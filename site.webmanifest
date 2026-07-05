@@ -1,0 +1,16 @@
+{
+  "name": "Alisina Moradi Real Estate",
+  "short_name": "Alisina Realty",
+  "description": "Professional real estate services by Alisina Moradi",
+  "start_url": "/Alisina/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a73e8",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

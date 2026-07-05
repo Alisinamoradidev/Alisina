@@ -276,7 +276,95 @@ function updateListings() {
 
 searchForm.addEventListener('submit', e => {
   e.preventDefault();
-  updateListings();
+/* Testimonials */
+const testimonials = [
+  {
+    name: "Fatima Ahmadi",
+    role: "Home Buyer",
+    text: "Alisina made finding our first home so easy. He listened to what we wanted and found the perfect place within our budget. Highly recommend!",
+    initial: "F"
+  },
+  {
+    name: "Mohammad Karimi",
+    role: "Property Seller",
+    text: "Sold my house in just 3 weeks thanks to Alisina's marketing and negotiation skills. Got above asking price. Professional from start to finish.",
+    initial: "M"
+  },
+  {
+    name: "Zahra Hosseini",
+    role: "Investor",
+    text: "I've worked with many agents over the years. Alisina stands out for his market knowledge and honest advice. He helped me build a solid portfolio.",
+    initial: "Z"
+  },
+  {
+    name: "Ali Rezai",
+    role: "Renter",
+    text: "Found me a great apartment in a prime location within days. Transparent, responsive, and truly cares about his clients. Will use again.",
+    initial: "A"
+  }
+];
+
+function renderTestimonials() {
+  const grid = document.getElementById('testimonialsGrid');
+  testimonials.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'testimonial-card';
+    card.innerHTML = `
+      <div class="testimonial-stars">
+        <i class="fas fa-star"></i><i class="fas fa-star"></i>
+        <i class="fas fa-star"></i><i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+      </div>
+      <p class="testimonial-text">"${t.text}"</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">${t.initial}</div>
+        <div>
+          <div class="testimonial-name">${t.name}</div>
+          <div class="testimonial-role">${t.role}</div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* Mortgage Calculator */
+function calculateMortgage() {
+  const price = parseFloat(document.getElementById('calcPrice').value) || 0;
+  const downPct = parseFloat(document.getElementById('calcDown').value) || 0;
+  const rate = parseFloat(document.getElementById('calcRate').value) || 0;
+  const term = parseInt(document.getElementById('calcTerm').value) || 30;
+
+  const down = price * (downPct / 100);
+  const loan = price - down;
+  const monthlyRate = rate / 100 / 12;
+  const payments = term * 12;
+
+  let monthlyPI = 0;
+  if (monthlyRate > 0 && payments > 0) {
+    monthlyPI = loan * (monthlyRate * Math.pow(1 + monthlyRate, payments)) / (Math.pow(1 + monthlyRate, payments) - 1);
+  } else if (loan > 0) {
+    monthlyPI = loan / payments;
+  }
+
+  const monthlyTax = price * 0.012 / 12;
+  const monthlyInsurance = price * 0.005 / 12;
+  const total = monthlyPI + monthlyTax + monthlyInsurance;
+
+  document.getElementById('calcMonthly').textContent = `$${total.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  document.getElementById('calcPI').textContent = `$${monthlyPI.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  document.getElementById('calcTax').textContent = `$${monthlyTax.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  document.getElementById('calcInsurance').textContent = `$${monthlyInsurance.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+}
+
+document.getElementById('calcBtn').addEventListener('click', calculateMortgage);
+document.querySelectorAll('#calcPrice, #calcDown, #calcRate, #calcTerm').forEach(el => {
+  el.addEventListener('input', calculateMortgage);
+});
+
+renderTestimonials();
+calculateMortgage();
+updateListings();
 });
 
 [searchInput, priceFilter, typeFilter, sortSelect].forEach(el => {

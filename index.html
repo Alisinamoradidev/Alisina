@@ -3,9 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alisina Moradi - Find Your Dream Home</title>
+  <title>Alisina Moradi | Real Estate Agent - Find Your Dream Home</title>
+  <meta name="description" content="Alisina Moradi - Professional real estate agent. Browse premium properties for sale and rent. Expert guidance for buyers, sellers, and investors.">
+  <meta name="keywords" content="real estate, properties, homes for sale, rent, Alisina Moradi, buy house, real estate agent">
+  <meta name="author" content="Alisina Moradi">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Alisina Moradi | Real Estate Agent">
+  <meta property="og:description" content="Find your dream home with Alisina Moradi. Premium properties for sale and rent.">
+  <meta property="og:image" content="https://alisinamoradidev.github.io/Alisina/images/alisina.jpg">
+  <meta property="og:url" content="https://alisinamoradidev.github.io/Alisina/">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Alisina Moradi | Real Estate Agent">
+  <meta name="twitter:description" content="Find your dream home with Alisina Moradi.">
+  <meta name="twitter:image" content="https://alisinamoradidev.github.io/Alisina/images/alisina.jpg">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Google tag (gtag.js) placeholder -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
 </head>
 <body>
   <header class="header">
@@ -162,6 +191,70 @@
     </div>
   </section>
 
+  <section class="section testimonials" id="testimonials">
+    <div class="container">
+      <div class="section-header">
+        <h2>What My Clients Say</h2>
+        <p>Trusted by buyers, sellers, and investors</p>
+      </div>
+      <div class="testimonials-grid" id="testimonialsGrid"></div>
+    </div>
+  </section>
+
+  <section class="section calculator" id="calculator">
+    <div class="container">
+      <div class="section-header">
+        <h2>Mortgage Calculator</h2>
+        <p>Estimate your monthly payments</p>
+      </div>
+      <div class="calculator-wrapper">
+        <div class="calculator-form">
+          <div class="calc-group">
+            <label>Property Price ($)</label>
+            <input type="number" id="calcPrice" value="300000">
+          </div>
+          <div class="calc-group">
+            <label>Down Payment (%)</label>
+            <input type="number" id="calcDown" value="20" min="0" max="100">
+          </div>
+          <div class="calc-group">
+            <label>Interest Rate (%)</label>
+            <input type="number" id="calcRate" value="6.5" step="0.1" min="0" max="30">
+          </div>
+          <div class="calc-group">
+            <label>Loan Term (years)</label>
+            <select id="calcTerm">
+              <option value="15">15 years</option>
+              <option value="30" selected>30 years</option>
+            </select>
+          </div>
+          <button class="btn-submit" id="calcBtn">Calculate</button>
+        </div>
+        <div class="calculator-result" id="calcResult">
+          <div class="calc-monthly">
+            <span class="calc-label">Monthly Payment</span>
+            <span class="calc-amount" id="calcMonthly">$0</span>
+          </div>
+          <div class="calc-breakdown">
+            <div>
+              <span class="calc-label">Principal & Interest</span>
+              <span id="calcPI">$0</span>
+            </div>
+            <div>
+              <span class="calc-label">Property Tax (est.)</span>
+              <span id="calcTax">$0</span>
+            </div>
+            <div>
+              <span class="calc-label">Insurance (est.)</span>
+              <span id="calcInsurance">$0</span>
+            </div>
+          </div>
+          <p class="calc-note">* Estimates only. Contact me for accurate rates.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section contact" id="contact">
     <div class="container">
       <div class="section-header">
@@ -253,6 +346,10 @@
       </div>
     </div>
   </div>
+
+  <a href="https://wa.me/93778747337?text=Hi%20Alisina%2C%20I%27m%20interested%20in%20your%20properties" class="whatsapp-btn" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+  </a>
 
   <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">
     <i class="fas fa-arrow-up"></i>
