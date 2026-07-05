@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VibeEstate - Find Your Dream Home</title>
+  <title>Alisina Moradi - Find Your Dream Home</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -13,7 +13,7 @@
       <div class="header-inner">
         <a href="#" class="logo">
           <i class="fas fa-building"></i>
-          <span>VibeEstate</span>
+          <span>Alisina Moradi</span>
         </a>
         <nav class="nav" id="nav">
           <a href="#home">Home</a>
@@ -21,9 +21,14 @@
           <a href="#about">About</a>
           <a href="#contact">Contact</a>
         </nav>
-        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">
-          <i class="fas fa-bars"></i>
-        </button>
+        <div class="header-actions">
+          <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+            <i class="fas fa-moon"></i>
+          </button>
+          <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
       </div>
     </div>
   </header>
@@ -68,6 +73,19 @@
       <div class="section-header">
         <h2>Featured Properties</h2>
         <p>Explore our handpicked selection of premium properties</p>
+      </div>
+      <div class="listings-bar">
+        <span class="results-count" id="resultsCount">Showing 9 properties</span>
+        <div class="sort-group">
+          <i class="fas fa-arrow-down-wide-short"></i>
+          <select id="sortSelect">
+            <option value="default">Default</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="name-asc">Name: A-Z</option>
+            <option value="name-desc">Name: Z-A</option>
+          </select>
+        </div>
       </div>
       <div class="listings-grid" id="listingsGrid"></div>
       <div class="no-results" id="noResults">
@@ -128,7 +146,7 @@
             <i class="fas fa-envelope"></i>
             <div>
               <h4>Email</h4>
-              <p>hello@vibeestate.com</p>
+              <p>alisina@moradi.dev</p>
             </div>
           </div>
           <div class="info-item">
@@ -142,7 +160,7 @@
             <i class="fas fa-map-marker-alt"></i>
             <div>
               <h4>Office</h4>
-              <p>123 Realty Ave, New York, NY</p>
+              <p>Tehran, Iran</p>
             </div>
           </div>
         </div>
@@ -150,15 +168,55 @@
     </div>
   </section>
 
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="propertyModal">
+      <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+      <div class="modal-image" id="modalImage"></div>
+      <div class="modal-body">
+        <div class="modal-header">
+          <h2 id="modalTitle"></h2>
+          <div class="modal-price" id="modalPrice"></div>
+        </div>
+        <div class="modal-location" id="modalLocation">
+          <i class="fas fa-map-marker-alt"></i>
+          <span></span>
+        </div>
+        <div class="modal-details" id="modalDetails"></div>
+        <p class="modal-description" id="modalDescription">
+          This beautiful property offers modern finishes and an open floor plan. 
+          Features include hardwood floors, stainless steel appliances, granite countertops, 
+          spacious closets, and private outdoor space. Conveniently located near shopping, 
+          dining, and public transportation.
+        </p>
+        <div class="modal-features">
+          <span><i class="fas fa-check-circle"></i> Central A/C</span>
+          <span><i class="fas fa-check-circle"></i> Hardwood Floors</span>
+          <span><i class="fas fa-check-circle"></i> Laundry</span>
+          <span><i class="fas fa-check-circle"></i> Parking</span>
+          <span><i class="fas fa-check-circle"></i> Pet Friendly</span>
+          <span><i class="fas fa-check-circle"></i> Storage</span>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-submit" id="modalInquire">Inquire Now</button>
+          <button class="btn-fav" id="modalFav"><i class="far fa-heart"></i> Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
   <footer class="footer">
     <div class="container">
       <div class="footer-inner">
         <div class="footer-brand">
           <a href="#" class="logo">
             <i class="fas fa-building"></i>
-            <span>VibeEstate</span>
+            <span>Alisina Moradi</span>
           </a>
-          <p>Making dreams come home since 2024.</p>
+          <p>Your trusted real estate partner.</p>
         </div>
         <div class="footer-links">
           <h4>Quick Links</h4>
@@ -185,7 +243,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 VibeEstate. All rights reserved.</p>
+        <p>&copy; 2026 Alisina Moradi. All rights reserved.</p>
       </div>
     </div>
   </footer>
