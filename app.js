@@ -365,19 +365,102 @@ function resetQuiz() {
 }
 
 /* Map */
+function createMapIcon(p) {
+  const color = p.badge === 'sale' ? '#1a73e8' : '#059669';
+  const label = formatPrice(p.price, p.badge);
+  return L.divIcon({
+    className: 'map-marker',
+    html: `<div class="map-marker-inner" style="background:${color}"><span>${label}</span></div>`,
+    iconSize: [0, 0],
+    popupAnchor: [0, -10]
+  });
+}
+
+function createPopupContent(p) {
+  const popup = document.createElement('div');
+  popup.className = 'map-popup';
+  popup.innerHTML = `
+    <div class="map-popup-img"><img src="${p.image}" alt="${p.title}" loading="lazy"></div>
+    <div class="map-popup-body">
+      <div class="map-popup-price">${formatPrice(p.price, p.badge)}</div>
+      <div class="map-popup-title">${p.title}</div>
+      <div class="map-popup-location"><i class="fas fa-map-marker-alt"></i> ${p.location}</div>
+      <div class="map-popup-features">
+        <span><i class="fas fa-bed"></i> ${p.beds}</span>
+        <span><i class="fas fa-bath"></i> ${p.baths}</span>
+        <span><i class="fas fa-ruler-combined"></i> ${p.sqft.toLocaleString()} sqft</span>
+      </div>
+      <button class="map-popup-btn" data-id="${p.id}">View Details</button>
+    </div>`;
+  popup.querySelector('.map-popup-btn').addEventListener('click', () => openModal(p));
+  return popup;
+}
+
 function initMap() {
   const el = document.getElementById('propertyMap');
   if (typeof L === 'undefined' || !el) return;
   if (el._leaflet_id) return;
-  const map = L.map(el).setView([39.8283, -98.5795], 4);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+
+  const isDark = document.body.hasAttribute('data-theme');
+  const tileUrl = isDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+  const attr = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
+
+  const map = L.map(el, { zoomControl: false }).setView([39.8283, -98.5795], 4);
+  L.tileLayer(tileUrl, { attribution: attr, maxZoom: 20 }).addTo(map);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+  const markers = [];
   const bounds = [];
+
   properties.forEach(p => {
-    const marker = L.marker([p.lat, p.lng]).addTo(map);
+    const marker = L.marker([p.lat, p.lng], { icon: createMapIcon(p) }).addTo(map);
+    const popupEl = createPopupContent(p);
+    marker.bindPopup(popupEl, { maxWidth: 320, className: 'map-popup-wrapper', closeButton: true });
+    markers.push(marker);
     bounds.push([p.lat, p.lng]);
-    marker.bindPopup(`<b>${p.title}</b><br>${formatPrice(p.price, p.badge)}<br><button onclick="openModal(properties.find(x=>x.id===${p.id}))" style="margin-top:6px;padding:4px 12px;background:#1a73e8;color:#fff;border:none;border-radius:6px;cursor:pointer">View</button>`);
+
+    marker.on('mouseover', () => marker.setZIndexOffset(1000));
+    marker.on('mouseout', () => marker.setZIndexOffset(0));
   });
-  if (bounds.length) map.fitBounds(bounds, { padding: [40, 40] });
+
+  if (bounds.length) {
+    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 12 });
+  }
+
+  /* Sync with property cards */
+  document.querySelectorAll('.property-card').forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      const id = Number(card.dataset.id);
+      const m = markers.find((_, i) => properties[i].id === id);
+      if (m) {
+        map.flyTo(m.getLatLng(), 10, { duration: 0.6 });
+        m.setZIndexOffset(1000);
+        setTimeout(() => { if (m._icon) m._icon.style.transform += ' scale(1.3)'; }, 100);
+      }
+    });
+    card.addEventListener('mouseleave', () => {
+      markers.forEach(m => m.setZIndexOffset(0));
+      markers.forEach(m => { if (m._icon) m._icon.style.transform = m._icon.style.transform.replace(' scale(1.3)', ''); });
+      if (bounds.length) map.fitBounds(bounds, { padding: [60, 60], maxZoom: 12, duration: 0.6 });
+    });
+  });
+
+  /* Re-theme on dark mode toggle */
+  const observer = new MutationObserver(() => {
+    const dark = document.body.hasAttribute('data-theme');
+    const newUrl = dark
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    map.eachLayer(layer => {
+      if (layer instanceof L.TileLayer) {
+        map.removeLayer(layer);
+        L.tileLayer(newUrl, { attribution: attr, maxZoom: 20 }).addTo(map);
+      }
+    });
+  });
+  observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
 }
 
 function tryInitMap() {
