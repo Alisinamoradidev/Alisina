@@ -170,10 +170,13 @@
       </div>
       <div class="contact-wrapper">
         <form class="contact-form" id="contactForm">
-          <input type="text" placeholder="Your Name" required>
-          <input type="email" placeholder="Your Email" required>
-          <input type="tel" placeholder="Your Phone">
-          <textarea rows="4" placeholder="Tell us what you're looking for..." required></textarea>
+          <input type="text" name="name" placeholder="Your Name" required>
+          <input type="email" name="email" placeholder="Your Email" required>
+          <input type="tel" name="phone" placeholder="Your Phone">
+          <textarea name="message" rows="4" placeholder="Tell us what you're looking for..." required></textarea>
+          <input type="hidden" name="_captcha" value="false">
+          <input type="hidden" name="_subject" value="New Inquiry from Real Estate Site">
+          <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
           <button type="submit" class="btn-submit">Send Message</button>
         </form>
         <div class="contact-info">
