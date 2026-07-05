@@ -392,36 +392,16 @@ document.addEventListener('click', e => {
   }
 });
 
-contactForm.addEventListener('submit', e => {
-  e.preventDefault();
-  const formData = new FormData(contactForm);
-  const data = Object.fromEntries(formData);
+contactForm.addEventListener('submit', () => {
   const btn = contactForm.querySelector('.btn-submit');
   btn.textContent = 'Sending...';
   btn.disabled = true;
-
-  fetch('https://formsubmit.co/ajax/alisinamoradi2718281@gmail.com', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  })
-  .then(res => res.json())
-  .then(res => {
-    if (res.success) {
-      showToast('Message sent! I\'ll get back to you soon.');
-      contactForm.reset();
-    } else {
-      showToast('Failed to send. Please try again.');
-    }
-  })
-  .catch(() => {
-    showToast('Network error. Please try again.');
-  })
-  .finally(() => {
-    btn.textContent = 'Send Message';
-    btn.disabled = false;
-  });
 });
+
+if (window.location.search.includes('sent=true')) {
+  showToast('Message sent! I\'ll get back to you soon.');
+  window.history.replaceState({}, '', window.location.pathname + '#contact');
+}
 
 function showToast(message) {
   let toast = document.querySelector('.toast');
