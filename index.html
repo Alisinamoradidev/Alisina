@@ -11,7 +11,7 @@
   <!-- Open Graph -->
   <meta property="og:title" content="Alisina Moradi | Real Estate Agent">
   <meta property="og:description" content="Find your dream home with Alisina Moradi. Premium properties for sale and rent.">
-  <meta property="og:image" content="https://alisinamoradidev.github.io/Alisina/images/alisina.jpg">
+  <meta property="og:image" content="https://alisinamoradidev.github.io/Alisina/favicon.svg">
   <meta property="og:url" content="https://alisinamoradidev.github.io/Alisina/">
   <meta property="og:type" content="website">
 
@@ -19,13 +19,15 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Alisina Moradi | Real Estate Agent">
   <meta name="twitter:description" content="Find your dream home with Alisina Moradi.">
-  <meta name="twitter:image" content="https://alisinamoradidev.github.io/Alisina/images/alisina.jpg">
+  <meta name="twitter:image" content="https://alisinamoradidev.github.io/Alisina/favicon.svg">
 
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="favicon.svg">
   <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <!-- Google tag (gtag.js) placeholder -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
@@ -48,7 +50,10 @@
           <a href="#home">Home</a>
           <a href="#listings">Listings</a>
           <a href="#about">About</a>
+          <a href="#quiz">Quiz</a>
+          <a href="#map">Map</a>
           <a href="#agent">Agent</a>
+          <a href="#scheduleSection">Schedule</a>
           <a href="#contact">Contact</a>
         </nav>
         <div class="header-actions">
@@ -160,8 +165,8 @@
   <section class="section agent" id="agent">
     <div class="container">
       <div class="agent-wrapper">
-        <div class="agent-image">
-          <img src="images/alisina.jpg" alt="Alisina Moradi">
+        <div class="agent-image agent-placeholder">
+          <i class="fas fa-user-circle"></i>
         </div>
         <div class="agent-info">
           <span class="agent-tag">Your Trusted Agent</span>
@@ -255,6 +260,66 @@
     </div>
   </section>
 
+  <section class="section quiz-section" id="quiz">
+    <div class="container">
+      <div class="section-header">
+        <h2>Property Match Quiz</h2>
+        <p>Answer 4 quick questions and find your perfect property</p>
+      </div>
+      <div class="quiz-wrapper">
+        <div id="quizIntro">
+          <h3>Find Your Perfect Property</h3>
+          <p>Answer 4 quick questions and I'll match you with the best properties.</p>
+          <button class="btn-search" onclick="startQuiz()">Start Quiz</button>
+        </div>
+        <div id="quizQuestions" style="display:none"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section map-section" id="map">
+    <div class="container">
+      <div class="section-header">
+        <h2>Properties on Map</h2>
+        <p>Explore all listings in one view</p>
+      </div>
+      <div id="propertyMap"></div>
+    </div>
+  </section>
+
+  <section class="section schedule" id="scheduleSection">
+    <div class="container">
+      <div class="section-header">
+        <h2>Schedule a Viewing</h2>
+        <p>Book a property tour at your convenience</p>
+      </div>
+      <div class="schedule-wrapper">
+        <form class="schedule-form" id="scheduleForm">
+          <input type="text" name="name" placeholder="Your Name" required>
+          <input type="email" name="email" placeholder="Your Email" required>
+          <input type="tel" name="phone" placeholder="Your Phone" required>
+          <input type="text" name="property" id="scheduleProperty" placeholder="Property you're interested in">
+          <div class="schedule-row">
+            <input type="date" name="date" required>
+            <input type="time" name="time" required>
+          </div>
+          <textarea name="notes" rows="3" placeholder="Additional notes..."></textarea>
+          <button type="submit" class="btn-submit">Request Viewing</button>
+        </form>
+        <div class="schedule-info">
+          <i class="fas fa-calendar-check"></i>
+          <h3>Why Schedule With Me?</h3>
+          <ul>
+            <li><i class="fas fa-check"></i> Personalized property tour</li>
+            <li><i class="fas fa-check"></i> Expert market insights</li>
+            <li><i class="fas fa-check"></i> No pressure, no commitment</li>
+            <li><i class="fas fa-check"></i> Flexible timing — weekends available</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section contact" id="contact">
     <div class="container">
       <div class="section-header">
@@ -341,6 +406,7 @@
         </div>
         <div class="modal-actions">
           <button class="btn-submit" id="modalInquire">Inquire Now</button>
+          <button class="btn-submit btn-secondary" id="modalSchedule">Schedule Viewing</button>
           <button class="btn-fav" id="modalFav"><i class="far fa-heart"></i> Save</button>
         </div>
       </div>
@@ -354,6 +420,19 @@
   <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">
     <i class="fas fa-arrow-up"></i>
   </button>
+
+  <div class="chat-widget" id="chatWidget">
+    <button class="chat-toggle" id="chatToggle" aria-label="Open chat">
+      <i class="fas fa-comment-dots"></i>
+    </button>
+    <div class="chat-body" id="chatBody">
+      <div class="chat-header">
+        <span><i class="fas fa-robot"></i> Alisina AI</span>
+        <button id="chatClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="chat-msgs" id="chatMsgs"></div>
+    </div>
+  </div>
 
   <footer class="footer">
     <div class="container">
@@ -369,8 +448,10 @@
           <h4>Quick Links</h4>
           <a href="#home">Home</a>
           <a href="#listings">Listings</a>
-          <a href="#about">About</a>
+          <a href="#quiz">Quiz</a>
+          <a href="#map">Map</a>
           <a href="#agent">Agent</a>
+          <a href="#scheduleSection">Schedule</a>
           <a href="#contact">Contact</a>
         </div>
         <div class="footer-links">
@@ -383,10 +464,9 @@
         <div class="footer-social">
           <h4>Follow Us</h4>
           <div class="social-icons">
-            <a href="#"><i class="fab fa-facebook"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
-            <a href="#"><i class="fab fa-linkedin"></i></a>
+            <a href="https://www.facebook.com/share/1Bc6Bctsqo/" target="_blank" rel="noopener"><i class="fab fa-facebook"></i></a>
+            <a href="https://instagram.com/alisina3178" target="_blank" rel="noopener"><i class="fab fa-instagram"></i></a>
+            <a href="https://linkedin.com/in/alisina-moradi" target="_blank" rel="noopener"><i class="fab fa-linkedin"></i></a>
           </div>
         </div>
       </div>

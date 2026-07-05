@@ -559,6 +559,21 @@ body {
   display: block;
 }
 
+.agent-placeholder {
+  background: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-height: 300px;
+}
+
+.agent-placeholder i {
+  font-size: 120px;
+  color: var(--primary);
+  opacity: 0.6;
+}
+
 .agent-tag {
   display: inline-block;
   padding: 6px 16px;
@@ -672,6 +687,17 @@ body {
 
 .btn-submit:hover {
   background: var(--primary-dark);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+}
+
+.btn-secondary:hover {
+  background: var(--primary);
+  color: var(--white);
 }
 
 .contact-info {
@@ -1362,4 +1388,377 @@ body {
 .toast.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* FAQ Chat Widget */
+.chat-widget {
+  position: fixed;
+  bottom: 140px;
+  right: 28px;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.chat-toggle {
+  width: 52px;
+  height: 52px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-toggle:hover {
+  transform: scale(1.1);
+}
+
+.chat-body {
+  position: absolute;
+  bottom: 60px;
+  right: 0;
+  width: 340px;
+  max-height: 460px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(12px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform-origin: bottom right;
+}
+
+.chat-body.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--primary);
+  color: var(--white);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.chat-header i {
+  margin-right: 8px;
+}
+
+.chat-header button {
+  background: none;
+  border: none;
+  color: var(--white);
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.chat-header button:hover {
+  opacity: 1;
+}
+
+.chat-msgs {
+  flex: 1;
+  padding: 14px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 340px;
+}
+
+.chat-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.chat-msg.bot {
+  align-self: flex-start;
+  background: var(--muted);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-msg.user {
+  align-self: flex-end;
+  background: var(--primary);
+  color: var(--white);
+  border-bottom-right-radius: 4px;
+}
+
+.chat-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.chat-option {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  color: var(--text);
+}
+
+.chat-option:hover {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+
+/* Schedule Viewing */
+.schedule-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.schedule-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.schedule-form input,
+.schedule-form textarea {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  outline: none;
+  transition: border-color var(--transition);
+  font-family: inherit;
+  background: var(--card-bg);
+  color: var(--text);
+}
+
+.schedule-form input:focus,
+.schedule-form textarea:focus {
+  border-color: var(--primary);
+}
+
+.schedule-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.schedule-info {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow);
+}
+
+.schedule-info i {
+  font-size: 36px;
+  color: var(--primary);
+  margin-bottom: 16px;
+  display: block;
+}
+
+.schedule-info h3 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.schedule-info ul {
+  list-style: none;
+  padding: 0;
+}
+
+.schedule-info li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.schedule-info li i {
+  font-size: 14px;
+  margin-bottom: 0;
+  color: var(--accent);
+}
+
+/* Property Match Quiz */
+.quiz-wrapper {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  min-height: 200px;
+}
+
+.quiz-wrapper h3 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.quiz-wrapper > div p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.quiz-question {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.quiz-opt {
+  padding: 14px 20px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quiz-opt:hover {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--white);
+}
+
+.quiz-result-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.quiz-result-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.quiz-matches {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.quiz-match {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+  text-align: left;
+}
+
+.quiz-match:hover {
+  box-shadow: var(--shadow);
+}
+
+.quiz-match img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.quiz-match strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.quiz-match div > :not(strong) {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Map */
+.map-section {
+  background: var(--muted);
+}
+
+.quiz-section {
+  background: var(--muted);
+}
+
+#propertyMap {
+  width: 100%;
+  height: 450px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  z-index: 1;
+}
+
+/* Responsive for new sections */
+@media (max-width: 768px) {
+  .chat-body {
+    width: 300px;
+    right: -10px;
+  }
+
+  .schedule-wrapper {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .schedule-row {
+    grid-template-columns: 1fr;
+  }
+
+  #propertyMap {
+    height: 300px;
+  }
+
+  .chat-widget {
+    bottom: 136px;
+    right: 16px;
+  }
 }
