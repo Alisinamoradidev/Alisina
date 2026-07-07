@@ -328,9 +328,21 @@ async function deleteMessage(id) {
   catch (err) { alert(err.message); }
 }
 
+async function deleteAllMessages() {
+  if (!confirm('Delete ALL messages? This cannot be undone.')) return;
+  try { await api('/api/contact/messages', { method: 'DELETE' }); loadMessages(); loadDashboard(); }
+  catch (err) { alert(err.message); }
+}
+
 async function deleteSchedule(id) {
   if (!confirm('Delete this schedule?')) return;
   try { await api(`/api/contact/schedules/${id}`, { method: 'DELETE' }); loadSchedules(); loadDashboard(); }
+  catch (err) { alert(err.message); }
+}
+
+async function deleteAllSchedules() {
+  if (!confirm('Delete ALL schedules? This cannot be undone.')) return;
+  try { await api('/api/contact/schedules', { method: 'DELETE' }); loadSchedules(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
 

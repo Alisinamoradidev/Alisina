@@ -78,13 +78,13 @@
         </div>
 
         <div id="viewMessages" class="view">
-          <div class="view-header"><h2>Contact Messages</h2><button class="btn-outline" onclick="exportCSV('messages')"><i class="fas fa-download"></i> CSV</button></div>
+          <div class="view-header"><h2>Contact Messages</h2><div class="view-actions"><button class="btn-outline" onclick="exportCSV('messages')"><i class="fas fa-download"></i> CSV</button><button class="btn-danger" onclick="deleteAllMessages()"><i class="fas fa-trash"></i> Delete All</button></div></div>
           <div id="messagesList"></div>
           <p class="empty-state" id="messagesEmpty">No messages yet.</p>
         </div>
 
         <div id="viewSchedules" class="view">
-          <div class="view-header"><h2>Viewing Schedules</h2><button class="btn-outline" onclick="exportCSV('schedules')"><i class="fas fa-download"></i> CSV</button></div>
+          <div class="view-header"><h2>Viewing Schedules</h2><div class="view-actions"><button class="btn-outline" onclick="exportCSV('schedules')"><i class="fas fa-download"></i> CSV</button><button class="btn-danger" onclick="deleteAllSchedules()"><i class="fas fa-trash"></i> Delete All</button></div></div>
           <div id="schedulesList"></div>
           <p class="empty-state" id="schedulesEmpty">No schedules yet.</p>
         </div>

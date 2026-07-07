@@ -149,6 +149,12 @@ module.exports = async (req, res) => {
       return res.status(200).json({ success: true, message: 'Schedule saved' });
     }
 
+    if (path === '/contact/messages' && method === 'DELETE') {
+      const { error } = await supabase.from('contacts').delete().neq('id', 0);
+      if (error) throw error;
+      return res.status(200).json({ message: 'All messages deleted' });
+    }
+
     if (path === '/contact/messages' && method === 'GET') {
       const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
       const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20')));
@@ -163,6 +169,12 @@ module.exports = async (req, res) => {
       const { error } = await supabase.from('contacts').delete().eq('id', msgDelMatch[1]);
       if (error) throw error;
       return res.status(200).json({ message: 'Deleted' });
+    }
+
+    if (path === '/contact/schedules' && method === 'DELETE') {
+      const { error } = await supabase.from('schedules').delete().neq('id', 0);
+      if (error) throw error;
+      return res.status(200).json({ message: 'All schedules deleted' });
     }
 
     if (path === '/contact/schedules' && method === 'GET') {
