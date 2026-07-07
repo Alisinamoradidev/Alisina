@@ -74,6 +74,12 @@ module.exports = async (req, res) => {
       return res.status(200).json(data || []);
     }
 
+    if (path === '/properties' && method === 'DELETE') {
+      const { error } = await supabase.from('properties').delete().neq('id', 0);
+      if (error) throw error;
+      return res.status(200).json({ message: 'All properties deleted' });
+    }
+
     const propMatch = path.match(/^\/properties\/(\d+)$/);
     if (propMatch && method === 'GET') {
       const { data, error } = await supabase.from('properties').select('*').eq('id', propMatch[1]).single();
@@ -108,6 +114,12 @@ module.exports = async (req, res) => {
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
       return res.status(200).json(data || []);
+    }
+
+    if (path === '/blog' && method === 'DELETE') {
+      const { error } = await supabase.from('posts').delete().neq('id', 0);
+      if (error) throw error;
+      return res.status(200).json({ message: 'All posts deleted' });
     }
 
     const blogMatch = path.match(/^\/blog\/(\d+)$/);

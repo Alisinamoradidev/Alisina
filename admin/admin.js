@@ -204,6 +204,12 @@ async function deleteProperty(id) {
   catch (err) { alert(err.message); }
 }
 
+async function deleteAllProperties() {
+  if (!confirm('Delete ALL properties? This cannot be undone.')) return;
+  try { await api('/api/properties', { method: 'DELETE' }); loadProperties(); loadDashboard(); }
+  catch (err) { alert(err.message); }
+}
+
 /* Blog Posts */
 let editingPostId = null;
 
@@ -285,6 +291,12 @@ async function editPost(id) {
 async function deletePost(id) {
   if (!confirm('Delete this post?')) return;
   try { await api(`/api/blog/${id}`, { method: 'DELETE' }); loadPosts(); loadDashboard(); }
+  catch (err) { alert(err.message); }
+}
+
+async function deleteAllPosts() {
+  if (!confirm('Delete ALL blog posts? This cannot be undone.')) return;
+  try { await api('/api/blog', { method: 'DELETE' }); loadPosts(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
 

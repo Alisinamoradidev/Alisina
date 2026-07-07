@@ -61,6 +61,7 @@
             <div class="view-actions">
               <input type="text" id="propSearch" placeholder="Search..." class="search-input">
               <button class="btn-outline" onclick="exportCSV('properties')"><i class="fas fa-download"></i> CSV</button>
+              <button class="btn-danger" onclick="deleteAllProperties()"><i class="fas fa-trash"></i> Delete All</button>
               <button class="btn-primary" onclick="openPropertyForm()"><i class="fas fa-plus"></i> Add</button>
             </div>
           </div>
@@ -71,7 +72,10 @@
         <div id="viewBlog" class="view">
           <div class="view-header">
             <h2>Blog Posts</h2>
-            <button class="btn-primary" onclick="openPostForm()"><i class="fas fa-plus"></i> New Post</button>
+            <div class="view-actions">
+              <button class="btn-danger" onclick="deleteAllPosts()"><i class="fas fa-trash"></i> Delete All</button>
+              <button class="btn-primary" onclick="openPostForm()"><i class="fas fa-plus"></i> New Post</button>
+            </div>
           </div>
           <div class="table-wrap"><table id="postsTable"><thead><tr><th>ID</th><th>Title</th><th>Slug</th><th>Published</th><th>Date</th><th>Actions</th></tr></thead><tbody id="postsBody"></tbody></table></div>
           <p class="empty-state" id="postsEmpty">No posts yet.</p>
