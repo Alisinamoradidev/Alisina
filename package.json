@@ -5,6 +5,8 @@
   "description": "Alisina Moradi - Real Estate Agent Website",
   "scripts": {
     "dev": "npx serve .",
-    "start": "npx serve ."
+    "start": "npx serve .",
+    "backend": "cd backend && npm start",
+    "setup": "cd backend && npm install"
   }
 }

@@ -1,4 +1,4 @@
-const properties = [
+let properties = [
   { id: 1, title: "Modern Downtown Apartment", location: "123 Main St, New York, NY", price: 450000, type: "apartment", beds: 2, baths: 2, sqft: 1200, image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80", badge: "sale", featured: true, year: 2021, lat: 40.7128, lng: -74.006 },
   { id: 2, title: "Luxury Villa with Pool", location: "456 Ocean Dr, Miami, FL", price: 1200000, type: "villa", beds: 5, baths: 4, sqft: 4200, image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80", badge: "sale", featured: true, year: 2023, lat: 25.7617, lng: -80.1918 },
   { id: 3, title: "Cozy Suburban House", location: "789 Oak Ln, Austin, TX", price: 320000, type: "house", beds: 3, baths: 2, sqft: 1800, image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80", badge: "sale", featured: true, year: 2019, lat: 30.2672, lng: -97.7431 },
@@ -9,6 +9,18 @@ const properties = [
   { id: 8, title: "Garden Apartment", location: "222 Green St, Portland, OR", price: 1400, type: "apartment", beds: 2, baths: 1, sqft: 850, image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80", badge: "rent", featured: false, year: 2017, lat: 45.5152, lng: -122.6784 },
   { id: 9, title: "Colonial Family Home", location: "444 Maple Ave, Boston, MA", price: 575000, type: "house", beds: 4, baths: 3, sqft: 2600, image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80", badge: "sale", featured: true, year: 2016, lat: 42.3601, lng: -71.0589 }
 ];
+
+async function loadPropertiesFromApi() {
+  try {
+    const res = await fetch(`${API_URL}/api/properties`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && data.length > 0) {
+      properties = data;
+      updateListings();
+    }
+  } catch {}
+}
 
 const $ = id => document.getElementById(id);
 const listingsGrid = $('listingsGrid');
@@ -293,14 +305,32 @@ $('scheduleForm').addEventListener('submit', e => {
   const data = Object.fromEntries(new FormData($('scheduleForm')));
   const btn = $('scheduleForm').querySelector('.btn-submit');
   btn.textContent = 'Sending...'; btn.disabled = true;
-  fetch('https://formsubmit.co/ajax/alisinamoradi2718281@gmail.com', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...data, _subject: 'Viewing Request - Alisina Moradi Real Estate' })
-  })
-  .then(r => r.json())
-  .then(r => { if (r.success) { showToast('Viewing request sent! I\'ll confirm within 24 hours.'); $('scheduleForm').reset(); } else showToast('Failed to send. Try again.'); })
-  .catch(() => showToast('Network error. Try again.'))
-  .finally(() => { btn.textContent = 'Request Viewing'; btn.disabled = false; });
+
+  const sendToBackend = () => {
+    return fetch(`${API_URL}/api/contact/schedule`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(r => r.json()).then(r => {
+      if (r.success) return true;
+      throw new Error(r.error || 'Failed');
+    });
+  };
+
+  const sendToFormSubmit = () => {
+    return fetch('https://formsubmit.co/ajax/alisinamoradi2718281@gmail.com', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...data, _subject: 'Viewing Request - Alisina Moradi Real Estate' })
+    }).then(r => r.json()).then(r => {
+      if (r.success) return true;
+      throw new Error(r.error || 'Failed');
+    });
+  };
+
+  sendToBackend()
+    .catch(sendToFormSubmit)
+    .then(() => { showToast('Viewing request sent! I\'ll confirm within 24 hours.'); $('scheduleForm').reset(); })
+    .catch(() => showToast('Network error. Try again.'))
+    .finally(() => { btn.textContent = 'Request Viewing'; btn.disabled = false; });
 });
 
 /* Property Match Quiz */
@@ -475,4 +505,5 @@ renderTestimonials();
 calculateMortgage();
 resetQuiz();
 updateListings();
+loadPropertiesFromApi();
 tryInitMap();
