@@ -158,6 +158,13 @@ module.exports = async (req, res) => {
       return res.status(200).json({ messages: data || [], total: count, page, pages: Math.ceil(count / limit) });
     }
 
+    const msgDelMatch = path.match(/^\/contact\/messages\/(\d+)$/);
+    if (msgDelMatch && method === 'DELETE') {
+      const { error } = await supabase.from('contacts').delete().eq('id', msgDelMatch[1]);
+      if (error) throw error;
+      return res.status(200).json({ message: 'Deleted' });
+    }
+
     if (path === '/contact/schedules' && method === 'GET') {
       const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
       const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20')));
