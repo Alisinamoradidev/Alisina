@@ -8,3 +8,6 @@ backend/data.db*
 dist/
 .vscode/
 *.local
+
+.vercel
+.env*
