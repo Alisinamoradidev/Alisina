@@ -6,17 +6,21 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const propertyRoutes = require('./routes/properties');
 const contactRoutes = require('./routes/contact');
+const blogRoutes = require('./routes/blog');
+const userRoutes = require('./routes/users');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors({ origin: '*' }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/blog', blogRoutes);
+app.use('/api/users', userRoutes);
 
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 
@@ -29,11 +33,11 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  console.error('Server error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });
 
 app.listen(PORT, () => {
-  console.log(`API server running at http://localhost:${PORT}`);
-  console.log(`Admin panel at http://localhost:${PORT}/admin`);
+  console.log(`API server running on port ${PORT}`);
+  console.log(`Admin panel at /admin`);
 });

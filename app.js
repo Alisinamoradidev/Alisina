@@ -128,10 +128,14 @@ listingsGrid.addEventListener('click', e => {
   if (favBtn) {
     e.stopPropagation();
     const id = Number(favBtn.dataset.id);
-    favorites.has(id) ? favorites.delete(id) : favorites.add(id);
+    const wasFav = favorites.has(id);
+    wasFav ? favorites.delete(id) : favorites.add(id);
     localStorage.setItem('favs', JSON.stringify([...favorites]));
     setFavIcon(favBtn, id);
-    showToast(favorites.has(id) ? 'Added to favorites' : 'Removed from favorites');
+    showToast(wasFav ? 'Removed from favorites' : 'Added to favorites');
+    if (userToken) {
+      fetch(`${API_URL}/api/users/favorites/${id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${userToken}`, 'Content-Type': 'application/json' } }).catch(() => {});
+    }
     return;
   }
   const card = e.target.closest('.property-card');
@@ -501,9 +505,219 @@ function tryInitMap() {
   setTimeout(() => clearInterval(interval), 10000);
 }
 
+/* User Auth */
+let userToken = localStorage.getItem('user_token');
+let currentUser = JSON.parse(localStorage.getItem('user_data') || 'null');
+
+function updateUserUI() {
+  const loggedOut = document.getElementById('userMenuLoggedOut');
+  const loggedIn = document.getElementById('userMenuLoggedIn');
+  const userBtn = document.getElementById('userBtn');
+  if (currentUser) {
+    loggedOut.style.display = 'none';
+    loggedIn.style.display = 'block';
+    document.getElementById('userMenuName').textContent = currentUser.name;
+    document.getElementById('userMenuEmail').textContent = currentUser.email;
+    userBtn.innerHTML = '<i class="fas fa-user-check"></i>';
+  } else {
+    loggedOut.style.display = 'block';
+    loggedIn.style.display = 'none';
+    userBtn.innerHTML = '<i class="far fa-user"></i>';
+  }
+}
+
+function toggleUserMenu() {
+  const menu = document.getElementById('userMenu');
+  menu.classList.toggle('open');
+}
+
+document.addEventListener('click', e => {
+  const menu = document.getElementById('userMenu');
+  if (!e.target.closest('#userBtn') && !e.target.closest('#userMenu')) {
+    menu.classList.remove('open');
+  }
+});
+
+let authMode = 'login';
+function showAuthModal(mode) {
+  authMode = mode;
+  document.getElementById('authModal').style.display = 'flex';
+  document.getElementById('authError').textContent = '';
+  if (mode === 'login') {
+    document.getElementById('authModalTitle').textContent = 'Sign In';
+    document.getElementById('authModalSub').textContent = 'Welcome back!';
+    document.getElementById('authBtn').textContent = 'Sign In';
+    document.getElementById('authToggleText').textContent = "Don't have an account?";
+    document.getElementById('authToggleLink').textContent = 'Register';
+    document.getElementById('authNameField').style.display = 'none';
+  } else {
+    document.getElementById('authModalTitle').textContent = 'Create Account';
+    document.getElementById('authModalSub').textContent = 'Join to save favorites!';
+    document.getElementById('authBtn').textContent = 'Create Account';
+    document.getElementById('authToggleText').textContent = 'Already have an account?';
+    document.getElementById('authToggleLink').textContent = 'Sign In';
+    document.getElementById('authNameField').style.display = 'block';
+  }
+}
+
+function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+document.getElementById('authModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAuthModal(); });
+
+function toggleAuthMode() {
+  showAuthModal(authMode === 'login' ? 'register' : 'login');
+}
+
+document.getElementById('authForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = document.getElementById('authEmail').value;
+  const password = document.getElementById('authPassword').value;
+  const err = document.getElementById('authError');
+  const btn = document.getElementById('authBtn');
+
+  if (authMode === 'register') {
+    const name = document.getElementById('authName').value;
+    if (!name) { err.textContent = 'Name is required'; return; }
+    btn.disabled = true; btn.textContent = 'Creating...';
+    try {
+      const res = await fetch(`${API_URL}/api/users/register`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      userToken = data.token; currentUser = data.user;
+      localStorage.setItem('user_token', userToken);
+      localStorage.setItem('user_data', JSON.stringify(currentUser));
+      updateUserUI(); closeAuthModal(); showToast('Account created! Welcome ' + data.user.name);
+    } catch (e) { err.textContent = e.message; }
+    finally { btn.disabled = false; btn.textContent = 'Create Account'; }
+  } else {
+    btn.disabled = true; btn.textContent = 'Signing in...';
+    try {
+      const res = await fetch(`${API_URL}/api/users/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      userToken = data.token; currentUser = data.user;
+      localStorage.setItem('user_token', userToken);
+      localStorage.setItem('user_data', JSON.stringify(currentUser));
+      updateUserUI(); closeAuthModal(); showToast('Welcome back, ' + data.user.name + '!');
+      syncFavoritesFromServer();
+    } catch (e) { err.textContent = e.message; }
+    finally { btn.disabled = false; btn.textContent = 'Sign In'; }
+  }
+});
+
+function logoutUser() {
+  userToken = null; currentUser = null;
+  localStorage.removeItem('user_token');
+  localStorage.removeItem('user_data');
+  document.getElementById('userMenu').classList.remove('open');
+  updateUserUI();
+  favorites.clear();
+  localStorage.setItem('favs', '[]');
+  updateListings();
+  showToast('Signed out');
+}
+
+async function syncFavoritesFromServer() {
+  if (!userToken) return;
+  try {
+    const res = await fetch(`${API_URL}/api/users/favorites/ids`, {
+      headers: { 'Authorization': `Bearer ${userToken}` }
+    });
+    const ids = await res.json();
+    favorites = new Set(ids);
+    localStorage.setItem('favs', JSON.stringify([...favorites]));
+    updateListings();
+  } catch {}
+}
+
+/* Gallery Carousel */
+function initCarousel(modalImageEl, images) {
+  if (!images || images.length === 0) return;
+  let current = 0;
+  modalImageEl.innerHTML = `
+    <div class="carousel" style="position:relative;width:100%;height:100%">
+      <img src="${images[0]}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+      ${images.length > 1 ? `
+        <button class="carousel-btn carousel-prev" onclick="carouselMove(-1)" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-left"></i></button>
+        <button class="carousel-btn carousel-next" onclick="carouselMove(1)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-right"></i></button>
+        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;padding:2px 12px;border-radius:12px;font-size:12px;z-index:5" id="carouselCounter">1 / ${images.length}</div>
+      ` : ''}
+    </div>`;
+  window._carouselImages = images;
+  window._carouselImg = modalImageEl.querySelector('img');
+}
+
+function carouselMove(dir) {
+  const images = window._carouselImages;
+  const img = window._carouselImg;
+  if (!images || !img) return;
+  let current = images.indexOf(img.src);
+  if (current === -1) current = 0;
+  current = (current + dir + images.length) % images.length;
+  img.src = images[current];
+  const counter = document.getElementById('carouselCounter');
+  if (counter) counter.textContent = `${current + 1} / ${images.length}`;
+}
+
+/* Override openModal for gallery */
+const _origOpenModal = openModal;
+openModal = function(p) {
+  _origOpenModal(p);
+  const images = p.gallery && p.gallery.length > 0 ? p.gallery : (p.image ? [p.image] : []);
+  initCarousel($('modalImage'), images);
+};
+
+/* Override setFavIcon to sync with server */
+const _origSetFavIcon = setFavIcon;
+setFavIcon = function(btn, id) {
+  _origSetFavIcon(btn, id);
+  if (userToken && currentUser) {
+    fetch(`${API_URL}/api/users/favorites/${id}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${userToken}`, 'Content-Type': 'application/json' }
+    }).catch(() => {});
+  }
+};
+
+/* Blog */
+async function loadBlogPosts() {
+  try {
+    const res = await fetch(`${API_URL}/api/blog`);
+    if (!res.ok) return;
+    const posts = await res.json();
+    const grid = document.getElementById('blogGrid');
+    if (!posts.length) { grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">No posts yet. Check back soon!</p>'; return; }
+    grid.innerHTML = posts.slice(0, 3).map(p => `
+      <div class="blog-card">
+        ${p.image ? `<div class="blog-image"><img src="${p.image}" alt="${p.title}" loading="lazy"></div>` : ''}
+        <div class="blog-body">
+          <div class="blog-date">${p.created_at?.split(' ')[0] || ''}</div>
+          <h3 class="blog-title">${p.title}</h3>
+          <p class="blog-excerpt">${p.excerpt || ''}</p>
+          <span class="blog-read-more">Read More <i class="fas fa-arrow-right"></i></span>
+        </div>
+      </div>
+    `).join('');
+  } catch {}
+}
+
+/* Update favorites toggle — save to server if logged in */
+const _origFavToggle = function(id) {
+  favorites.has(id) ? favorites.delete(id) : favorites.add(id);
+  localStorage.setItem('favs', JSON.stringify([...favorites]));
+};
+/* Patch the fav click in listingsGrid handler */
 renderTestimonials();
 calculateMortgage();
 resetQuiz();
 updateListings();
 loadPropertiesFromApi();
 tryInitMap();
+loadBlogPosts();
+updateUserUI();
+if (userToken) syncFavoritesFromServer();

@@ -1721,6 +1721,35 @@ body {
   color: var(--text-secondary);
 }
 
+/* Blog */
+.blog { background: var(--bg); }
+.blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 28px; }
+.blog-card { background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform var(--transition), box-shadow var(--transition); }
+.blog-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.blog-image { width: 100%; height: 200px; overflow: hidden; }
+.blog-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.blog-card:hover .blog-image img { transform: scale(1.08); }
+.blog-body { padding: 20px; }
+.blog-date { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+.blog-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+.blog-excerpt { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; }
+.blog-read-more { font-size: 14px; font-weight: 600; color: var(--primary); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.blog-read-more:hover { gap: 10px; }
+.blog-read-more i { font-size: 12px; }
+
+/* User Menu */
+.btn-user { width: 40px; height: 40px; background: var(--muted); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); font-size: 18px; transition: var(--transition); }
+.btn-user:hover { background: var(--primary); color: var(--white); }
+.user-menu { position: absolute; top: 100%; right: 0; background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 20px; min-width: 220px; z-index: 100; display: none; margin-top: 8px; }
+.user-menu.open { display: block; }
+.user-menu .btn-search { font-size: 14px; padding: 10px; }
+.user-menu .btn-submit { font-size: 14px; padding: 10px; }
+
+.header-actions { position: relative; }
+
+/* Carousel */
+.carousel-btn:hover { background: rgba(0,0,0,0.8) !important; }
+
 /* Map */
 .map-section {
   background: var(--muted);

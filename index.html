@@ -50,6 +50,7 @@
           <a href="#home">Home</a>
           <a href="#listings">Listings</a>
           <a href="#about">About</a>
+          <a href="#blog">Blog</a>
           <a href="#quiz">Quiz</a>
           <a href="#map">Map</a>
           <a href="#agent">Agent</a>
@@ -60,9 +61,23 @@
           <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
             <i class="fas fa-moon"></i>
           </button>
+          <button class="btn-user" id="userBtn" aria-label="Account" onclick="toggleUserMenu()">
+            <i class="far fa-user"></i>
+          </button>
           <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">
             <i class="fas fa-bars"></i>
           </button>
+        </div>
+        <div class="user-menu" id="userMenu">
+          <div id="userMenuLoggedOut">
+            <button class="btn-search" style="width:100%" onclick="showAuthModal('login')">Sign In</button>
+            <button class="btn-submit btn-secondary" style="width:100%;margin-top:8px" onclick="showAuthModal('register')">Create Account</button>
+          </div>
+          <div id="userMenuLoggedIn" style="display:none">
+            <p style="font-weight:600;margin-bottom:8px" id="userMenuName"></p>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px" id="userMenuEmail"></p>
+            <button class="btn-submit" style="width:100%" onclick="logoutUser()">Sign Out</button>
+          </div>
         </div>
       </div>
     </div>
@@ -193,6 +208,16 @@
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="section blog" id="blog">
+    <div class="container">
+      <div class="section-header">
+        <h2>Latest from the Blog</h2>
+        <p>Real estate market insights, tips, and local guides</p>
+      </div>
+      <div class="blog-grid" id="blogGrid"></div>
     </div>
   </section>
 
@@ -475,6 +500,38 @@
       </div>
     </div>
   </footer>
+
+  <div class="modal-overlay" id="authModal" style="display:none">
+    <div class="modal" style="max-width:400px">
+      <button class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
+      <div class="modal-body" style="padding:32px">
+        <div style="text-align:center;margin-bottom:24px">
+          <h3 id="authModalTitle" style="font-size:22px">Sign In</h3>
+          <p style="color:var(--text-secondary);font-size:14px" id="authModalSub">Welcome back!</p>
+        </div>
+        <form id="authForm">
+          <div id="authNameField" class="field" style="margin-bottom:14px;display:none">
+            <label>Name</label>
+            <input type="text" id="authName" required>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Email</label>
+            <input type="email" id="authEmail" required>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Password</label>
+            <input type="password" id="authPassword" required minlength="6">
+          </div>
+          <p class="login-error" id="authError" style="margin-bottom:12px"></p>
+          <button type="submit" class="btn-submit" style="width:100%" id="authBtn">Sign In</button>
+        </form>
+        <p style="text-align:center;margin-top:16px;font-size:14px;color:var(--text-secondary)">
+          <span id="authToggleText">Don't have an account?</span>
+          <a href="#" onclick="toggleAuthMode()" style="color:var(--primary);font-weight:600" id="authToggleLink">Register</a>
+        </p>
+      </div>
+    </div>
+  </div>
 
   <script src="config.js"></script>
   <script src="app.js"></script>
