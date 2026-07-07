@@ -625,9 +625,9 @@ function logoutUser() {
 async function syncFavoritesFromServer() {
   if (!userToken) return;
   try {
-    const res = await fetch(`${API_URL}/api/users/favorites/ids`, {
-      headers: { 'Authorization': `Bearer ${userToken}` }
-    });
+      const res = await fetch(`${API_URL}/api/users/favorites`, {
+        headers: { 'Authorization': `Bearer ${userToken}` }
+      });
     const ids = await res.json();
     favorites = new Set(ids);
     localStorage.setItem('favs', JSON.stringify([...favorites]));
