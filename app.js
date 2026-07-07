@@ -64,6 +64,7 @@ function createPropertyCard(p) {
     <div class="property-image">
       <img src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22><rect fill=%22%23d1d5db%22 width=%22600%22 height=%22400%22/><text fill=%22%236b7280%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>No Image</text></svg>'">
       <span class="property-badge ${p.badge === 'sale' ? 'badge-sale' : 'badge-rent'}">${p.badge === 'sale' ? 'For Sale' : 'For Rent'}</span>
+      <span class="photo-count"><i class="fas fa-camera"></i> ${p.gallery && p.gallery.length > 0 ? p.gallery.length + 1 : 1}</span>
       <button class="property-fav" data-id="${p.id}"><i class="far fa-heart"></i></button>
     </div>
     <div class="property-body">
@@ -657,16 +658,24 @@ function initCarousel(modalImageEl, images) {
   if (!images || images.length === 0) return;
   let current = 0;
   modalImageEl.innerHTML = `
-    <div class="carousel" style="position:relative;width:100%;height:100%">
-      <img src="${images[0]}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+    <div class="carousel" style="position:relative;width:100%;height:100%;display:flex;flex-direction:column">
+      <div class="carousel-main" style="position:relative;flex:1;min-height:0">
+        <img src="${images[0]}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+        ${images.length > 1 ? `
+          <button class="carousel-btn carousel-prev" onclick="carouselMove(-1)" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-left"></i></button>
+          <button class="carousel-btn carousel-next" onclick="carouselMove(1)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-right"></i></button>
+          <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;padding:2px 12px;border-radius:12px;font-size:12px;z-index:5" id="carouselCounter">1 / ${images.length}</div>
+        ` : ''}
+      </div>
       ${images.length > 1 ? `
-        <button class="carousel-btn carousel-prev" onclick="carouselMove(-1)" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-left"></i></button>
-        <button class="carousel-btn carousel-next" onclick="carouselMove(1)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-right"></i></button>
-        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;padding:2px 12px;border-radius:12px;font-size:12px;z-index:5" id="carouselCounter">1 / ${images.length}</div>
+        <div class="carousel-thumbs" style="display:flex;gap:6px;padding:8px;overflow-x:auto;background:#111;flex-shrink:0">
+          ${images.map((src, i) => `<img src="${src}" onclick="carouselGo(${i})" style="width:60px;height:45px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:${i === 0 ? 1 : 0.5};border:${i === 0 ? '2px solid var(--primary)' : '2px solid transparent'};flex-shrink:0;transition:opacity 0.2s,border 0.2s" data-index="${i}">`).join('')}
+        </div>
       ` : ''}
     </div>`;
   window._carouselImages = images;
-  window._carouselImg = modalImageEl.querySelector('img');
+  window._carouselThumbs = modalImageEl.querySelectorAll('.carousel-thumbs img');
+  window._carouselImg = modalImageEl.querySelector('.carousel-main img');
 }
 
 function carouselMove(dir) {
@@ -676,9 +685,28 @@ function carouselMove(dir) {
   let current = images.indexOf(img.src);
   if (current === -1) current = 0;
   current = (current + dir + images.length) % images.length;
-  img.src = images[current];
+  goToImage(current);
+}
+
+function carouselGo(index) {
+  goToImage(index);
+}
+
+function goToImage(index) {
+  const images = window._carouselImages;
+  const img = window._carouselImg;
+  const thumbs = window._carouselThumbs;
+  if (!images || !img || index < 0 || index >= images.length) return;
+  img.src = images[index];
   const counter = document.getElementById('carouselCounter');
-  if (counter) counter.textContent = `${current + 1} / ${images.length}`;
+  if (counter) counter.textContent = `${index + 1} / ${images.length}`;
+  if (thumbs) {
+    thumbs.forEach((t, i) => {
+      t.style.opacity = i === index ? '1' : '0.5';
+      t.style.border = i === index ? '2px solid var(--primary)' : '2px solid transparent';
+    });
+    thumbs[index]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
 }
 
 /* Override openModal for gallery */

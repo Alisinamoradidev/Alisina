@@ -115,7 +115,7 @@
             <div class="field"><label>Lng</label><input type="number" step="any" id="pfLng"></div>
           </div>
           <div class="field"><label>Main Image URL</label><input type="url" id="pfImage" placeholder="https://..."><input type="file" accept="image/*" onchange="uploadImage(this, 'pfImage')" style="margin-top:6px"></div>
-          <div class="field"><label>Gallery Images (one URL per line)</label><textarea id="pfGallery" rows="3" placeholder="https://...&#10;https://...&#10;https://..."></textarea><input type="file" accept="image/*" onchange="uploadImage(this, 'pfGallery', true)" style="margin-top:6px"></div>
+          <div class="field"><label>Gallery Images (one URL per line)</label><textarea id="pfGallery" rows="3" placeholder="https://...&#10;https://...&#10;https://..."></textarea><input type="file" accept="image/*" multiple onchange="uploadImage(this, 'pfGallery', true)" style="margin-top:6px"></div>
           <div class="field"><label>Description</label><textarea id="pfDescription" rows="3"></textarea></div>
           <div class="form-actions">
             <button type="button" class="btn-outline" onclick="closePropertyForm()">Cancel</button>

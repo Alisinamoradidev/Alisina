@@ -12,20 +12,26 @@ function api(path, options = {}) {
 }
 
 async function uploadImage(input, targetId, append) {
-  const file = input.files?.[0];
-  if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { alert('Image too large (max 3MB)'); input.value = ''; return; }
-  const reader = new FileReader();
-  reader.onload = async () => {
+  const files = input.files;
+  if (!files || files.length === 0) return;
+  input.disabled = true;
+  const el = document.getElementById(targetId);
+  for (const file of files) {
+    if (file.size > 3 * 1024 * 1024) { alert(`"${file.name}" too large (max 3MB), skipped`); continue; }
     try {
-      const data = await api('/api/upload', { method: 'POST', body: JSON.stringify({ file: reader.result, name: file.name }) });
-      const el = document.getElementById(targetId);
-      if (append) el.value += (el.value ? '\n' : '') + data.url;
-      else el.value = data.url;
-    } catch (err) { alert(err.message); }
-    input.value = '';
-  };
-  reader.readAsDataURL(file);
+      const data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const result = await api('/api/upload', { method: 'POST', body: JSON.stringify({ file: data, name: file.name }) });
+      if (append) el.value += (el.value ? '\n' : '') + result.url;
+      else el.value = result.url;
+    } catch (err) { alert(`Failed to upload "${file.name}": ${err.message}`); }
+  }
+  input.value = '';
+  input.disabled = false;
 }
 
 /* Auth */
