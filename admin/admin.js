@@ -11,6 +11,23 @@ function api(path, options = {}) {
   });
 }
 
+async function uploadImage(input, targetId, append) {
+  const file = input.files?.[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { alert('Image too large (max 3MB)'); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const data = await api('/api/upload', { method: 'POST', body: JSON.stringify({ file: reader.result, name: file.name }) });
+      const el = document.getElementById(targetId);
+      if (append) el.value += (el.value ? '\n' : '') + data.url;
+      else el.value = data.url;
+    } catch (err) { alert(err.message); }
+    input.value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
 /* Auth */
 const loginView = document.getElementById('loginView');
 const adminView = document.getElementById('adminView');

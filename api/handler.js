@@ -270,6 +270,25 @@ module.exports = async (req, res) => {
       }
     }
 
+    /* Upload */
+    if (path === '/upload' && method === 'POST') {
+      const { file, name } = body;
+      if (!file || !name) return res.status(400).json({ error: 'file and name required' });
+      const base64Data = file.replace(/^data:image\/\w+;base64,/, '');
+      const size = Buffer.byteLength(base64Data, 'base64');
+      if (size > 3 * 1024 * 1024) return res.status(413).json({ error: 'File too large (max 3MB)' });
+      const { data: buckets } = await supabase.storage.listBuckets();
+      if (!buckets?.some(b => b.name === 'property-images')) {
+        const { error: ce } = await supabase.storage.createBucket('property-images', { public: true });
+        if (ce && !ce.message?.includes('already exists')) throw ce;
+      }
+      const filename = `${Date.now()}-${name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const { error: ue } = await supabase.storage.from('property-images').upload(filename, Buffer.from(base64Data, 'base64'), { contentType: file.split(';')[0].split(':')[1] || 'image/jpeg', upsert: false });
+      if (ue) throw ue;
+      const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(filename);
+      return res.status(200).json({ url: publicUrl });
+    }
+
     return res.status(404).json({ error: 'Not found', path, method });
 
   } catch (err) {
