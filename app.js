@@ -183,7 +183,24 @@ $('mobileToggle').addEventListener('click', () => nav.classList.toggle('active')
 nav.querySelectorAll('a').forEach(l => l.addEventListener('click', () => nav.classList.remove('active')));
 document.addEventListener('click', e => { if (!e.target.closest('.header-inner')) nav.classList.remove('active'); });
 
-contactForm.addEventListener('submit', () => { const b = contactForm.querySelector('.btn-submit'); b.textContent = 'Sending...'; b.disabled = true; });
+contactForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = contactForm.querySelector('.btn-submit');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  const fd = new FormData(contactForm);
+  if (fd.get('_honey')) return;
+  const payload = { name: fd.get('name'), email: fd.get('email'), phone: fd.get('phone'), inquiry_type: fd.get('inquiry_type'), property: fd.get('property'), message: fd.get('message') };
+  try {
+    const res = await fetch(`${API_URL}/api/contact`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (!res.ok) throw new Error('Failed to save');
+    contactForm.submit();
+  } catch {
+    btn.textContent = 'Send Message';
+    btn.disabled = false;
+    showToast('Could not send. Try again.');
+  }
+});
 if (window.location.search.includes('sent=true')) { showToast('Message sent! I\'ll get back to you soon.'); window.history.replaceState({}, '', window.location.pathname + '#contact'); }
 
 function showToast(msg) {
