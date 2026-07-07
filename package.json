@@ -1,0 +1,10 @@
+{
+  "name": "alisina-real-estate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Alisina Moradi - Real Estate Agent Website",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  }
+}
