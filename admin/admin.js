@@ -283,6 +283,7 @@ async function loadMessages() {
     data.messages.forEach(m => {
       const div = document.createElement('div'); div.className = 'msg-card';
       div.innerHTML = `
+        <button class="btn-danger btn-sm" onclick="deleteMessage(${m.id})" style="float:right"><i class="fas fa-trash"></i></button>
         <h4>${m.name} <small style="color:var(--text-muted);font-weight:400">(${m.email})</small></h4>
         <div class="meta">
           <span><i class="far fa-calendar"></i> ${m.created_at}</span>
@@ -308,6 +309,7 @@ async function loadSchedules() {
     data.schedules.forEach(s => {
       const div = document.createElement('div'); div.className = 'sched-card';
       div.innerHTML = `
+        <button class="btn-danger btn-sm" onclick="deleteSchedule(${s.id})" style="float:right"><i class="fas fa-trash"></i></button>
         <h4>${s.name} <small style="color:var(--text-muted);font-weight:400">(${s.email})</small></h4>
         <div class="meta">
           <span><i class="far fa-calendar"></i> ${s.date} at ${s.time}</span>
@@ -318,6 +320,18 @@ async function loadSchedules() {
       list.appendChild(div);
     });
   } catch {}
+}
+
+async function deleteMessage(id) {
+  if (!confirm('Delete this message?')) return;
+  try { await api(`/api/contact/messages/${id}`, { method: 'DELETE' }); loadMessages(); loadDashboard(); }
+  catch (err) { alert(err.message); }
+}
+
+async function deleteSchedule(id) {
+  if (!confirm('Delete this schedule?')) return;
+  try { await api(`/api/contact/schedules/${id}`, { method: 'DELETE' }); loadSchedules(); loadDashboard(); }
+  catch (err) { alert(err.message); }
 }
 
 /* CSV Export */

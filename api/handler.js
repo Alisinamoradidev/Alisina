@@ -174,6 +174,13 @@ module.exports = async (req, res) => {
       return res.status(200).json({ schedules: data || [], total: count, page, pages: Math.ceil(count / limit) });
     }
 
+    const schedDelMatch = path.match(/^\/contact\/schedules\/(\d+)$/);
+    if (schedDelMatch && method === 'DELETE') {
+      const { error } = await supabase.from('schedules').delete().eq('id', schedDelMatch[1]);
+      if (error) throw error;
+      return res.status(200).json({ message: 'Deleted' });
+    }
+
     /* Auth */
     if (path === '/auth/login' && method === 'POST') {
       const { username, password } = body;
