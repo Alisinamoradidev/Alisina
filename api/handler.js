@@ -723,6 +723,29 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       }
     }
 
+    /* Refund all completed payments (admin only — test mode cleanup) */
+    if (path === '/payments/refund-all' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      try {
+        const { data: payments } = await supabase.from('payments').select('*').eq('status', 'completed').not('stripe_payment_intent', 'is', null);
+        if (!payments?.length) return res.status(200).json({ message: 'No completed payments to refund' });
+        const stripe = getStripe();
+        let refunded = 0;
+        for (const p of payments) {
+          try {
+            await stripe.refunds.create({ payment_intent: p.stripe_payment_intent });
+            await supabase.from('payments').update({ status: 'refunded', updated_at: new Date().toISOString() }).eq('id', p.id);
+            refunded++;
+          } catch {}
+        }
+        return res.status(200).json({ message: `Refunded ${refunded} of ${payments.length} payments` });
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
+    }
+
     /* Email test endpoint (admin only) */
     if (path === '/payments/test-email' && method === 'POST') {
       const auth = req.headers.authorization;

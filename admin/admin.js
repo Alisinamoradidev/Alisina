@@ -690,6 +690,11 @@ async function deleteSelectedPayments() {
   try { await api('/api/payments/delete', { method: 'POST', body: JSON.stringify({ ids }) }); loadPayments(); updateSelectedCount(); }
   catch (err) { alert(err.message); }
 }
+async function refundAllPayments() {
+  if (!confirm('Refund ALL completed payments via Stripe? This will void them in test mode.')) return;
+  try { const r = await api('/api/payments/refund-all', { method: 'POST' }); alert(r.message); loadPayments(); }
+  catch (err) { alert(err.message); }
+}
 async function deleteAllPayments() {
   if (!confirm('Delete ALL payment records?')) return;
   try { await api('/api/payments', { method: 'DELETE' }); loadPayments(); }
