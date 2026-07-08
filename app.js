@@ -149,17 +149,21 @@ function getFilteredAndSorted() {
   const pv = priceFilter.value;
   const tv = typeFilter.value;
   const sv = sortSelect.value;
+  const bv = parseInt(document.getElementById('bedsFilter')?.value) || 0;
+  const baw = parseInt(document.getElementById('bathsFilter')?.value) || 0;
   let filtered = properties.filter(p => {
     const ms = !q || p.title.toLowerCase().includes(q) || p.location.toLowerCase().includes(q) || p.type.toLowerCase().includes(q);
-    return ms && matchesPrice(p.price, pv) && (!tv || p.type === tv);
+    return ms && matchesPrice(p.price, pv) && (!tv || p.type === tv) && p.beds >= bv && p.baths >= baw;
   });
   return sortProperties(filtered, sv);
 }
 
 function updateListings() { renderProperties(getFilteredAndSorted()); }
 
-$('searchForm').addEventListener('submit', e => { e.preventDefault(); updateListings(); });
-[searchInput, priceFilter, typeFilter, sortSelect].forEach(el => { el.addEventListener('input', updateListings); el.addEventListener('change', updateListings); });
+$('searchForm').addEventListener('submit', e => { e.preventDefault(); currentPage = 1; updateListings(); });
+document.getElementById('bedsFilter')?.addEventListener('change', () => { currentPage = 1; updateListings(); });
+document.getElementById('bathsFilter')?.addEventListener('change', () => { currentPage = 1; updateListings(); });
+[searchInput, priceFilter, typeFilter, sortSelect].forEach(el => { el.addEventListener('input', () => { currentPage = 1; updateListings(); }); el.addEventListener('change', () => { currentPage = 1; updateListings(); }); });
 
 listingsGrid.addEventListener('click', e => {
   const favBtn = e.target.closest('.property-fav');
