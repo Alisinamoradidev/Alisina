@@ -7,6 +7,31 @@ const SITE_URL = process.env.SITE_URL || 'https://alisina-nu.vercel.app';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+function emailLayout(title, bodyContent) {
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:24px 0">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+        <tr><td style="background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:32px 40px;text-align:center">
+          <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:600">${title}</h1>
+        </td></tr>
+        <tr><td style="padding:32px 40px;color:#334155;font-size:15px;line-height:1.6">
+          ${bodyContent}
+        </td></tr>
+        <tr><td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;color:#94a3b8;font-size:13px">
+          Alisina Realty &bull; All rights reserved
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`.trim();
+}
+
 async function getStripe() {
   const { data } = await supabase.from('settings').select('value').eq('key', 'stripe_secret_key').maybeSingle();
   const secret = data?.value?.secret || process.env.STRIPE_SECRET_KEY || '';
@@ -421,30 +446,6 @@ module.exports = async (req, res) => {
           const propName = prop?.title || `Property #${property_id}`;
           const customerName = session.customer_details?.name || 'Valued Customer';
           const customerEmail = session.customer_details?.email || metaEmail;
-          function emailLayout(title, bodyContent) {
-            return `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:24px 0">
-    <tr><td align="center">
-      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
-        <tr><td style="background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:32px 40px;text-align:center">
-          <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:600">${title}</h1>
-        </td></tr>
-        <tr><td style="padding:32px 40px;color:#334155;font-size:15px;line-height:1.6">
-          ${bodyContent}
-        </td></tr>
-        <tr><td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;color:#94a3b8;font-size:13px">
-          Alisina Realty &bull; All rights reserved
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`.trim();
-          }
           if (gmailUser && gmailPass) {
             const nodemailer = require('nodemailer');
             const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
