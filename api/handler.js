@@ -617,6 +617,23 @@ module.exports = async (req, res) => {
       }
     }
 
+    /* TEMP — trigger a test payment to fire webhook */
+    if (path === '/payments/test-trigger' && method === 'POST') {
+      const stripe = await getStripe();
+      if (!stripe) return res.status(503).json({ error: 'No stripe key' });
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{ price_data: { currency: 'usd', product_data: { name: 'Test', description: 'Test' }, unit_amount: 1000 }, quantity: 1 }],
+        mode: 'payment',
+        success_url: `${SITE_URL}?test=ok`,
+        cancel_url: `${SITE_URL}?test=cancel`,
+        metadata: { property_id: '1', type: 'deposit' },
+        customer_email: 'alisinam485@gmail.com',
+      });
+      const paymentIntent = await stripe.paymentIntents.confirm(session.payment_intent, { payment_method: 'pm_card_visa' });
+      return res.status(200).json({ session_id: session.id, pi_status: paymentIntent.status });
+    }
+
     /* Email test endpoint (admin only) */
     if (path === '/payments/test-email' && method === 'POST') {
       const auth = req.headers.authorization;
