@@ -4,9 +4,11 @@
       "maxDuration": 10
     }
   },
-  "rewrites": [
+  "routes": [
     { "source": "/api/(.*)", "destination": "/api/handler" },
     { "source": "/admin", "destination": "/admin/index.html" },
-    { "source": "/admin/", "destination": "/admin/index.html" }
+    { "source": "/admin/", "destination": "/admin/index.html" },
+    { "handle": "filesystem" },
+    { "source": "/(.*)", "destination": "/404.html" }
   ]
 }
