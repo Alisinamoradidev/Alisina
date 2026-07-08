@@ -164,6 +164,25 @@ ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "testimonials_read" ON testimonials FOR SELECT USING (true);
 CREATE POLICY "testimonials_all" ON testimonials FOR ALL USING (true);
 
+-- 7. Newsletter subscribers
+CREATE TABLE IF NOT EXISTS subscribers (
+  id SERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "subscribers_insert" ON subscribers FOR INSERT WITH CHECK (true);
+CREATE POLICY "subscribers_read" ON subscribers FOR SELECT USING (true);
+
+-- 8. Rate limiting
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT PRIMARY KEY,
+  count INTEGER DEFAULT 1,
+  expires_at TIMESTAMPTZ NOT NULL
+);
+ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "rate_limits_all" ON rate_limits FOR ALL USING (true);
+
 INSERT INTO posts (title, slug, excerpt, content, image, author, published) VALUES
 ('2026 Real Estate Market Trends', '2026-real-estate-market-trends',
 'Discover the key trends shaping the real estate market in 2026.',

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel — Alisina Real Estate</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
@@ -57,6 +59,10 @@
             <div class="stat-card"><div class="stat-value" id="statTestimonials">—</div><div class="stat-label">Testimonials</div></div>
             <div class="stat-card"><div class="stat-value" id="statUsers">—</div><div class="stat-label">Site Users</div></div>
           </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px">
+            <div style="background:var(--bg-card);border-radius:12px;padding:16px"><h3 style="margin-bottom:12px">Payments by Month</h3><canvas id="chartPayments" height="200"></canvas></div>
+            <div style="background:var(--bg-card);border-radius:12px;padding:16px"><h3 style="margin-bottom:12px">Property Distribution</h3><canvas id="chartProperties" height="200"></canvas></div>
+          </div>
         </div>
 
         <div id="viewProperties" class="view">
@@ -64,7 +70,9 @@
             <h2>Properties</h2>
             <div class="view-actions">
               <input type="text" id="propSearch" placeholder="Search..." class="search-input">
-              <button class="btn-outline" onclick="exportCSV('properties')"><i class="fas fa-download"></i> CSV</button>
+              <button class="btn-outline" onclick="exportCSV('properties')"><i class="fas fa-download"></i> Export CSV</button>
+              <button class="btn-outline" onclick="document.getElementById('csvFileInput').click()"><i class="fas fa-upload"></i> Import CSV</button>
+              <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="importCSV(this)">
               <button class="btn-danger" onclick="deleteAllProperties()"><i class="fas fa-trash"></i> Delete All</button>
               <button class="btn-primary" onclick="openPropertyForm()"><i class="fas fa-plus"></i> Add</button>
             </div>
@@ -184,7 +192,7 @@
           <div class="field"><label>Title *</label><input type="text" id="pfPostTitle" required></div>
           <div class="field"><label>Slug * (URL-friendly, e.g. market-trends-2026)</label><input type="text" id="pfPostSlug" required></div>
           <div class="field"><label>Excerpt (short summary)</label><textarea id="pfPostExcerpt" rows="2"></textarea></div>
-          <div class="field"><label>Content * (HTML supported)</label><textarea id="pfPostContent" rows="8" style="font-family:monospace"></textarea></div>
+          <div class="field"><label>Content *</label><div id="pfPostEditor" style="min-height:300px;margin-bottom:48px"></div><textarea id="pfPostContent" style="display:none"></textarea></div>
           <div class="form-grid" style="grid-template-columns:1fr 1fr">
             <div class="field"><label>Image URL</label><input type="url" id="pfPostImage"><input type="file" accept="image/*" onchange="uploadImage(this, 'pfPostImage')" style="margin-top:6px"></div>
             <div class="field"><label>Author</label><input type="text" id="pfPostAuthor" value="Alisina Moradi"></div>

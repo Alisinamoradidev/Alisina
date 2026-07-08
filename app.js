@@ -66,6 +66,7 @@ const scrollTop = $('scrollTop');
 let favorites = new Set(JSON.parse(localStorage.getItem('favs') || '[]'));
 let currentPage = 1;
 const pageSize = 6;
+let compareItems = [];
 
 function formatPrice(price, badge) {
   if (badge === 'rent') return `$${price.toLocaleString()}/mo`;
@@ -107,10 +108,46 @@ function createPropertyCard(p) {
         <span><i class="fas fa-bath"></i> ${p.baths} Baths</span>
         <span><i class="fas fa-ruler-combined"></i> ${p.sqft.toLocaleString()} sqft</span>
       </div>
+      <button class="btn-compare" data-id="${p.id}" onclick="toggleCompare(${p.id})" title="Compare"><i class="fas ${compareItems.includes(p.id) ? 'fa-check-circle' : 'fa-plus-circle'}"></i></button>
     </div>`;
   setFavIcon(card.querySelector('.property-fav'), p.id);
   return card;
 }
+
+function toggleCompare(id) {
+  const idx = compareItems.indexOf(id);
+  if (idx > -1) { compareItems.splice(idx, 1); } else { if (compareItems.length >= 4) return alert('Compare up to 4 properties'); compareItems.push(id); }
+  updateListings();
+  renderCompareBar();
+}
+
+function renderCompareBar() {
+  const bar = document.getElementById('compareBar');
+  if (!compareItems.length) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  const inner = bar.querySelector('.compare-bar-inner');
+  const items = compareItems.map(id => properties.find(p => p.id === id)).filter(Boolean);
+  inner.innerHTML = items.map(p => `
+    <div class="compare-chip"><span>${p.title}</span><i class="fas fa-times" onclick="toggleCompare(${p.id})"></i></div>
+  `).join('');
+  const btn = bar.querySelector('.compare-btn');
+  btn.style.display = items.length >= 2 ? 'inline-flex' : 'none';
+}
+
+function openCompare() {
+  const items = compareItems.map(id => properties.find(p => p.id === id)).filter(Boolean);
+  if (items.length < 2) return;
+  const labels = ['Price','Type','Beds','Baths','Sqft','Year Built','Location'];
+  const keys = [p => formatPrice(p.price, p.badge), p => p.type, p => p.beds, p => p.baths, p => p.sqft.toLocaleString(), p => p.year || '—', p => p.location];
+  let html = '<table class="compare-table"><thead><tr><th></th>' + items.map(p => `<th><img src="${p.image}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px"><br>${p.title}</th>`).join('') + '</tr></thead><tbody>';
+  labels.forEach((label, i) => {
+    html += `<tr><td><strong>${label}</strong></td>` + items.map(p => `<td>${keys[i](p)}</td>`).join('') + '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('compareModalBody').innerHTML = html;
+  document.getElementById('compareModal').style.display = 'flex';
+}
+function closeCompare() { document.getElementById('compareModal').style.display = 'none'; }
 
 function matchesPrice(price, filter) {
   if (!filter) return true;
@@ -893,6 +930,21 @@ loadPropertiesFromApi();
 tryInitMap();
 loadBlogPosts();
 /* Open property modal if loaded from /property/:id page */
+/* Newsletter subscription */
+document.getElementById('subscribeForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = document.getElementById('subscribeEmail').value.trim();
+  const btn = document.getElementById('subscribeBtn');
+  const msg = document.getElementById('subscribeMsg');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  try {
+    const r = await fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+    const d = await r.json();
+    msg.textContent = d.message || d.error || 'Subscribed!';
+    if (r.ok) document.getElementById('subscribeEmail').value = '';
+  } catch { msg.textContent = 'Failed to subscribe. Try again.'; }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i>'; }
+});
 if (window.__propertyId) {
   const checkProp = setInterval(() => {
     const p = properties.find(x => x.id === window.__propertyId);

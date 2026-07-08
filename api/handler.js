@@ -83,6 +83,18 @@ function getAuthUser(auth) {
   } catch { return null; }
 }
 
+async function checkRateLimit(key, maxRequests = 10, windowSec = 60) {
+  const now = new Date();
+  const { data } = await supabase.from('rate_limits').select('*').eq('key', key).maybeSingle();
+  if (!data || new Date(data.expires_at) < now) {
+    await supabase.from('rate_limits').upsert({ key, count: 1, expires_at: new Date(now.getTime() + windowSec * 1000).toISOString() }, { onConflict: 'key' });
+    return true;
+  }
+  if (data.count >= maxRequests) return false;
+  await supabase.from('rate_limits').update({ count: data.count + 1 }).eq('key', key);
+  return true;
+}
+
 module.exports = async (req, res) => {
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
@@ -307,6 +319,8 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     /* Contact */
     if (path === '/contact' && method === 'POST') {
+      const allowed = await checkRateLimit('contact_' + (body.email || 'unknown'), 3, 300);
+      if (!allowed) return res.status(429).json({ error: 'Too many messages. Try again later.' });
       const { data, error } = await supabase.from('contacts').insert(body).select().single();
       if (error) throw error;
       return res.status(200).json({ success: true, message: 'Message received' });
@@ -381,6 +395,8 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     /* Users */
     if (path === '/users/register' && method === 'POST') {
+      const allowed = await checkRateLimit('register_' + (body.email || 'unknown'), 3, 300);
+      if (!allowed) return res.status(429).json({ error: 'Too many registration attempts. Try again later.' });
       const { name, email, password } = body;
 
       const { data: existing } = await supabase.from('site_users').select('id').eq('email', email).maybeSingle();
@@ -395,6 +411,8 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (path === '/users/login' && method === 'POST') {
+      const allowed = await checkRateLimit('login_' + (body.email || 'unknown'), 5, 300);
+      if (!allowed) return res.status(429).json({ error: 'Too many login attempts. Try again later.' });
       const { email, password } = body;
       const { data: user } = await supabase.from('site_users').select('*').eq('email', email).maybeSingle();
       if (!user) return res.status(401).json({ error: 'Invalid email or password' });
@@ -726,6 +744,54 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       } catch (e) {
         return res.status(500).json({ error: e.message, code: e.code });
       }
+    }
+
+    /* Newsletter subscription */
+    if (path === '/subscribe' && method === 'POST') {
+      const allowed = await checkRateLimit('subscribe_' + (body.email || 'unknown'), 3, 300);
+      if (!allowed) return res.status(429).json({ error: 'Too many attempts. Try again later.' });
+      const { email } = body;
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Valid email required' });
+      const { error } = await supabase.from('subscribers').upsert({ email }, { onConflict: 'email' });
+      if (error) throw error;
+      return res.status(201).json({ message: 'Subscribed successfully' });
+    }
+
+    /* CSV import (admin only) */
+    if (path === '/properties/import' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const { csv } = body;
+      if (!csv) return res.status(400).json({ error: 'CSV data required' });
+      const rows = csv.split('\n').filter(r => r.trim());
+      if (rows.length < 2) return res.status(400).json({ error: 'CSV must have header + at least 1 row' });
+      const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+      const required = ['title', 'price'];
+      for (const r of required) { if (!headers.includes(r)) return res.status(400).json({ error: `CSV missing required column: ${r}` }); }
+      const imported = [];
+      for (let i = 1; i < rows.length; i++) {
+        const vals = rows[i].split(',').map(v => v.trim());
+        const obj = {};
+        headers.forEach((h, idx) => { obj[h] = vals[idx] || ''; });
+        const prop = {
+          title: obj.title,
+          location: obj.location || obj.city || '',
+          price: Number(obj.price) || 0,
+          type: obj.type || 'house',
+          beds: Number(obj.beds) || 0,
+          baths: Number(obj.baths) || 0,
+          sqft: Number(obj.sqft) || 0,
+          year: Number(obj.year) || null,
+          image: obj.image || obj.photo || '',
+          badge: obj.badge || obj.status || 'sale',
+          featured: obj.featured === 'true' || obj.featured === 'yes' || false,
+          description: obj.description || '',
+        };
+        const { data, error } = await supabase.from('properties').insert(prop).select().single();
+        if (!error && data) imported.push(data);
+      }
+      return res.status(200).json({ message: `Imported ${imported.length} properties`, count: imported.length });
     }
 
     return res.status(404).json({ error: 'Not found', path, method });

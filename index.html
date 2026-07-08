@@ -216,6 +216,11 @@
         <h3>No properties found</h3>
         <p>Try adjusting your search or filter criteria</p>
       </div>
+      <div id="compareBar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:2px solid var(--primary);padding:12px 24px;z-index:1000;box-shadow:0 -4px 12px rgba(0,0,0,0.1);align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-weight:600;color:var(--text);white-space:nowrap">Compare:</span>
+        <div class="compare-bar-inner" style="display:flex;gap:8px;flex-wrap:wrap;flex:1"></div>
+        <button class="btn-primary btn-sm compare-btn" style="display:none" onclick="openCompare()"><i class="fas fa-arrows-left-right"></i> Compare</button>
+      </div>
     </div>
   </section>
 
@@ -579,6 +584,12 @@
           <a href="#">Villas</a>
         </div>
         <div class="footer-social">
+          <h4>Stay Updated</h4>
+          <form id="subscribeForm" style="display:flex;gap:8px;margin-bottom:16px;max-width:300px">
+            <input type="email" id="subscribeEmail" placeholder="Your email" required style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg-card);color:var(--text)">
+            <button type="submit" class="btn-primary btn-sm" id="subscribeBtn"><i class="fas fa-paper-plane"></i></button>
+          </form>
+          <p id="subscribeMsg" style="font-size:13px;color:var(--text-secondary);margin-bottom:12px"></p>
           <h4>Follow Us</h4>
           <div class="social-icons">
             <a href="https://www.facebook.com/share/1Bc6Bctsqo/" target="_blank" rel="noopener"><i class="fab fa-facebook"></i></a>
@@ -593,6 +604,12 @@
     </div>
   </footer>
 
+  <div class="modal-overlay" id="compareModal" style="display:none">
+    <div class="modal modal-lg">
+      <div class="modal-header"><h3>Compare Properties</h3><button class="modal-close" onclick="closeCompare()">&times;</button></div>
+      <div class="modal-body" id="compareModalBody" style="overflow-x:auto"></div>
+    </div>
+  </div>
   <div class="modal-overlay" id="authModal" style="display:none">
     <div class="modal" style="max-width:400px">
       <button class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>

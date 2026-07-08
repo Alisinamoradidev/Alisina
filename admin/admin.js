@@ -109,14 +109,18 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 });
 
 /* Dashboard */
+let chartPaymentsInstance = null;
+let chartPropsInstance = null;
+
 async function loadDashboard() {
   try {
-    const [props, posts, msgs, scheds, testis] = await Promise.all([
+    const [props, posts, msgs, scheds, testis, payments] = await Promise.all([
       api('/api/properties'),
       api('/api/blog?published=0'),
       api('/api/contact/messages?limit=1'),
       api('/api/contact/schedules?limit=1'),
       api('/api/testimonials'),
+      api('/api/payments'),
     ]);
     document.getElementById('statProperties').textContent = props.length;
     document.getElementById('statFeatured').textContent = props.filter(p => p.featured).length;
@@ -125,6 +129,42 @@ async function loadDashboard() {
     document.getElementById('statSchedules').textContent = scheds.total;
     document.getElementById('statTestimonials').textContent = testis.length;
     document.getElementById('statUsers').textContent = '—';
+
+    /* Payments chart */
+    const byMonth = {};
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    payments.forEach(p => {
+      const d = new Date(p.created_at);
+      const key = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+      byMonth[key] = (byMonth[key] || 0) + p.amount;
+    });
+    const labels = Object.keys(byMonth).slice(-12);
+    const amounts = labels.map(l => byMonth[l]);
+    if (chartPaymentsInstance) chartPaymentsInstance.destroy();
+    const ctx1 = document.getElementById('chartPayments');
+    if (ctx1 && labels.length) {
+      chartPaymentsInstance = new Chart(ctx1, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Revenue ($)', data: amounts, backgroundColor: '#2563eb', borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v.toLocaleString() } } } }
+      });
+    }
+
+    /* Property type distribution */
+    const typeCount = {};
+    props.forEach(p => { typeCount[p.type] = (typeCount[p.type] || 0) + 1; });
+    const typeLabels = Object.keys(typeCount);
+    const typeValues = Object.values(typeCount);
+    const colors = ['#2563eb','#059669','#d97706','#7c3aed','#dc2626'];
+    if (chartPropsInstance) chartPropsInstance.destroy();
+    const ctx2 = document.getElementById('chartProperties');
+    if (ctx2 && typeLabels.length) {
+      chartPropsInstance = new Chart(ctx2, {
+        type: 'doughnut',
+        data: { labels: typeLabels, datasets: [{ data: typeValues, backgroundColor: colors.slice(0, typeLabels.length) }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
   } catch {}
 }
 
@@ -307,6 +347,11 @@ async function loadPosts() {
   } catch {}
 }
 
+let quillEditor = null;
+document.addEventListener('DOMContentLoaded', () => {
+  quillEditor = new Quill('#pfPostEditor', { theme: 'snow', modules: { toolbar: [['bold','italic','underline','strike'], [{list:'ordered'},{list:'bullet'}], ['link','image','blockquote','code-block'], [{header:[1,2,3,false]}], ['clean']] } });
+});
+
 function openPostForm(post) {
   editingPostId = post ? post.id : null;
   document.getElementById('postFormTitle').textContent = post ? 'Edit Post' : 'New Post';
@@ -314,7 +359,8 @@ function openPostForm(post) {
   document.getElementById('pfPostTitle').value = post ? post.title : '';
   document.getElementById('pfPostSlug').value = post ? post.slug : '';
   document.getElementById('pfPostExcerpt').value = post ? post.excerpt || '' : '';
-  document.getElementById('pfPostContent').value = post ? post.content || '' : '';
+  if (quillEditor) { if (post && post.content) quillEditor.root.innerHTML = post.content; else quillEditor.root.innerHTML = ''; }
+  document.getElementById('pfPostContent').value = '';
   document.getElementById('pfPostImage').value = post ? post.image || '' : '';
   document.getElementById('pfPostAuthor').value = post ? post.author || 'Alisina Moradi' : 'Alisina Moradi';
   document.getElementById('pfPostPublished').value = post ? (post.published ? 1 : 0) : 1;
@@ -329,7 +375,7 @@ document.getElementById('postForm').addEventListener('submit', async e => {
     title: document.getElementById('pfPostTitle').value,
     slug: document.getElementById('pfPostSlug').value,
     excerpt: document.getElementById('pfPostExcerpt').value,
-    content: document.getElementById('pfPostContent').value,
+    content: quillEditor ? quillEditor.root.innerHTML : document.getElementById('pfPostContent').value,
     image: document.getElementById('pfPostImage').value,
     author: document.getElementById('pfPostAuthor').value,
     published: parseInt(document.getElementById('pfPostPublished').value) === 1,
@@ -559,6 +605,20 @@ async function exportCSV(type) {
     const a = document.createElement('a'); a.href = url; a.download = `${type}-export.csv`;
     a.click(); URL.revokeObjectURL(url);
   } catch {}
+}
+
+async function importCSV(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  input.disabled = true;
+  try {
+    const text = await file.text();
+    const res = await api('/api/properties/import', { method: 'POST', body: JSON.stringify({ csv: text }) });
+    alert(res.message || `Imported ${res.count} properties`);
+    loadProperties();
+    loadDashboard();
+  } catch (err) { alert('Import failed: ' + err.message); }
+  finally { input.value = ''; input.disabled = false; }
 }
 
 /* Payments */
