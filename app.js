@@ -13,14 +13,16 @@ let properties = [
 async function loadPropertiesFromApi() {
   try {
     const res = await fetch(`${API_URL}/api/properties`);
-    if (!res.ok) return;
+    if (!res.ok) return hideSkeletons();
     const data = await res.json();
     if (data && data.length > 0) {
       properties = data;
       updateListings();
     }
-  } catch {}
+    hideSkeletons();
+  } catch { hideSkeletons(); }
 }
+function hideSkeletons() { document.querySelectorAll('.skeleton-card').forEach(e => e.remove()); }
 
 const $ = id => document.getElementById(id);
 const listingsGrid = $('listingsGrid');
@@ -786,7 +788,7 @@ setFavIcon = function(btn, id) {
 async function loadBlogPosts() {
   try {
     const res = await fetch(`${API_URL}/api/blog`);
-    if (!res.ok) return;
+    if (!res.ok) return hideBlogSkeletons();
     const posts = await res.json();
     const grid = document.getElementById('blogGrid');
     if (!posts.length) { grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">No posts yet. Check back soon!</p>'; return; }
@@ -801,8 +803,10 @@ async function loadBlogPosts() {
         </div>
       </div>
     `).join('');
-  } catch {}
+    hideBlogSkeletons();
+  } catch { hideBlogSkeletons(); }
 }
+function hideBlogSkeletons() { document.querySelectorAll('#blogGrid .skeleton-card').forEach(e => e.remove()); }
 
 /* Update favorites toggle — save to server if logged in */
 const _origFavToggle = function(id) {
