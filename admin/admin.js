@@ -501,8 +501,8 @@ async function loadStripeSettings() {
     document.getElementById('sfNotifEmail').value = (notif && notif.email) ? notif.email : '';
   } catch {}
   try {
-    const rk = await api('/api/payments/settings?key=resend_api_key');
-    document.getElementById('sfResendKey').value = (rk && rk.key) ? rk.key : '';
+    const smtp = await api('/api/payments/settings?key=gmail_smtp');
+    document.getElementById('sfGmailEmail').value = (smtp && smtp.email) ? smtp.email : '';
   } catch {}
 }
 
@@ -526,11 +526,12 @@ document.getElementById('stripeForm')?.addEventListener('submit', async e => {
         body: JSON.stringify({ key: 'notification_email', value: { email: notifEmail } })
       });
     }
-    const resendKey = document.getElementById('sfResendKey').value.trim();
-    if (resendKey) {
+    const gmailEmail = document.getElementById('sfGmailEmail').value.trim();
+    const gmailPass = document.getElementById('sfGmailPass').value.trim();
+    if (gmailEmail && gmailPass) {
       await api('/api/payments/settings', {
         method: 'PUT',
-        body: JSON.stringify({ key: 'resend_api_key', value: { key: resendKey } })
+        body: JSON.stringify({ key: 'gmail_smtp', value: { email: gmailEmail, appPassword: gmailPass } })
       });
     }
     alert('Settings saved');

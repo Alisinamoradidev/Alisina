@@ -413,8 +413,9 @@ module.exports = async (req, res) => {
           /* Send email notifications */
           const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
           const toEmail = notif?.value?.email;
-          const { data: resendKey } = await supabase.from('settings').select('value').eq('key', 'resend_api_key').maybeSingle();
-          const resendApiKey = resendKey?.value?.key || process.env.RESEND_API_KEY;
+          const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
+          const gmailUser = gmailConfig?.value?.email;
+          const gmailPass = gmailConfig?.value?.appPassword;
           const { data: prop } = await supabase.from('properties').select('title').eq('id', parseInt(property_id) || 0).maybeSingle();
           const propName = prop?.title || `Property #${property_id}`;
           const customerName = session.customer_details?.name || 'Valued Customer';
@@ -443,47 +444,46 @@ module.exports = async (req, res) => {
 </body>
 </html>`.trim();
           }
-          const siteUrl = process.env.SITE_URL || 'https://alisina-nu.vercel.app';
-          async function sendResend(to, subject, html) {
-            if (!resendApiKey) return;
-            await fetch('https://api.resend.com/emails', {
-              method: 'POST', headers: { 'Authorization': `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ from: 'Alisina Realty <onboarding@resend.dev>', to: [to], subject, html }),
+          async function sendGmail(to, subject, html) {
+            if (!gmailUser || !gmailPass) return;
+            const nodemailer = require('nodemailer');
+            const transporter = nodemailer.createTransport({
+              host: 'smtp.gmail.com', port: 587, secure: false,
+              auth: { user: gmailUser, pass: gmailPass },
             });
+            await transporter.sendMail({ from: `"Alisina Realty" <${gmailUser}>`, to, subject, html });
           }
+          const emailPromises = [];
           if (toEmail) {
-            try {
-              await sendResend(toEmail, `New payment received — ${propName}`,
-                emailLayout('New Payment Received', `
-                  <p style="margin:0 0 6px;color:#64748b;font-size:14px">A new payment has come through.</p>
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${customerEmail || 'No email'}</td></tr>
-                  </table>
-                  <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
-                `)
-              );
-            } catch {}
+            emailPromises.push(sendGmail(toEmail, `New payment received — ${propName}`,
+              emailLayout('New Payment Received', `
+                <p style="margin:0 0 6px;color:#64748b;font-size:14px">A new payment has come through.</p>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
+                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
+                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
+                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${customerEmail || 'No email'}</td></tr>
+                </table>
+                <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
+              `)
+            ));
           }
           if (customerEmail) {
-            try {
-              await sendResend(customerEmail, `Payment Confirmation — ${propName}`,
-                emailLayout('Payment Confirmed', `
-                  <p style="margin:0 0 6px;color:#334155">Dear ${customerName},</p>
-                  <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
-                  </table>
-                  <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
-                  <p style="color:#64748b;font-size:14px;margin-top:20px">Thank you for choosing us. If you have any questions, feel free to reply to this email.</p>
-                `)
-              );
-            } catch {}
+            emailPromises.push(sendGmail(customerEmail, `Payment Confirmation — ${propName}`,
+              emailLayout('Payment Confirmed', `
+                <p style="margin:0 0 6px;color:#334155">Dear ${customerName},</p>
+                <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
+                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
+                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
+                </table>
+                <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
+                <p style="color:#64748b;font-size:14px;margin-top:20px">Thank you for choosing us. If you have any questions, feel free to reply to this email.</p>
+              `)
+            ));
           }
+          await Promise.allSettled(emailPromises);
         } catch (e) {
           console.error('Webhook insert error:', e?.code, e?.message);
         }
