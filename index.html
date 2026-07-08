@@ -184,6 +184,11 @@
         <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w60"></div><div class="sk-line w80"></div><div class="sk-line w40"></div></div></div>
         <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w60"></div><div class="sk-line w80"></div><div class="sk-line w40"></div></div></div>
       </div>
+      <div class="pagination" id="pagination" style="display:none;justify-content:center;gap:8px;margin-top:32px;align-items:center">
+        <button class="btn-outline btn-sm" id="prevPage" onclick="goToPage(currentPage - 1)"><i class="fas fa-chevron-left"></i> Prev</button>
+        <div id="pageNumbers" style="display:flex;gap:4px;align-items:center"></div>
+        <button class="btn-outline btn-sm" id="nextPage" onclick="goToPage(currentPage + 1)">Next <i class="fas fa-chevron-right"></i></button>
+      </div>
       <div class="no-results" id="noResults">
         <i class="fas fa-search"></i>
         <h3>No properties found</h3>

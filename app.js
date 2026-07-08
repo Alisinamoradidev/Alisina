@@ -37,6 +37,8 @@ const contactForm = $('contactForm');
 const modalOverlay = $('modalOverlay');
 const scrollTop = $('scrollTop');
 let favorites = new Set(JSON.parse(localStorage.getItem('favs') || '[]'));
+let currentPage = 1;
+const pageSize = 6;
 
 function formatPrice(price, badge) {
   if (badge === 'rent') return `$${price.toLocaleString()}/mo`;
@@ -100,14 +102,47 @@ function sortProperties(list, sortBy) {
 
 function renderProperties(list) {
   listingsGrid.innerHTML = '';
-  if (list.length === 0) { noResults.classList.add('visible'); resultsCount.textContent = 'No properties found'; return; }
+  if (list.length === 0) { noResults.classList.add('visible'); resultsCount.textContent = 'No properties found'; document.getElementById('pagination').style.display = 'none'; return; }
   noResults.classList.remove('visible');
-  resultsCount.textContent = `Showing ${list.length} of ${properties.length} properties`;
-  list.forEach(p => listingsGrid.appendChild(createPropertyCard(p)));
+  const totalPages = Math.ceil(list.length / pageSize);
+  if (currentPage > totalPages) currentPage = totalPages || 1;
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = list.slice(start, start + pageSize);
+  resultsCount.textContent = `Showing ${start + 1}–${Math.min(start + pageSize, list.length)} of ${list.length} properties`;
+  pageItems.forEach(p => listingsGrid.appendChild(createPropertyCard(p)));
+  renderPagination(totalPages, list);
   requestAnimationFrame(() => {
     document.querySelectorAll('.property-card').forEach((card, i) => setTimeout(() => card.classList.add('visible'), i * 80));
   });
 }
+
+function renderPagination(totalPages) {
+  const el = document.getElementById('pagination');
+  if (totalPages <= 1) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  document.getElementById('prevPage').disabled = currentPage <= 1;
+  document.getElementById('nextPage').disabled = currentPage >= totalPages;
+  const nums = document.getElementById('pageNumbers');
+  nums.innerHTML = '';
+  const range = 2;
+  const start = Math.max(1, currentPage - range);
+  const end = Math.min(totalPages, currentPage + range);
+  if (start > 1) { nums.appendChild(pageNum(1)); if (start > 2) nums.appendChild(ellipsis()); }
+  for (let i = start; i <= end; i++) nums.appendChild(pageNum(i));
+  if (end < totalPages) { if (end < totalPages - 1) nums.appendChild(ellipsis()); nums.appendChild(pageNum(totalPages)); }
+}
+
+function pageNum(n) {
+  const btn = document.createElement('button');
+  btn.className = `btn-sm ${n === currentPage ? 'btn-primary' : 'btn-outline'}`;
+  btn.textContent = n;
+  btn.onclick = () => { currentPage = n; updateListings(); };
+  return btn;
+}
+
+function ellipsis() { const s = document.createElement('span'); s.textContent = '...'; s.style.padding = '0 4px'; s.style.color = 'var(--text-muted)'; return s; }
+
+function goToPage(n) { currentPage = n; updateListings(); }
 
 function getFilteredAndSorted() {
   const q = searchInput.value.toLowerCase().trim();
