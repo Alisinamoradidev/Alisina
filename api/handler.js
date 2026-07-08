@@ -451,7 +451,7 @@ module.exports = async (req, res) => {
           const customerEmail = session.customer_details?.email || metaEmail;
           if (gmailUser && gmailPass && toEmail) {
             const nodemailer = require('nodemailer');
-            const t = nodemailer.createTransport({ service: 'gmail', auth: { user: gmailUser, pass: gmailPass } });
+            const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
             try {
               await t.sendMail({
                 from: `"Alisina Realty" <${gmailUser}>`, to: toEmail,
