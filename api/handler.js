@@ -452,7 +452,7 @@ module.exports = async (req, res) => {
           if (gmailUser && gmailPass) {
             const nodemailer = require('nodemailer');
             const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
-            const recipients = [toEmail, customerEmail].filter(Boolean);
+            const recipients = [...new Set([toEmail, customerEmail].filter(Boolean))];
             for (const email of recipients) {
               try {
                 await t.sendMail({
