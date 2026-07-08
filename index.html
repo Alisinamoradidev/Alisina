@@ -622,32 +622,33 @@
     </div>
   </div>
   <div class="modal-overlay" id="authModal">
-    <div class="modal" style="max-width:400px">
+    <div class="modal auth-modal">
       <button class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
-      <div class="modal-body" style="padding:32px">
-        <div style="text-align:center;margin-bottom:24px">
-          <h3 id="authModalTitle" style="font-size:22px">Sign In</h3>
-          <p style="color:var(--text-secondary);font-size:14px" id="authModalSub">Welcome back!</p>
-        </div>
+      <div class="auth-modal-header">
+        <div class="auth-modal-icon"><i class="fas fa-user-lock"></i></div>
+        <h3 id="authModalTitle">Sign In</h3>
+        <p id="authModalSub">Welcome back! Sign in to save your favorites.</p>
+      </div>
+      <div class="auth-modal-body">
         <form id="authForm">
-          <div id="authNameField" class="field" style="margin-bottom:14px;display:none">
-            <label>Name</label>
-            <input type="text" id="authName" required>
+          <div id="authNameField" class="auth-field" style="display:none">
+            <label for="authName">Full Name</label>
+            <input type="text" id="authName" placeholder="John Doe" required>
           </div>
-          <div class="field" style="margin-bottom:14px">
-            <label>Email</label>
-            <input type="email" id="authEmail" required>
+          <div class="auth-field">
+            <label for="authEmail">Email Address</label>
+            <input type="email" id="authEmail" placeholder="you@example.com" required>
           </div>
-          <div class="field" style="margin-bottom:14px">
-            <label>Password</label>
-            <input type="password" id="authPassword" required minlength="6">
+          <div class="auth-field">
+            <label for="authPassword">Password</label>
+            <input type="password" id="authPassword" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" required minlength="6">
           </div>
-          <p class="login-error" id="authError" style="margin-bottom:12px"></p>
-          <button type="submit" class="btn-submit" style="width:100%" id="authBtn">Sign In</button>
+          <p class="login-error" id="authError"></p>
+          <button type="submit" class="btn-auth" id="authBtn">Sign In</button>
         </form>
-        <p style="text-align:center;margin-top:16px;font-size:14px;color:var(--text-secondary)">
+        <p class="auth-toggle-text">
           <span id="authToggleText">Don't have an account?</span>
-          <a href="#" onclick="toggleAuthMode()" style="color:var(--primary);font-weight:600" id="authToggleLink">Register</a>
+          <a href="#" onclick="toggleAuthMode()" id="authToggleLink">Register</a>
         </p>
       </div>
     </div>
