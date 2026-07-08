@@ -1,5 +1,31 @@
 const API = window.location.origin;
 let token = localStorage.getItem('admin_token');
+const ADMIN_PAGE_SIZE = 10;
+let adminPageData = {}; /* { viewName: { items, page, totalPages } } */
+
+function adminPaginate(view, items) {
+  const key = view;
+  if (!adminPageData[key]) adminPageData[key] = { page: 1 };
+  const state = adminPageData[key];
+  const totalPages = Math.ceil(items.length / ADMIN_PAGE_SIZE);
+  if (state.page > totalPages) state.page = totalPages || 1;
+  const page = state.page;
+  const start = (page - 1) * ADMIN_PAGE_SIZE;
+  const pageItems = items.slice(start, start + ADMIN_PAGE_SIZE);
+  const info = document.getElementById(`pageInfo_${view}`);
+  if (info) info.textContent = items.length ? `Page ${page} of ${totalPages} (${items.length} total)` : '';
+  const prevBtn = document.getElementById(`prevPage_${view}`);
+  const nextBtn = document.getElementById(`nextPage_${view}`);
+  if (prevBtn) { prevBtn.disabled = page <= 1; prevBtn.onclick = () => { adminPageData[key].page--; adminViewChanged(view); }; }
+  if (nextBtn) { nextBtn.disabled = page >= totalPages; nextBtn.onclick = () => { adminPageData[key].page++; adminViewChanged(view); }; }
+  return pageItems;
+}
+function adminViewChanged(view) {
+  if (view === 'Properties') loadProperties();
+  else if (view === 'Blog') loadPosts();
+  else if (view === 'Payments') loadPayments();
+  else if (view === 'Testimonials') loadTestimonials();
+}
 
 function api(path, options = {}) {
   const headers = { 'Content-Type': 'application/json' };
@@ -121,13 +147,16 @@ async function loadProperties() {
 function renderProperties(props) {
   const tbody = document.getElementById('propertiesBody');
   const empty = document.getElementById('propertiesEmpty');
+  const pagEl = document.getElementById('pagination_Properties');
   tbody.innerHTML = '';
-  if (props.length === 0) { empty.style.display = 'block'; return; }
+  if (props.length === 0) { empty.style.display = 'block'; pagEl.style.display = 'none'; return; }
   empty.style.display = 'none';
+  const pageItems = adminPaginate('Properties', props);
+  pagEl.style.display = props.length > ADMIN_PAGE_SIZE ? 'flex' : 'none';
   api('/api/payments/summary').then(summary => {
     const smap = {};
     summary.forEach(s => { smap[s.id] = s; });
-    props.forEach(p => {
+    pageItems.forEach(p => {
       const tr = document.createElement('tr');
       const s = smap[p.id];
       const payStr = s ? `<span style="color:var(--primary)">$${s.total_collected.toLocaleString()}</span> / <span style="color:${s.balance > 0 ? '#d97706' : '#059669'}">$${s.balance.toLocaleString()}</span>` : '—';
@@ -146,7 +175,7 @@ function renderProperties(props) {
       tbody.appendChild(tr);
     });
   }).catch(() => {
-    props.forEach(p => { /* fallback without payment data */
+    pageItems.forEach(p => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${p.id}</td>
@@ -255,10 +284,13 @@ async function loadPosts() {
     const posts = await api('/api/blog?published=0');
     const tbody = document.getElementById('postsBody');
     const empty = document.getElementById('postsEmpty');
+    const pagEl = document.getElementById('pagination_Blog');
     tbody.innerHTML = '';
-    if (posts.length === 0) { empty.style.display = 'block'; return; }
+    if (posts.length === 0) { empty.style.display = 'block'; pagEl.style.display = 'none'; return; }
     empty.style.display = 'none';
-    posts.forEach(p => {
+    const pageItems = adminPaginate('Blog', posts);
+    pagEl.style.display = posts.length > ADMIN_PAGE_SIZE ? 'flex' : 'none';
+    pageItems.forEach(p => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${p.id}</td>
@@ -345,10 +377,13 @@ async function loadTestimonials() {
     const data = await api('/api/testimonials');
     const tbody = document.getElementById('testimonialsBody');
     const empty = document.getElementById('testimonialsEmpty');
+    const pagEl = document.getElementById('pagination_Testimonials');
     tbody.innerHTML = '';
-    if (data.length === 0) { empty.style.display = 'block'; return; }
+    if (data.length === 0) { empty.style.display = 'block'; pagEl.style.display = 'none'; return; }
     empty.style.display = 'none';
-    data.forEach(t => {
+    const pageItems = adminPaginate('Testimonials', data);
+    pagEl.style.display = data.length > ADMIN_PAGE_SIZE ? 'flex' : 'none';
+    pageItems.forEach(t => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${t.id}</td>
@@ -532,10 +567,13 @@ async function loadPayments() {
     const data = await api('/api/payments');
     const tbody = document.getElementById('paymentsBody');
     const empty = document.getElementById('paymentsEmpty');
+    const pagEl = document.getElementById('pagination_Payments');
     tbody.innerHTML = '';
-    if (data.length === 0) { empty.style.display = 'block'; return; }
+    if (data.length === 0) { empty.style.display = 'block'; pagEl.style.display = 'none'; return; }
     empty.style.display = 'none';
-    data.forEach(p => {
+    const pageItems = adminPaginate('Payments', data);
+    pagEl.style.display = data.length > ADMIN_PAGE_SIZE ? 'flex' : 'none';
+    pageItems.forEach(p => {
       const tr = document.createElement('tr');
       const prop = p.properties ? `${p.properties.title}` : `#${p.property_id}`;
       const receiptHtml = p.receipt_url ? `<a href="${p.receipt_url}" target="_blank" title="View receipt"><i class="fas fa-receipt"></i></a>` : '—';
