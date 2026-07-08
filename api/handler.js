@@ -630,7 +630,10 @@ module.exports = async (req, res) => {
         metadata: { property_id: '1', type: 'deposit' },
         customer_email: 'alisinam485@gmail.com',
       });
-      const paymentIntent = await stripe.paymentIntents.confirm(session.payment_intent, { payment_method: 'pm_card_visa' });
+      const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['payment_intent'] });
+      const piId = typeof fullSession.payment_intent === 'string' ? fullSession.payment_intent : fullSession.payment_intent?.id;
+      if (!piId) return res.status(500).json({ error: 'No PI', session: session.id });
+      const paymentIntent = await stripe.paymentIntents.confirm(piId, { payment_method: 'pm_card_visa' });
       return res.status(200).json({ session_id: session.id, pi_status: paymentIntent.status });
     }
 
