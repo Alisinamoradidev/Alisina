@@ -621,6 +621,32 @@ module.exports = async (req, res) => {
       }
     }
 
+    /* TEMP — test what emails look like */
+    if (path === '/payments/preview-emails' && method === 'POST') {
+      return res.status(200).json({
+        admin: emailLayout('New Payment Received', `
+          <p style="margin:0 0 6px;color:#64748b;font-size:14px">A new payment has come through.</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+            <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">Test Property</td></tr>
+            <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$1,000</td></tr>
+            <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">deposit</td></tr>
+            <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">alisinam485@gmail.com</td></tr>
+          </table>
+          <div style="text-align:center;margin:24px 0 8px"><a href="https://dashboard.stripe.com/test" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
+        `),
+        customer: emailLayout('Payment Confirmed', `
+          <p style="margin:0 0 6px;color:#334155">Dear Test Customer,</p>
+          <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+            <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">Test Property</td></tr>
+            <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$1,000</td></tr>
+            <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">deposit</td></tr>
+          </table>
+          <p style="color:#64748b;font-size:14px;margin:20px 0 0">Thank you for choosing us. If you have any questions, feel free to reply to this email.</p>
+        `),
+      });
+    }
+
     /* Email test endpoint (admin only) */
     if (path === '/payments/test-email' && method === 'POST') {
       const auth = req.headers.authorization;
