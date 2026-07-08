@@ -723,7 +723,7 @@ document.addEventListener('click', e => {
 let authMode = 'login';
 function showAuthModal(mode) {
   authMode = mode;
-  document.getElementById('authModal').style.display = 'flex';
+  document.getElementById('authModal').classList.add('active');
   document.getElementById('authError').textContent = '';
   if (mode === 'login') {
     document.getElementById('authModalTitle').textContent = 'Sign In';
@@ -742,8 +742,9 @@ function showAuthModal(mode) {
   }
 }
 
-function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+function closeAuthModal() { document.getElementById('authModal').classList.remove('active'); }
 document.getElementById('authModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAuthModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAuthModal(); });
 
 function toggleAuthMode() {
   showAuthModal(authMode === 'login' ? 'register' : 'login');
