@@ -220,10 +220,12 @@ $('modalPay').addEventListener('click', async () => {
   const cfg = await cfgRes.json();
   if (!cfg.configured) { showToast('Payment not configured yet'); return; }
   btn.disabled = true; btn.textContent = 'Redirecting...';
+  const customerEmail = prompt('Enter your email for receipt:');
+  if (!customerEmail || !customerEmail.includes('@')) { showToast('Valid email required'); btn.disabled = false; btn.textContent = btn._payType === 'deposit' ? 'Pay $1,000 Deposit' : 'Pay Rent'; return; }
   try {
     const res = await fetch(`${API_URL}/api/payments/create-checkout`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ property_id: btn._propId, type: btn._payType })
+      body: JSON.stringify({ property_id: btn._propId, type: btn._payType, email: customerEmail })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Payment failed');

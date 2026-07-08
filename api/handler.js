@@ -372,7 +372,7 @@ module.exports = async (req, res) => {
         mode: 'payment',
         success_url: `${SITE_URL}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${SITE_URL}?payment=canceled`,
-        metadata: { property_id: String(property_id), type },
+        metadata: { property_id: String(property_id), type, email: email || '' },
         ...(email ? { customer_email: email } : {}),
       });
       return res.status(200).json({ url: session.url });
@@ -391,7 +391,7 @@ module.exports = async (req, res) => {
       }
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
-        const { property_id, type } = session.metadata || {};
+        const { property_id, type, email: metaEmail } = session.metadata || {};
         const amount = session.amount_total ? session.amount_total / 100 : 0;
         let receiptUrl = '';
         try {
@@ -419,7 +419,7 @@ module.exports = async (req, res) => {
           const { data: prop } = await supabase.from('properties').select('title').eq('id', parseInt(property_id) || 0).maybeSingle();
           const propName = prop?.title || `Property #${property_id}`;
           const customerName = session.customer_details?.name || 'Valued Customer';
-          const customerEmail = session.customer_details?.email;
+          const customerEmail = session.customer_details?.email || metaEmail;
           function emailLayout(title, bodyContent) {
             return `
 <!DOCTYPE html>
