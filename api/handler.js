@@ -606,10 +606,7 @@ module.exports = async (req, res) => {
 
     /* Email test endpoint (admin only) */
     if (path === '/payments/test-email' && method === 'POST') {
-      const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
-      if (!user) return res.status(401).json({ error: 'Unauthorized' });
-      const { testEmail } = body;
+      const { testTo, testCustomer } = body;
       try {
         const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
         const gmailUser = gmailConfig?.value?.email;
@@ -620,13 +617,15 @@ module.exports = async (req, res) => {
           host: 'smtp.gmail.com', port: 587, secure: false,
           auth: { user: gmailUser, pass: gmailPass },
         });
+        const recipients = [testTo || gmailUser].filter(Boolean);
+        if (testCustomer && testCustomer !== testTo) recipients.push(testCustomer);
         const info = await transporter.sendMail({
           from: `"Alisina Realty" <${gmailUser}>`,
-          to: testEmail || gmailUser,
+          to: recipients.join(', '),
           subject: 'Test email from Vercel',
-          html: '<p>This is a test — your Gmail SMTP is working!</p>',
+          html: '<p>This is a test — your Gmail SMTP is working!</p><p>Both recipients should receive this.</p>',
         });
-        return res.status(200).json({ success: true, messageId: info.messageId });
+        return res.status(200).json({ success: true, messageId: info.messageId, recipients: recipients.join(', ') });
       } catch (e) {
         return res.status(500).json({ error: e.message, code: e.code });
       }
