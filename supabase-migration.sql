@@ -160,7 +160,8 @@ INSERT INTO properties (title, location, price, type, beds, baths, sqft, image, 
 ('Mountain View House', '777 Summit Rd, Denver, CO', 2500, 'house', 4, 3, 2400, 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80', 'rent', FALSE, 2018, 39.7392, -104.9903, 'Beautiful mountain retreat with stunning views.'),
 ('Penthouse Suite', '999 Skyline Blvd, Chicago, IL', 2100000, 'condo', 4, 3, 3200, 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80', 'sale', TRUE, 2024, 41.8781, -87.6298, 'Luxury penthouse with panoramic city views.'),
 ('Garden Apartment', '222 Green St, Portland, OR', 1400, 'apartment', 2, 1, 850, 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80', 'rent', FALSE, 2017, 45.5152, -122.6784, 'Charming garden apartment in a quiet neighborhood.'),
-('Colonial Family Home', '444 Maple Ave, Boston, MA', 575000, 'house', 4, 3, 2600, 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80', 'sale', TRUE, 2016, 42.3601, -71.0589, 'Classic colonial home with modern updates.');
+('Colonial Family Home', '444 Maple Ave, Boston, MA', 575000, 'house', 4, 3, 2600, 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80', 'sale', TRUE, 2016, 42.3601, -71.0589, 'Classic colonial home with modern updates.')
+ON CONFLICT DO NOTHING;
 
 -- 5. Seed blog post
 -- 6. Testimonials
@@ -208,4 +209,5 @@ INSERT INTO posts (title, slug, excerpt, content, image, author, published) VALU
 ('2026 Real Estate Market Trends', '2026-real-estate-market-trends',
 'Discover the key trends shaping the real estate market in 2026.',
 '<p>The real estate market in 2026 continues to evolve with several key trends:</p><ul><li><strong>Interest Rates:</strong> Rates are stabilizing, creating opportunities.</li><li><strong>Suburban Growth:</strong> Families moving to suburban areas.</li><li><strong>Smart Homes:</strong> Properties with smart tech command premium prices.</li></ul><p>Contact me for a personalized market analysis!</p>',
-'https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?w=800&q=80', 'Alisina Moradi', TRUE);
+'https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?w=800&q=80', 'Alisina Moradi', TRUE)
+ON CONFLICT (slug) DO NOTHING;
