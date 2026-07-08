@@ -7,7 +7,9 @@ const SITE_URL = process.env.SITE_URL || 'https://alisina-nu.vercel.app';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function emailLayout(title, bodyContent) {
+function emailLayout(title, bodyContent, color) {
+  const gradient = color === 'admin' ? 'linear-gradient(135deg,#1e3a5f,#2563eb)' : 'linear-gradient(135deg,#0d9488,#14b8a6)';
+  const icon = color === 'admin' ? '&#128196;' : '&#9989;';
   return `
 <!DOCTYPE html>
 <html>
@@ -16,7 +18,8 @@ function emailLayout(title, bodyContent) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:24px 0">
     <tr><td align="center">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
-        <tr><td style="background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:32px 40px;text-align:center">
+        <tr><td style="background:${gradient};padding:32px 40px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">${icon}</div>
           <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:600">${title}</h1>
         </td></tr>
         <tr><td style="padding:32px 40px;color:#334155;font-size:15px;line-height:1.6">
@@ -466,7 +469,7 @@ module.exports = async (req, res) => {
                     <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${customerEmail || 'No email'}</td></tr>
                   </table>
                   <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
-                `),
+                `, 'admin'),
               }).then(() => { console.log('admin email ok'); }).catch(e => { console.error('admin email:', e.message); }));
             }
             if (customerEmail && customerEmail !== toEmail) {
@@ -479,11 +482,11 @@ module.exports = async (req, res) => {
                   <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
                     <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#14b8a6">$${amount.toLocaleString()}</td></tr>
                     <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
                   </table>
                   <p style="color:#64748b;font-size:14px;margin:20px 0 0">Thank you for choosing us. If you have any questions, feel free to reply to this email.</p>
-                `),
+                `, 'customer'),
               }).then(() => { console.log('customer email ok'); }).catch(e => { console.error('customer email:', e.message); }));
             }
             await Promise.allSettled(sends);
