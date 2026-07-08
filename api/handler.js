@@ -84,7 +84,8 @@ function getAuthUser(auth) {
 }
 
 module.exports = async (req, res) => {
-  const origin = req.headers.origin || '*';
+  res.setHeader('Content-Type','text/plain');
+  return res.status(200).end('url=' + (req.url || '') + '|host=' + (req.headers.host || '') + '|method=' + req.method);
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
