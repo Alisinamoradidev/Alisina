@@ -410,43 +410,34 @@ module.exports = async (req, res) => {
             status: 'completed',
             type: type || 'deposit',
           }).select();
-          /* Send email notification if configured */
+          /* Send email notifications */
           const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
           const toEmail = notif?.value?.email;
+          const { data: resendKey } = await supabase.from('settings').select('value').eq('key', 'resend_api_key').maybeSingle();
+          const resendApiKey = resendKey?.value?.key || process.env.RESEND_API_KEY;
           const { data: prop } = await supabase.from('properties').select('title').eq('id', parseInt(property_id) || 0).maybeSingle();
           const propName = prop?.title || `Property #${property_id}`;
+          const customerName = session.customer_details?.name || 'Valued Customer';
+          const customerEmail = session.customer_details?.email;
+          async function sendResend(to, subject, html) {
+            if (!resendApiKey) return;
+            await fetch('https://api.resend.com/emails', {
+              method: 'POST', headers: { 'Authorization': `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ from: 'Alisina Realty <onboarding@resend.dev>', to: [to], subject, html }),
+            });
+          }
           if (toEmail) {
             try {
-              await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(toEmail), {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  _subject: `New payment received!`,
-                  Property: propName,
-                  Amount: `$${amount.toLocaleString()}`,
-                  Type: type || 'deposit',
-                  Customer: session.customer_details?.email || 'No email',
-                  Receipt: receiptUrl,
-                })
-              });
+              await sendResend(toEmail, `New payment received - ${propName}`,
+                `<h2>New Payment Received</h2><p><strong>Property:</strong> ${propName}</p><p><strong>Amount:</strong> $${amount.toLocaleString()}</p><p><strong>Type:</strong> ${type || 'deposit'}</p><p><strong>Customer:</strong> ${customerEmail || 'No email'}</p><p><strong>Receipt:</strong> <a href="${receiptUrl}">View Receipt</a></p>`
+              );
             } catch {}
           }
-          /* Send confirmation email to customer */
-          const customerEmail = session.customer_details?.email;
           if (customerEmail) {
             try {
-              await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(customerEmail), {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  _subject: `Payment Confirmation - ${propName}`,
-                  _template: 'box',
-                  Name: session.customer_details?.name || 'Valued Customer',
-                  Property: propName,
-                  Amount: `$${amount.toLocaleString()}`,
-                  Type: type || 'deposit',
-                  'Receipt URL': receiptUrl,
-                  _footer: 'Thank you for your payment. If you have any questions, please contact us.',
-                })
-              });
+              await sendResend(customerEmail, `Payment Confirmation - ${propName}`,
+                `<h2>Thank you for your payment!</h2><p>Dear ${customerName},</p><p>Your payment for <strong>${propName}</strong> has been received successfully.</p><p><strong>Amount:</strong> $${amount.toLocaleString()}</p><p><strong>Type:</strong> ${type || 'deposit'}</p><p><strong>Receipt:</strong> <a href="${receiptUrl}">View Receipt</a></p><br><p>If you have any questions, please contact us.</p>`
+              );
             } catch {}
           }
         } catch (e) {

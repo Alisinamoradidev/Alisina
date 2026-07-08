@@ -109,7 +109,8 @@
             <div class="field"><label>Publishable Key</label><input type="text" id="sfPubKey" placeholder="pk_live_..."></div>
             <div class="field"><label>Secret Key</label><input type="password" id="sfSecKey" placeholder="sk_live_..."></div>
             <div class="field"><label>Webhook Secret</label><input type="password" id="sfWhsec" placeholder="whsec_..."></div>
-            <div class="field"><label>Notification Email</label><input type="email" id="sfNotifEmail" placeholder="admin@example.com"><small style="color:var(--text-muted);display:block;margin-top:4px">Get email when a payment is received (via FormSubmit.co)</small></div>
+            <div class="field"><label>Notification Email</label><input type="email" id="sfNotifEmail" placeholder="admin@example.com"><small style="color:var(--text-muted);display:block;margin-top:4px">Get notified when a payment is received</small></div>
+            <div class="field"><label>Resend API Key</label><input type="password" id="sfResendKey" placeholder="re_..."><small style="color:var(--text-muted);display:block;margin-top:4px">From <a href="https://resend.com" target="_blank">resend.com</a> (free, 100 emails/day). Required for email notifications.</small></div>
             <div class="form-actions"><button type="submit" class="btn-primary" id="stripeSaveBtn">Save Stripe Keys</button></div>
           </form>
 

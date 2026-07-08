@@ -500,6 +500,10 @@ async function loadStripeSettings() {
     const notif = await api('/api/payments/settings?key=notification_email');
     document.getElementById('sfNotifEmail').value = (notif && notif.email) ? notif.email : '';
   } catch {}
+  try {
+    const rk = await api('/api/payments/settings?key=resend_api_key');
+    document.getElementById('sfResendKey').value = (rk && rk.key) ? rk.key : '';
+  } catch {}
 }
 
 document.getElementById('stripeForm')?.addEventListener('submit', async e => {
@@ -522,9 +526,17 @@ document.getElementById('stripeForm')?.addEventListener('submit', async e => {
         body: JSON.stringify({ key: 'notification_email', value: { email: notifEmail } })
       });
     }
+    const resendKey = document.getElementById('sfResendKey').value.trim();
+    if (resendKey) {
+      await api('/api/payments/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ key: 'resend_api_key', value: { key: resendKey } })
+      });
+    }
     alert('Settings saved');
     document.getElementById('sfSecKey').value = '';
     document.getElementById('sfWhsec').value = '';
+    document.getElementById('sfResendKey').value = '';
   } catch (err) { alert(err.message); }
   finally { btn.disabled = false; btn.textContent = 'Save Stripe Keys'; }
 });
