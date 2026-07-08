@@ -40,6 +40,8 @@
         <button class="nav-btn" data-view="blog"><i class="fas fa-newspaper"></i> Blog</button>
         <button class="nav-btn" data-view="messages"><i class="fas fa-envelope"></i> Messages</button>
         <button class="nav-btn" data-view="schedules"><i class="fas fa-calendar"></i> Schedules</button>
+        <button class="nav-btn" data-view="payments"><i class="fas fa-credit-card"></i> Payments</button>
+        <button class="nav-btn" data-view="bank"><i class="fas fa-university"></i> Bank Info</button>
       </nav>
 
       <main class="admin-content">
@@ -65,7 +67,7 @@
               <button class="btn-primary" onclick="openPropertyForm()"><i class="fas fa-plus"></i> Add</button>
             </div>
           </div>
-          <div class="table-wrap"><table id="propertiesTable"><thead><tr><th>ID</th><th>Title</th><th>Price</th><th>Type</th><th>Badge</th><th>Featured</th><th>Actions</th></tr></thead><tbody id="propertiesBody"></tbody></table></div>
+          <div class="table-wrap"><table id="propertiesTable"><thead><tr><th>ID</th><th>Title</th><th>Price</th><th>Type</th><th>Badge</th><th>Payments</th><th>Featured</th><th>Actions</th></tr></thead><tbody id="propertiesBody"></tbody></table></div>
           <p class="empty-state" id="propertiesEmpty">No properties yet.</p>
         </div>
 
@@ -91,6 +93,36 @@
           <div class="view-header"><h2>Viewing Schedules</h2><div class="view-actions"><button class="btn-outline" onclick="exportCSV('schedules')"><i class="fas fa-download"></i> CSV</button><button class="btn-danger" onclick="deleteAllSchedules()"><i class="fas fa-trash"></i> Delete All</button></div></div>
           <div id="schedulesList"></div>
           <p class="empty-state" id="schedulesEmpty">No schedules yet.</p>
+        </div>
+
+        <div id="viewPayments" class="view">
+          <div class="view-header"><h2>Payments</h2><div class="view-actions"><button class="btn-danger" onclick="deleteAllPayments()"><i class="fas fa-trash"></i> Delete All</button></div></div>
+          <div class="table-wrap"><table id="paymentsTable"><thead><tr><th>ID</th><th>Property</th><th>Email</th><th>Amount</th><th>Type</th><th>Status</th><th>Receipt</th><th>Date</th><th>Actions</th></tr></thead><tbody id="paymentsBody"></tbody></table></div>
+          <p class="empty-state" id="paymentsEmpty">No payments yet.</p>
+        </div>
+
+        <div id="viewBank" class="view">
+          <div class="view-header"><h2>Payment Settings</h2></div>
+
+          <h3 style="margin-bottom:8px;color:var(--text)">Stripe Account</h3>
+          <form id="stripeForm" class="modal-body" style="max-width:500px;padding:0;margin-bottom:24px">
+            <div class="field"><label>Publishable Key</label><input type="text" id="sfPubKey" placeholder="pk_live_..."></div>
+            <div class="field"><label>Secret Key</label><input type="password" id="sfSecKey" placeholder="sk_live_..."></div>
+            <div class="field"><label>Webhook Secret</label><input type="password" id="sfWhsec" placeholder="whsec_..."></div>
+            <div class="field"><label>Notification Email</label><input type="email" id="sfNotifEmail" placeholder="admin@example.com"><small style="color:var(--text-muted);display:block;margin-top:4px">Get email when a payment is received (via FormSubmit.co)</small></div>
+            <div class="form-actions"><button type="submit" class="btn-primary" id="stripeSaveBtn">Save Stripe Keys</button></div>
+          </form>
+
+          <h3 style="margin-bottom:8px;color:var(--text)">Bank Transfer Info</h3>
+          <form id="bankForm" class="modal-body" style="max-width:500px;padding:0">
+            <div class="field"><label>Bank Name</label><input type="text" id="bfBankName"></div>
+            <div class="field"><label>Account Name</label><input type="text" id="bfAccountName"></div>
+            <div class="field"><label>Account Number</label><input type="text" id="bfAccountNumber"></div>
+            <div class="field"><label>Routing Number</label><input type="text" id="bfRouting"></div>
+            <div class="field"><label>IBAN</label><input type="text" id="bfIban"></div>
+            <div class="field"><label>SWIFT/BIC</label><input type="text" id="bfSwift"></div>
+            <div class="form-actions"><button type="submit" class="btn-primary" id="bankSaveBtn">Save Bank Info</button></div>
+          </form>
         </div>
       </main>
     </div>

@@ -1,16 +1,43 @@
 const { createClient } = require('@supabase/supabase-js');
+const Stripe = require('stripe');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SITE_URL = process.env.SITE_URL || 'https://alisina-nu.vercel.app';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+async function getStripe() {
+  const { data } = await supabase.from('settings').select('value').eq('key', 'stripe_secret_key').maybeSingle();
+  const secret = data?.value?.secret || process.env.STRIPE_SECRET_KEY || '';
+  return secret ? new Stripe(secret) : null;
+}
+
+async function getStripeConfig() {
+  const [pk, sk] = await Promise.all([
+    supabase.from('settings').select('value').eq('key', 'stripe_publishable_key').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'stripe_secret_key').maybeSingle(),
+  ]);
+  const pub = pk?.data?.value?.key || '';
+  const hasSecret = !!(sk?.data?.value?.secret || process.env.STRIPE_SECRET_KEY);
+  return { publishable_key: pub, configured: hasSecret };
+}
+
+async function getWebhookSecret() {
+  const { data } = await supabase.from('settings').select('value').eq('key', 'stripe_webhook_secret').maybeSingle();
+  return data?.value?.secret || process.env.STRIPE_WEBHOOK_SECRET || '';
+}
+
 function getBody(req) {
   return new Promise((resolve) => {
-    if (req.body) return resolve(req.body);
+    if (req.body) {
+      if (!req._rawBody) req._rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
+      return resolve(req.body);
+    }
     let data = '';
     req.on('data', chunk => data += chunk);
     req.on('end', () => {
+      req._rawBody = Buffer.from(data);
       try { resolve(JSON.parse(data || '{}')); } catch { resolve({}); }
     });
   });
@@ -37,6 +64,14 @@ module.exports = async (req, res) => {
   const method = req.method;
 
   try {
+    /* For webhook, get raw body for signature verification before Vercel parsing */
+    if (path === '/payments/webhook' && method === 'POST') {
+      let raw = '';
+      req.on('data', chunk => raw += chunk);
+      await new Promise(r => req.on('end', r));
+      req._rawBody = Buffer.from(raw);
+      try { req.body = JSON.parse(raw); } catch { req.body = {}; }
+    }
     const body = await getBody(req);
 
     if (path === '/health' && method === 'GET') {
@@ -299,6 +334,233 @@ module.exports = async (req, res) => {
       if (ue) throw ue;
       const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(filename);
       return res.status(200).json({ url: publicUrl });
+    }
+
+    /* Stripe config (dynamic — admin sets keys in Settings) */
+    if (path === '/stripe/config' && method === 'GET') {
+      const cfg = await getStripeConfig();
+      return res.status(200).json(cfg);
+    }
+
+    if (path === '/stripe/save' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const { publishable_key, secret_key, webhook_secret } = body;
+      const now = new Date().toISOString();
+      await Promise.all([
+        supabase.from('settings').upsert({ key: 'stripe_publishable_key', value: { key: publishable_key || '' }, updated_at: now }),
+        supabase.from('settings').upsert({ key: 'stripe_secret_key', value: { secret: secret_key || '' }, updated_at: now }),
+        supabase.from('settings').upsert({ key: 'stripe_webhook_secret', value: { secret: webhook_secret || '' }, updated_at: now }),
+      ]);
+      return res.status(200).json({ success: true });
+    }
+
+    /* Payments - Stripe Checkout */
+    if (path === '/payments/create-checkout' && method === 'POST') {
+      const stripe = await getStripe();
+      if (!stripe) return res.status(503).json({ error: 'Payment not configured — admin must save Stripe keys in Settings' });
+      const { property_id, type, email } = body;
+      if (!property_id || !type) return res.status(400).json({ error: 'property_id and type required' });
+      const { data: property } = await supabase.from('properties').select('*').eq('id', property_id).single();
+      if (!property) return res.status(404).json({ error: 'Property not found' });
+      const amount = type === 'deposit' ? 1000 : (type === 'rent' ? property.price : null);
+      if (!amount || amount <= 0) return res.status(400).json({ error: 'Invalid amount' });
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{ price_data: { currency: 'usd', product_data: { name: property.title, description: property.location }, unit_amount: Math.round(amount * 100) }, quantity: 1 }],
+        mode: 'payment',
+        success_url: `${SITE_URL}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${SITE_URL}?payment=canceled`,
+        metadata: { property_id: String(property_id), type },
+        ...(email ? { customer_email: email } : {}),
+      });
+      return res.status(200).json({ url: session.url });
+    }
+
+    if (path === '/payments/webhook' && method === 'POST') {
+      const stripe = await getStripe();
+      const whsec = await getWebhookSecret();
+      if (!stripe || !whsec) return res.status(503).json({ error: 'Payment not configured' });
+      const sig = req.headers['stripe-signature'];
+      let event;
+      try {
+        event = stripe.webhooks.constructEvent(req._rawBody, sig, whsec);
+      } catch {
+        return res.status(400).json({ error: 'Invalid signature' });
+      }
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+        const { property_id, type } = session.metadata || {};
+        const amount = session.amount_total ? session.amount_total / 100 : 0;
+        let receiptUrl = '';
+        try {
+          const pi = await stripe.paymentIntents.retrieve(session.payment_intent);
+          receiptUrl = pi.charges?.data[0]?.receipt_url || `https://dashboard.stripe.com/payments/${session.payment_intent}`;
+        } catch {}
+        try {
+          await supabase.from('payments').insert({
+            property_id: parseInt(property_id) || null,
+            user_email: session.customer_details?.email || '',
+            amount,
+            currency: session.currency || 'usd',
+            stripe_session_id: session.id,
+            stripe_payment_intent: session.payment_intent || '',
+            receipt_url: receiptUrl,
+            status: 'completed',
+            type: type || 'deposit',
+          }).select();
+          /* Send email notification if configured */
+          const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
+          const toEmail = notif?.value?.email;
+          if (toEmail) {
+            try {
+              const { data: prop } = await supabase.from('properties').select('title').eq('id', parseInt(property_id) || 0).single();
+              const propName = prop?.title || `Property #${property_id}`;
+              await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(toEmail), {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  _subject: `New payment received!`,
+                  Property: propName,
+                  Amount: `$${amount.toLocaleString()}`,
+                  Type: type || 'deposit',
+                  Customer: session.customer_details?.email || 'No email',
+                  Receipt: receiptUrl,
+                })
+              });
+            } catch {}
+          }
+        } catch (e) {
+          console.error('Webhook insert error:', e?.code, e?.message);
+        }
+      }
+      return res.status(200).json({ received: true });
+    }
+
+    if (path === '/payments' && method === 'DELETE') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      try {
+        const { error } = await supabase.from('payments').delete().neq('id', 0);
+        if (error) throw error;
+        return res.status(200).json({ message: 'All payments deleted' });
+      } catch (e) {
+        if (e?.code === 'PGRST205') return res.status(200).json({ message: 'No payments table yet' });
+        throw e;
+      }
+    }
+
+    if (path === '/payments' && method === 'GET') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      try {
+        const { data: payments, error } = await supabase.from('payments').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        const propertyIds = [...new Set((payments || []).map(p => p.property_id).filter(Boolean))];
+        let propertyMap = {};
+        if (propertyIds.length > 0) {
+          const { data: props } = await supabase.from('properties').select('id, title, location').in('id', propertyIds);
+          if (props) props.forEach(p => propertyMap[p.id] = { title: p.title, location: p.location });
+        }
+        return res.status(200).json((payments || []).map(p => ({ ...p, properties: propertyMap[p.property_id] || null })));
+      } catch (e) {
+        if (e?.code === 'PGRST205') return res.status(200).json([]);
+        throw e;
+      }
+    }
+
+    if (path === '/payments/delete' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const { id } = body;
+      if (!id) return res.status(400).json({ error: 'id required' });
+      try {
+        const { error } = await supabase.from('payments').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ message: 'Deleted' });
+      } catch (e) {
+        if (e?.code === 'PGRST205') return res.status(200).json({ message: 'No payments table yet' });
+        throw e;
+      }
+    }
+
+    /* Settings (Payments Settings) */
+    if (path === '/payments/settings' && method === 'GET') {
+      try {
+        const key = url.searchParams.get('key') || 'bank_info';
+        const { data } = await supabase.from('settings').select('value').eq('key', key).maybeSingle();
+        return res.status(200).json(data?.value || {});
+      } catch { return res.status(200).json({}); }
+    }
+
+    if (path === '/payments/settings' && method === 'PUT') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      try {
+        const { key, value, bank_name, account_name, account_number, routing, iban, swift } = body;
+        let settingsKey = 'bank_info';
+        let settingsValue = { bank_name, account_name, account_number, routing, iban, swift };
+        if (key) {
+          settingsKey = key;
+          settingsValue = value;
+        }
+        const { error } = await supabase.from('settings').upsert({ key: settingsKey, value: settingsValue, updated_at: new Date().toISOString() });
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      } catch (e) {
+        if (e?.code === 'PGRST205') return res.status(200).json({ message: 'Settings table not ready, run migration SQL' });
+        throw e;
+      }
+    }
+
+    /* Refund Payment */
+    if (path === '/payments/refund' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const { payment_id } = body;
+      if (!payment_id) return res.status(400).json({ error: 'payment_id required' });
+      try {
+        const { data: payment, error: fetchErr } = await supabase.from('payments').select('*').eq('id', payment_id).single();
+        if (fetchErr || !payment) return res.status(404).json({ error: 'Payment not found' });
+        if (payment.status !== 'completed') return res.status(400).json({ error: 'Payment not completed' });
+        if (!payment.stripe_payment_intent) return res.status(400).json({ error: 'No Stripe payment intent' });
+        const stripe = getStripe();
+        const refund = await stripe.refunds.create({ payment_intent: payment.stripe_payment_intent });
+        await supabase.from('payments').update({ status: 'refunded', updated_at: new Date().toISOString() }).eq('id', payment_id);
+        return res.status(200).json({ success: true, refund_id: refund.id });
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
+    }
+
+    /* Payment Summary per property */
+    if (path === '/payments/summary' && method === 'GET') {
+      try {
+        const { data: payments } = await supabase.from('payments').select('property_id, amount, status').eq('status', 'completed');
+        if (!payments) return res.status(200).json([]);
+        const { data: props } = await supabase.from('properties').select('id, title, price, sale_rent');
+        if (!props) return res.status(200).json([]);
+        const map = {};
+        for (const p of payments) {
+          const id = p.property_id;
+          if (!id) continue;
+          if (!map[id]) map[id] = 0;
+          map[id] += parseFloat(p.amount) || 0;
+        }
+        const result = props.map(p => ({
+          id: p.id, title: p.title, price: p.price, sale_rent: p.sale_rent,
+          total_collected: map[p.id] || 0,
+          balance: Math.max(0, (p.price || 0) - (map[p.id] || 0)),
+        }));
+        return res.status(200).json(result);
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
     }
 
     return res.status(404).json({ error: 'Not found', path, method });

@@ -67,13 +67,16 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('view' + btn.dataset.view.charAt(0).toUpperCase() + btn.dataset.view.slice(1)).classList.add('active');
+    const viewId = 'view' + btn.dataset.view.charAt(0).toUpperCase() + btn.dataset.view.slice(1);
+    document.getElementById(viewId).classList.add('active');
     const v = btn.dataset.view;
     if (v === 'properties') loadProperties();
     if (v === 'blog') loadPosts();
     if (v === 'messages') loadMessages();
     if (v === 'schedules') loadSchedules();
     if (v === 'dashboard') loadDashboard();
+    if (v === 'payments') loadPayments();
+    if (v === 'bank') { loadBankInfo(); loadStripeSettings(); }
   });
 });
 
@@ -117,20 +120,44 @@ function renderProperties(props) {
   tbody.innerHTML = '';
   if (props.length === 0) { empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  props.forEach(p => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${p.id}</td>
-      <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small></td>
-      <td>${formatPrice(p)}</td>
-      <td>${p.type}</td>
-      <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${p.badge}</span></td>
-      <td>${p.featured ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '—'}</td>
-      <td><div class="actions">
-        <button class="btn-outline btn-sm" onclick="editProperty(${p.id})"><i class="fas fa-edit"></i></button>
-        <button class="btn-danger btn-sm" onclick="deleteProperty(${p.id})"><i class="fas fa-trash"></i></button>
-      </div></td>`;
-    tbody.appendChild(tr);
+  api('/api/payments/summary').then(summary => {
+    const smap = {};
+    summary.forEach(s => { smap[s.id] = s; });
+    props.forEach(p => {
+      const tr = document.createElement('tr');
+      const s = smap[p.id];
+      const payStr = s ? `<span style="color:var(--primary)">$${s.total_collected.toLocaleString()}</span> / <span style="color:${s.balance > 0 ? '#d97706' : '#059669'}">$${s.balance.toLocaleString()}</span>` : '—';
+      tr.innerHTML = `
+        <td>${p.id}</td>
+        <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small></td>
+        <td>${formatPrice(p)}</td>
+        <td>${p.type}</td>
+        <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${p.badge}</span></td>
+        <td>${payStr}</td>
+        <td>${p.featured ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '—'}</td>
+        <td><div class="actions">
+          <button class="btn-outline btn-sm" onclick="editProperty(${p.id})"><i class="fas fa-edit"></i></button>
+          <button class="btn-danger btn-sm" onclick="deleteProperty(${p.id})"><i class="fas fa-trash"></i></button>
+        </div></td>`;
+      tbody.appendChild(tr);
+    });
+  }).catch(() => {
+    props.forEach(p => { /* fallback without payment data */
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.id}</td>
+        <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small></td>
+        <td>${formatPrice(p)}</td>
+        <td>${p.type}</td>
+        <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${p.badge}</span></td>
+        <td>—</td>
+        <td>${p.featured ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '—'}</td>
+        <td><div class="actions">
+          <button class="btn-outline btn-sm" onclick="editProperty(${p.id})"><i class="fas fa-edit"></i></button>
+          <button class="btn-danger btn-sm" onclick="deleteProperty(${p.id})"><i class="fas fa-trash"></i></button>
+        </div></td>`;
+      tbody.appendChild(tr);
+    });
   });
 }
 
@@ -410,6 +437,131 @@ async function exportCSV(type) {
     a.click(); URL.revokeObjectURL(url);
   } catch {}
 }
+
+/* Payments */
+async function loadPayments() {
+  try {
+    const data = await api('/api/payments');
+    const tbody = document.getElementById('paymentsBody');
+    const empty = document.getElementById('paymentsEmpty');
+    tbody.innerHTML = '';
+    if (data.length === 0) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    data.forEach(p => {
+      const tr = document.createElement('tr');
+      const prop = p.properties ? `${p.properties.title}` : `#${p.property_id}`;
+      const receiptHtml = p.receipt_url ? `<a href="${p.receipt_url}" target="_blank" title="View receipt"><i class="fas fa-receipt"></i></a>` : '—';
+      const refundBtn = p.status === 'completed' && p.stripe_payment_intent
+        ? `<button class="btn-outline btn-sm" onclick="refundPayment(${p.id})" title="Refund"><i class="fas fa-undo"></i></button>`
+        : '';
+      tr.innerHTML = `
+        <td>${p.id}</td>
+        <td>${prop}</td>
+        <td>${p.user_email}</td>
+        <td>$${p.amount.toLocaleString()}</td>
+        <td><span style="text-transform:capitalize">${p.type}</span></td>
+        <td><span style="color:${p.status === 'completed' ? 'var(--primary)' : p.status === 'refunded' ? '#d97706' : '#dc2626'}">${p.status}</span></td>
+        <td>${receiptHtml}</td>
+        <td>${p.created_at?.split('T')[0] || ''}</td>
+        <td><div class="actions">${refundBtn}<button class="btn-danger btn-sm" onclick="deletePayment(${p.id})"><i class="fas fa-trash"></i></button></div></td>`;
+      tbody.appendChild(tr);
+    });
+  } catch {}
+}
+
+async function refundPayment(id) {
+  if (!confirm('Refund this payment? This will issue a full refund through Stripe.')) return;
+  try {
+    await api('/api/payments/refund', { method: 'POST', body: JSON.stringify({ payment_id: id }) });
+    alert('Payment refunded');
+    loadPayments();
+  } catch (err) { alert(err.message); }
+}
+
+async function deletePayment(id) {
+  if (!confirm('Delete this payment record?')) return;
+  try { await api('/api/payments/delete', { method: 'POST', body: JSON.stringify({ id }) }); loadPayments(); }
+  catch (err) { alert(err.message); }
+}
+
+async function deleteAllPayments() {
+  if (!confirm('Delete ALL payment records?')) return;
+  try { await api('/api/payments', { method: 'DELETE' }); loadPayments(); }
+  catch (err) { alert(err.message); }
+}
+
+/* Stripe Settings */
+async function loadStripeSettings() {
+  try {
+    const d = await api('/api/stripe/config');
+    document.getElementById('sfPubKey').value = d.publishable_key || '';
+  } catch {}
+  try {
+    const notif = await api('/api/payments/settings?key=notification_email');
+    document.getElementById('sfNotifEmail').value = (notif && notif.email) ? notif.email : '';
+  } catch {}
+}
+
+document.getElementById('stripeForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('stripeSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    await api('/api/stripe/save', {
+      method: 'POST',
+      body: JSON.stringify({
+        publishable_key: document.getElementById('sfPubKey').value,
+        secret_key: document.getElementById('sfSecKey').value,
+        webhook_secret: document.getElementById('sfWhsec').value,
+      })
+    });
+    const notifEmail = document.getElementById('sfNotifEmail').value.trim();
+    if (notifEmail) {
+      await api('/api/payments/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ key: 'notification_email', value: { email: notifEmail } })
+      });
+    }
+    alert('Settings saved');
+    document.getElementById('sfSecKey').value = '';
+    document.getElementById('sfWhsec').value = '';
+  } catch (err) { alert(err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save Stripe Keys'; }
+});
+
+/* Bank Info */
+async function loadBankInfo() {
+  try {
+    const d = await api('/api/payments/settings');
+    document.getElementById('bfBankName').value = d.bank_name || '';
+    document.getElementById('bfAccountName').value = d.account_name || '';
+    document.getElementById('bfAccountNumber').value = d.account_number || '';
+    document.getElementById('bfRouting').value = d.routing || '';
+    document.getElementById('bfIban').value = d.iban || '';
+    document.getElementById('bfSwift').value = d.swift || '';
+  } catch {}
+}
+
+document.getElementById('bankForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('bankSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    await api('/api/payments/settings', {
+      method: 'PUT',
+      body: JSON.stringify({
+        bank_name: document.getElementById('bfBankName').value,
+        account_name: document.getElementById('bfAccountName').value,
+        account_number: document.getElementById('bfAccountNumber').value,
+        routing: document.getElementById('bfRouting').value,
+        iban: document.getElementById('bfIban').value,
+        swift: document.getElementById('bfSwift').value,
+      })
+    });
+    alert('Bank info saved');
+  } catch (err) { alert(err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save Bank Info'; }
+});
 
 /* Change Password */
 function showChangePassword() { document.getElementById('passwordModal').style.display = 'flex'; document.getElementById('passwordError').textContent = ''; }

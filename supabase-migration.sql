@@ -100,6 +100,39 @@ CREATE POLICY "site_users_read" ON site_users FOR SELECT USING (true);
 
 CREATE POLICY "favorites_all" ON favorites FOR ALL USING (true);
 
+CREATE TABLE IF NOT EXISTS payments (
+  id BIGSERIAL PRIMARY KEY,
+  property_id BIGINT REFERENCES properties(id),
+  user_email TEXT DEFAULT '',
+  amount REAL NOT NULL,
+  currency TEXT DEFAULT 'usd',
+  stripe_session_id TEXT UNIQUE,
+  stripe_payment_intent TEXT,
+  status TEXT DEFAULT 'pending',
+  type TEXT DEFAULT 'deposit',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "payments_read" ON payments FOR SELECT USING (true);
+CREATE POLICY "payments_insert" ON payments FOR INSERT WITH CHECK (true);
+CREATE POLICY "payments_update" ON payments FOR UPDATE USING (true);
+
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS receipt_url TEXT DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value JSONB DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "settings_read" ON settings FOR SELECT USING (true);
+CREATE POLICY "settings_write" ON settings FOR ALL USING (true);
+
+INSERT INTO settings (key, value) VALUES ('bank_info', '{}') ON CONFLICT (key) DO NOTHING;
+
 -- 4. Seed properties
 INSERT INTO properties (title, location, price, type, beds, baths, sqft, image, badge, featured, year, lat, lng, description) VALUES
 ('Modern Downtown Apartment', '123 Main St, New York, NY', 450000, 'apartment', 2, 2, 1200, 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80', 'sale', TRUE, 2021, 40.7128, -74.006, 'This stylish apartment offers contemporary living in the heart of the city.'),
