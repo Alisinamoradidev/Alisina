@@ -404,6 +404,8 @@ module.exports = async (req, res) => {
         ...(email ? { customer_email: email } : {}),
       });
       return res.status(200).json({ url: session.url });
+    }
+
     if (path === '/payments/webhook' && method === 'POST') {
       const stripe = await getStripe();
       const whsec = await getWebhookSecret();
