@@ -280,19 +280,24 @@ window.addEventListener('scroll', () => { window.scrollY > 400 ? scrollTop.class
 scrollTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 /* Testimonials */
-const testimonials = [
-  { name: "Fatima Ahmadi", role: "Home Buyer", text: "Alisina made finding our first home so easy. He listened to what we wanted and found the perfect place within our budget.", initial: "F" },
-  { name: "Mohammad Karimi", role: "Property Seller", text: "Sold my house in just 3 weeks thanks to Alisina's marketing and negotiation skills. Got above asking price.", initial: "M" },
-  { name: "Zahra Hosseini", role: "Investor", text: "I've worked with many agents over the years. Alisina stands out for his market knowledge and honest advice.", initial: "Z" },
-  { name: "Ali Rezai", role: "Renter", text: "Found me a great apartment in a prime location within days. Transparent, responsive, and truly cares about his clients.", initial: "A" }
-];
 function renderTestimonials() {
-  const g = $('testimonialsGrid');
-  testimonials.forEach(t => {
-    const c = document.createElement('div'); c.className = 'testimonial-card';
-    c.innerHTML = `<div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><p class="testimonial-text">"${t.text}"</p><div class="testimonial-author"><div class="testimonial-avatar">${t.initial}</div><div><div class="testimonial-name">${t.name}</div><div class="testimonial-role">${t.role}</div></div></div>`;
-    g.appendChild(c);
-  });
+  fetch('/api/testimonials').then(r => r.json()).then(testimonials => {
+    const g = $('testimonialsGrid');
+    if (!testimonials.length) {
+      g.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">No testimonials yet.</p>';
+      return;
+    }
+    g.innerHTML = testimonials.map(t => `
+      <div class="testimonial-card">
+        <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(Math.min(5, Math.max(1, t.rating || 5)))}</div>
+        <p class="testimonial-text">"${t.content}"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">${t.image ? `<img src="${t.image}" alt="${t.name}" style="width:48px;height:48px;border-radius:50%;object-fit:cover">` : (t.name ? t.name.charAt(0).toUpperCase() : '?')}</div>
+          <div><div class="testimonial-name">${t.name}</div><div class="testimonial-role">${t.role || ''}</div></div>
+        </div>
+      </div>
+    `).join('');
+  }).catch(() => {});
 }
 
 /* Mortgage Calculator */

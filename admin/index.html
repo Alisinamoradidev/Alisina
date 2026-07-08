@@ -39,6 +39,7 @@
         <button class="nav-btn" data-view="properties"><i class="fas fa-home"></i> Properties</button>
         <button class="nav-btn" data-view="blog"><i class="fas fa-newspaper"></i> Blog</button>
         <button class="nav-btn" data-view="messages"><i class="fas fa-envelope"></i> Messages</button>
+        <button class="nav-btn" data-view="testimonials"><i class="fas fa-star"></i> Testimonials</button>
         <button class="nav-btn" data-view="schedules"><i class="fas fa-calendar"></i> Schedules</button>
         <button class="nav-btn" data-view="payments"><i class="fas fa-credit-card"></i> Payments</button>
         <button class="nav-btn" data-view="bank"><i class="fas fa-university"></i> Bank Info</button>
@@ -53,6 +54,7 @@
             <div class="stat-card"><div class="stat-value" id="statPosts">—</div><div class="stat-label">Blog Posts</div></div>
             <div class="stat-card"><div class="stat-value" id="statMessages">—</div><div class="stat-label">Messages</div></div>
             <div class="stat-card"><div class="stat-value" id="statSchedules">—</div><div class="stat-label">Schedules</div></div>
+            <div class="stat-card"><div class="stat-value" id="statTestimonials">—</div><div class="stat-label">Testimonials</div></div>
             <div class="stat-card"><div class="stat-value" id="statUsers">—</div><div class="stat-label">Site Users</div></div>
           </div>
         </div>
@@ -81,6 +83,17 @@
           </div>
           <div class="table-wrap"><table id="postsTable"><thead><tr><th>ID</th><th>Title</th><th>Slug</th><th>Published</th><th>Date</th><th>Actions</th></tr></thead><tbody id="postsBody"></tbody></table></div>
           <p class="empty-state" id="postsEmpty">No posts yet.</p>
+        </div>
+
+        <div id="viewTestimonials" class="view">
+          <div class="view-header">
+            <h2>Testimonials</h2>
+            <div class="view-actions">
+              <button class="btn-primary" onclick="openTestimonialForm()"><i class="fas fa-plus"></i> Add</button>
+            </div>
+          </div>
+          <div class="table-wrap"><table id="testimonialsTable"><thead><tr><th>ID</th><th>Name</th><th>Rating</th><th>Published</th><th>Order</th><th>Actions</th></tr></thead><tbody id="testimonialsBody"></tbody></table></div>
+          <p class="empty-state" id="testimonialsEmpty">No testimonials yet.</p>
         </div>
 
         <div id="viewMessages" class="view">
@@ -176,6 +189,28 @@
           <div class="form-actions">
             <button type="button" class="btn-outline" onclick="closePostForm()">Cancel</button>
             <button type="submit" class="btn-primary" id="postSubmit">Save Post</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Testimonial Form Modal -->
+    <div class="modal-overlay" id="testimonialModal" style="display:none">
+      <div class="modal modal-sm">
+        <div class="modal-header"><h3 id="testimonialFormTitle">Add Testimonial</h3><button class="modal-close" onclick="closeTestimonialForm()">&times;</button></div>
+        <form id="testimonialForm" class="modal-body">
+          <div class="field"><label>Name *</label><input type="text" id="tfName" required></div>
+          <div class="field"><label>Role (e.g. Home Buyer, Seller)</label><input type="text" id="tfRole"></div>
+          <div class="field"><label>Content * (testimonial text)</label><textarea id="tfContent" rows="3" required></textarea></div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="field"><label>Rating (1-5)</label><input type="number" id="tfRating" min="1" max="5" value="5"></div>
+            <div class="field"><label>Display Order</label><input type="number" id="tfOrder" value="0"></div>
+            <div class="field"><label>Published</label><select id="tfPublished"><option value="1">Yes</option><option value="0">No</option></select></div>
+          </div>
+          <div class="field"><label>Avatar Image URL</label><input type="url" id="tfImage"><input type="file" accept="image/*" onchange="uploadImage(this, 'tfImage')" style="margin-top:6px"></div>
+          <div class="form-actions">
+            <button type="button" class="btn-outline" onclick="closeTestimonialForm()">Cancel</button>
+            <button type="submit" class="btn-primary" id="testimonialSubmit">Save Testimonial</button>
           </div>
         </form>
       </div>

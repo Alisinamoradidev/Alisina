@@ -147,6 +147,23 @@ INSERT INTO properties (title, location, price, type, beds, baths, sqft, image, 
 ('Colonial Family Home', '444 Maple Ave, Boston, MA', 575000, 'house', 4, 3, 2600, 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80', 'sale', TRUE, 2016, 42.3601, -71.0589, 'Classic colonial home with modern updates.');
 
 -- 5. Seed blog post
+-- 6. Testimonials
+CREATE TABLE IF NOT EXISTS testimonials (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  role TEXT DEFAULT '',
+  content TEXT NOT NULL,
+  rating INTEGER DEFAULT 5,
+  image TEXT DEFAULT '',
+  display_order INTEGER DEFAULT 0,
+  published BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "testimonials_read" ON testimonials FOR SELECT USING (true);
+CREATE POLICY "testimonials_all" ON testimonials FOR ALL USING (true);
+
 INSERT INTO posts (title, slug, excerpt, content, image, author, published) VALUES
 ('2026 Real Estate Market Trends', '2026-real-estate-market-trends',
 'Discover the key trends shaping the real estate market in 2026.',

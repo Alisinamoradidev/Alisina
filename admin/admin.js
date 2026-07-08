@@ -77,6 +77,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (v === 'schedules') loadSchedules();
     if (v === 'dashboard') loadDashboard();
     if (v === 'payments') loadPayments();
+    if (v === 'testimonials') loadTestimonials();
     if (v === 'bank') { loadBankInfo(); loadStripeSettings(); }
   });
 });
@@ -84,17 +85,19 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 /* Dashboard */
 async function loadDashboard() {
   try {
-    const [props, posts, msgs, scheds] = await Promise.all([
+    const [props, posts, msgs, scheds, testis] = await Promise.all([
       api('/api/properties'),
       api('/api/blog?published=0'),
       api('/api/contact/messages?limit=1'),
       api('/api/contact/schedules?limit=1'),
+      api('/api/testimonials'),
     ]);
     document.getElementById('statProperties').textContent = props.length;
     document.getElementById('statFeatured').textContent = props.filter(p => p.featured).length;
     document.getElementById('statPosts').textContent = posts.length;
     document.getElementById('statMessages').textContent = msgs.total;
     document.getElementById('statSchedules').textContent = scheds.total;
+    document.getElementById('statTestimonials').textContent = testis.length;
     document.getElementById('statUsers').textContent = '—';
   } catch {}
 }
@@ -331,6 +334,90 @@ async function deletePost(id) {
 async function deleteAllPosts() {
   if (!confirm('Delete ALL blog posts? This cannot be undone.')) return;
   try { await api('/api/blog', { method: 'DELETE' }); loadPosts(); loadDashboard(); }
+  catch (err) { alert(err.message); }
+}
+
+/* Testimonials */
+let editingTestimonialId = null;
+
+async function loadTestimonials() {
+  try {
+    const data = await api('/api/testimonials');
+    const tbody = document.getElementById('testimonialsBody');
+    const empty = document.getElementById('testimonialsEmpty');
+    tbody.innerHTML = '';
+    if (data.length === 0) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    data.forEach(t => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${t.id}</td>
+        <td><strong>${t.name}</strong>${t.role ? `<br><small style="color:var(--text-muted)">${t.role}</small>` : ''}</td>
+        <td>${'<i class="fas fa-star" style="color:#f59e0b"></i>'.repeat(Math.min(5, Math.max(1, t.rating || 5)))}</td>
+        <td>${t.published !== false ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '<span style="color:var(--text-muted)">No</span>'}</td>
+        <td>${t.display_order || 0}</td>
+        <td><div class="actions">
+          <button class="btn-outline btn-sm" onclick="editTestimonial(${t.id})"><i class="fas fa-edit"></i></button>
+          <button class="btn-danger btn-sm" onclick="deleteTestimonial(${t.id})"><i class="fas fa-trash"></i></button>
+        </div></td>`;
+      tbody.appendChild(tr);
+    });
+  } catch {}
+}
+
+function openTestimonialForm(t) {
+  editingTestimonialId = t ? t.id : null;
+  document.getElementById('testimonialFormTitle').textContent = t ? 'Edit Testimonial' : 'Add Testimonial';
+  document.getElementById('testimonialSubmit').textContent = t ? 'Update Testimonial' : 'Save Testimonial';
+  document.getElementById('tfName').value = t ? t.name : '';
+  document.getElementById('tfRole').value = t ? t.role || '' : '';
+  document.getElementById('tfContent').value = t ? t.content || '' : '';
+  document.getElementById('tfRating').value = t ? (t.rating || 5) : 5;
+  document.getElementById('tfOrder').value = t ? (t.display_order || 0) : 0;
+  document.getElementById('tfPublished').value = t ? (t.published !== false ? 1 : 0) : 1;
+  document.getElementById('tfImage').value = t ? t.image || '' : '';
+  document.getElementById('testimonialModal').style.display = 'flex';
+}
+
+function closeTestimonialForm() { document.getElementById('testimonialModal').style.display = 'none'; }
+
+document.getElementById('testimonialForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const data = {
+    name: document.getElementById('tfName').value,
+    role: document.getElementById('tfRole').value,
+    content: document.getElementById('tfContent').value,
+    rating: parseInt(document.getElementById('tfRating').value) || 5,
+    display_order: parseInt(document.getElementById('tfOrder').value) || 0,
+    published: parseInt(document.getElementById('tfPublished').value) === 1,
+    image: document.getElementById('tfImage').value,
+  };
+  const btn = document.getElementById('testimonialSubmit');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    if (editingTestimonialId) {
+      await api(`/api/testimonials/${editingTestimonialId}`, { method: 'PUT', body: JSON.stringify(data) });
+    } else {
+      await api('/api/testimonials', { method: 'POST', body: JSON.stringify(data) });
+    }
+    closeTestimonialForm();
+    loadTestimonials();
+    loadDashboard();
+  } catch (err) { alert(err.message); }
+  finally { btn.disabled = false; btn.textContent = editingTestimonialId ? 'Update Testimonial' : 'Save Testimonial'; }
+});
+
+async function editTestimonial(id) {
+  try {
+    const data = await api('/api/testimonials');
+    const t = data.find(x => x.id === id);
+    if (t) openTestimonialForm(t);
+  } catch {}
+}
+
+async function deleteTestimonial(id) {
+  if (!confirm('Delete this testimonial?')) return;
+  try { await api(`/api/testimonials/${id}`, { method: 'DELETE' }); loadTestimonials(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
 

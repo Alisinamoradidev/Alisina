@@ -272,6 +272,39 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       return res.status(200).json({ message: 'Deleted' });
     }
 
+    /* Testimonials */
+    if (path === '/testimonials' && method === 'GET') {
+      const { data, error } = await supabase.from('testimonials').select('*').eq('published', true).order('display_order', { ascending: true }).order('created_at', { ascending: false });
+      if (error) throw error;
+      return res.status(200).json(data || []);
+    }
+
+    const testimonialMatch = path.match(/^\/testimonials\/(\d+)$/);
+    if (testimonialMatch && method === 'GET') {
+      const { data, error } = await supabase.from('testimonials').select('*').eq('id', testimonialMatch[1]).single();
+      if (error) return res.status(404).json({ error: 'Not found' });
+      return res.status(200).json(data);
+    }
+
+    if (testimonialMatch && method === 'PUT') {
+      const { error } = await supabase.from('testimonials').update({ ...body, updated_at: new Date().toISOString() }).eq('id', testimonialMatch[1]);
+      if (error) throw error;
+      const { data } = await supabase.from('testimonials').select('*').eq('id', testimonialMatch[1]).single();
+      return res.status(200).json(data);
+    }
+
+    if (testimonialMatch && method === 'DELETE') {
+      const { error } = await supabase.from('testimonials').delete().eq('id', testimonialMatch[1]);
+      if (error) throw error;
+      return res.status(200).json({ message: 'Deleted' });
+    }
+
+    if (path === '/testimonials' && method === 'POST') {
+      const { data, error } = await supabase.from('testimonials').insert(body).select().single();
+      if (error) throw error;
+      return res.status(201).json(data);
+    }
+
     /* Contact */
     if (path === '/contact' && method === 'POST') {
       const { data, error } = await supabase.from('contacts').insert(body).select().single();
