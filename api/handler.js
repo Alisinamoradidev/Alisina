@@ -372,7 +372,7 @@ module.exports = async (req, res) => {
         mode: 'payment',
         success_url: `${SITE_URL}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${SITE_URL}?payment=canceled`,
-        metadata: { property_id: String(property_id), type, email: email || '' },
+        metadata: { property_id: String(property_id), type },
         ...(email ? { customer_email: email } : {}),
       });
       return res.status(200).json({ url: session.url });
@@ -391,7 +391,7 @@ module.exports = async (req, res) => {
       }
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
-        const { property_id, type, email: metaEmail } = session.metadata || {};
+        const { property_id, type } = session.metadata || {};
         const amount = session.amount_total ? session.amount_total / 100 : 0;
         let receiptUrl = '';
         try {
@@ -407,6 +407,7 @@ module.exports = async (req, res) => {
             stripe_session_id: session.id,
             stripe_payment_intent: session.payment_intent || '',
             receipt_url: receiptUrl,
+            customer_name: session.customer_details?.name || '',
             status: 'completed',
             type: type || 'deposit',
           }).select();

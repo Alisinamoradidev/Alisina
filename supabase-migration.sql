@@ -120,6 +120,7 @@ CREATE POLICY "payments_insert" ON payments FOR INSERT WITH CHECK (true);
 CREATE POLICY "payments_update" ON payments FOR UPDATE USING (true);
 
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS receipt_url TEXT DEFAULT '';
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS customer_name TEXT DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
