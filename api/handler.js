@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const Stripe = require('stripe');
+const bcrypt = require('bcryptjs');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -292,7 +293,8 @@ module.exports = async (req, res) => {
       const { data: existing } = await supabase.from('site_users').select('id').eq('email', email).maybeSingle();
       if (existing) return res.status(409).json({ error: 'Email already registered' });
 
-      const { data, error } = await supabase.from('site_users').insert({ name, email, password }).select().single();
+      const hashed = await bcrypt.hash(password, 10);
+      const { data, error } = await supabase.from('site_users').insert({ name, email, password: hashed }).select().single();
       if (error) throw error;
 
       const token = Buffer.from(JSON.stringify({ id: data.id, email, name })).toString('base64');
@@ -302,7 +304,9 @@ module.exports = async (req, res) => {
     if (path === '/users/login' && method === 'POST') {
       const { email, password } = body;
       const { data: user } = await supabase.from('site_users').select('*').eq('email', email).maybeSingle();
-      if (!user || user.password !== password) return res.status(401).json({ error: 'Invalid email or password' });
+      if (!user) return res.status(401).json({ error: 'Invalid email or password' });
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) return res.status(401).json({ error: 'Invalid email or password' });
 
       const token = Buffer.from(JSON.stringify({ id: user.id, email: user.email, name: user.name })).toString('base64');
       return res.status(200).json({ token: `simple_${token}`, user: { id: user.id, name: user.name, email: user.email } });
