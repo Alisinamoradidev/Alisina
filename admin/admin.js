@@ -635,12 +635,14 @@ async function loadPayments() {
     pagEl.style.display = data.length > ADMIN_PAGE_SIZE ? 'flex' : 'none';
     pageItems.forEach(p => {
       const tr = document.createElement('tr');
+      tr.dataset.paymentId = p.id;
       const prop = p.properties ? `${p.properties.title}` : `#${p.property_id}`;
       const receiptHtml = p.receipt_url ? `<a href="${p.receipt_url}" target="_blank" title="View receipt"><i class="fas fa-receipt"></i></a>` : '—';
       const refundBtn = p.status === 'completed' && p.stripe_payment_intent
         ? `<button class="btn-outline btn-sm" onclick="refundPayment(${p.id})" title="Refund"><i class="fas fa-undo"></i></button>`
         : '';
       tr.innerHTML = `
+        <td><input type="checkbox" class="payment-checkbox" data-id="${p.id}" onchange="updateSelectedCount()"></td>
         <td>${p.id}</td>
         <td>${prop}</td>
         <td>${p.user_email}</td>
@@ -652,6 +654,7 @@ async function loadPayments() {
         <td><div class="actions">${refundBtn}<button class="btn-danger btn-sm" onclick="deletePayment(${p.id})"><i class="fas fa-trash"></i></button></div></td>`;
       tbody.appendChild(tr);
     });
+    document.getElementById('selectAllPayments').checked = false;
   } catch {}
 }
 
@@ -670,6 +673,23 @@ async function deletePayment(id) {
   catch (err) { alert(err.message); }
 }
 
+function toggleSelectAllPayments() {
+  const checked = document.getElementById('selectAllPayments').checked;
+  document.querySelectorAll('.payment-checkbox').forEach(cb => cb.checked = checked);
+  updateSelectedCount();
+}
+function updateSelectedCount() {
+  const count = document.querySelectorAll('.payment-checkbox:checked').length;
+  document.getElementById('selectedCount').textContent = count;
+  document.getElementById('deleteSelectedBtn').style.display = count ? 'inline-flex' : 'none';
+}
+async function deleteSelectedPayments() {
+  const ids = [...document.querySelectorAll('.payment-checkbox:checked')].map(cb => parseInt(cb.dataset.id));
+  if (!ids.length) return;
+  if (!confirm(`Delete ${ids.length} selected payment record(s)?`)) return;
+  try { await api('/api/payments/delete', { method: 'POST', body: JSON.stringify({ ids }) }); loadPayments(); updateSelectedCount(); }
+  catch (err) { alert(err.message); }
+}
 async function deleteAllPayments() {
   if (!confirm('Delete ALL payment records?')) return;
   try { await api('/api/payments', { method: 'DELETE' }); loadPayments(); }

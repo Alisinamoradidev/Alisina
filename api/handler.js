@@ -630,8 +630,13 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const auth = req.headers.authorization;
       const user = getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
-      const { id } = body;
-      if (!id) return res.status(400).json({ error: 'id required' });
+      const { id, ids } = body;
+      if (ids && Array.isArray(ids)) {
+        const { error } = await supabase.from('payments').delete().in('id', ids);
+        if (error) throw error;
+        return res.status(200).json({ message: `Deleted ${ids.length} payments` });
+      }
+      if (!id) return res.status(400).json({ error: 'id or ids required' });
       try {
         const { error } = await supabase.from('payments').delete().eq('id', id);
         if (error) throw error;
