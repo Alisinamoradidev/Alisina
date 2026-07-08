@@ -444,14 +444,21 @@ module.exports = async (req, res) => {
 </body>
 </html>`.trim();
           }
+          console.log('customer email from session:', customerEmail, 'admin email:', toEmail);
           async function sendGmail(to, subject, html) {
-            if (!gmailUser || !gmailPass) return;
+            console.log('sendGmail called, to:', to);
+            if (!gmailUser || !gmailPass) { console.error('sendGmail: no credentials'); return; }
             const nodemailer = require('nodemailer');
             const transporter = nodemailer.createTransport({
               host: 'smtp.gmail.com', port: 587, secure: false,
               auth: { user: gmailUser, pass: gmailPass },
             });
-            await transporter.sendMail({ from: `"Alisina Realty" <${gmailUser}>`, to, subject, html });
+            try {
+              const info = await transporter.sendMail({ from: `"Alisina Realty" <${gmailUser}>`, to, subject, html });
+              console.log('sendGmail success:', info.messageId);
+            } catch (e) {
+              console.error('sendGmail error:', e.message, e.code);
+            }
           }
           const emailPromises = [];
           if (toEmail) {
