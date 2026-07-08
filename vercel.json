@@ -5,6 +5,8 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/handler" }
+    { "source": "/api/(.*)", "destination": "/api/handler" },
+    { "source": "/admin", "destination": "/admin/index.html" },
+    { "source": "/admin/", "destination": "/admin/index.html" }
   ]
 }
