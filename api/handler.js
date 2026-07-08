@@ -645,30 +645,6 @@ module.exports = async (req, res) => {
       }
     }
 
-    /* Test isolated transporters - remove after testing */
-    if (path === '/payments/test-both' && method === 'POST') {
-      const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
-      const gmailUser = gmailConfig?.value?.email, gmailPass = gmailConfig?.value?.appPassword;
-      if (!gmailUser || !gmailPass) return res.status(400).json({ error: 'Gmail not configured' });
-      const nodemailer = require('nodemailer');
-      const results = [];
-      async function sendOne(to, subject, html) {
-        const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
-        try { const info = await t.sendMail({ from: `"Alisina Realty" <${gmailUser}>`, to, subject, html }); t.close(); return info; }
-        catch (e) { t.close(); throw e; }
-      }
-      const { adminTo, customerTo } = body;
-      if (adminTo) {
-        try { const info = await sendOne(adminTo, 'Admin test', '<p>Admin test</p>'); results.push({ to: adminTo, ok: true, id: info.messageId }); }
-        catch (e) { results.push({ to: adminTo, ok: false, error: e.message }); }
-      }
-      if (customerTo) {
-        try { const info = await sendOne(customerTo, 'Customer test', '<p>Customer test</p>'); results.push({ to: customerTo, ok: true, id: info.messageId }); }
-        catch (e) { results.push({ to: customerTo, ok: false, error: e.message }); }
-      }
-      return res.status(200).json({ results });
-    }
-
     return res.status(404).json({ error: 'Not found', path, method });
 
   } catch (err) {
