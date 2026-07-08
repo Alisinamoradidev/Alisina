@@ -182,6 +182,9 @@ function openModal(p) {
   } else {
     payBtn.style.display = 'none';
   }
+  /* Show email input */
+  const emailGroup = $('modalEmailGroup');
+  if (payBtn.style.display !== 'none') { emailGroup.style.display = ''; } else { emailGroup.style.display = 'none'; }
   /* Bank info */
   fetch(`${API_URL}/api/payments/settings`).then(r => r.json()).then(d => {
     if (d && d.bank_name) {
@@ -219,11 +222,14 @@ $('modalPay').addEventListener('click', async () => {
   const cfgRes = await fetch(`${API_URL}/api/stripe/config`);
   const cfg = await cfgRes.json();
   if (!cfg.configured) { showToast('Payment not configured yet'); return; }
+  const emailInput = $('modalEmail');
+  const customerEmail = emailInput.value.trim();
+  if (!customerEmail || !customerEmail.includes('@')) { showToast('Please enter a valid email for your receipt'); btn.disabled = false; btn.textContent = btn._payType === 'deposit' ? 'Pay $1,000 Deposit' : 'Pay Rent'; return; }
   btn.disabled = true; btn.textContent = 'Redirecting...';
   try {
     const res = await fetch(`${API_URL}/api/payments/create-checkout`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ property_id: btn._propId, type: btn._payType })
+      body: JSON.stringify({ property_id: btn._propId, type: btn._payType, email: customerEmail })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Payment failed');
