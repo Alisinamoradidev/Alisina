@@ -536,7 +536,6 @@ document.getElementById('stripeForm')?.addEventListener('submit', async e => {
     alert('Settings saved');
     document.getElementById('sfSecKey').value = '';
     document.getElementById('sfWhsec').value = '';
-    document.getElementById('sfResendKey').value = '';
   } catch (err) { alert(err.message); }
   finally { btn.disabled = false; btn.textContent = 'Save Stripe Keys'; }
 });
