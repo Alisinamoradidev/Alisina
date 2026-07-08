@@ -84,8 +84,7 @@ function getAuthUser(auth) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Content-Type','text/plain');
-  return res.status(200).end('url=' + (req.url || '') + '|host=' + (req.headers.host || '') + '|method=' + req.method);
+  const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
@@ -111,9 +110,6 @@ module.exports = async (req, res) => {
     }
 
     /* Property detail page (SEO) */
-    if (method === 'GET' && path.startsWith('/property/')) {
-      return res.status(200).setHeader('Content-Type', 'text/plain').end('path=' + path + ' url=' + req.url);
-    }
     const seoPropMatch = method === 'GET' && path.match(/^\/property\/(\d+)$/);
     if (seoPropMatch) {
       const id = parseInt(seoPropMatch[1]);
