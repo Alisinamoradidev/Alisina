@@ -136,6 +136,37 @@ module.exports = async (req, res) => {
 </body></html>`);
     }
 
+    /* Blog detail page (SEO) */
+    const blogSlugMatch = method === 'GET' && path.match(/^\/blog\/(.+)$/) && (req.headers.accept || '').includes('text/html');
+    if (blogSlugMatch) {
+      const slug = decodeURIComponent(blogSlugMatch[1]);
+      const { data: post } = await supabase.from('posts').select('*').eq('slug', slug).maybeSingle();
+      if (!post) return res.status(404).setHeader('Content-Type', 'text/html').end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Post Not Found | Alisina Realty</title><link rel="stylesheet" href="/styles.css"><style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#1e293b;background:#f8fafc;text-align:center;padding:24px}h1{font-size:72px;margin:0;background:linear-gradient(135deg,#1e3a5f,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#64748b;margin:8px 0 24px}a{color:#2563eb}</style></head><body><div><h1>404</h1><p>Post not found</p><a href="/">Back to Home</a></div></body></html>');
+      const img = post.image || 'https://alisina-nu.vercel.app/images/alisina.jpg';
+      const postTitle = `${post.title} | Alisina Realty Blog`;
+      const postDesc = (post.excerpt || post.content || '').replace(/<[^>]*>/g,'').substring(0,200).replace(/"/g,'&quot;');
+      return res.status(200).setHeader('Content-Type', 'text/html').end(`<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${postTitle}</title>
+<meta name="description" content="${postDesc}">
+<meta property="og:title" content="${post.title}"><meta property="og:description" content="${postDesc}"><meta property="og:image" content="${img}"><meta property="og:url" content="https://alisina-nu.vercel.app/blog/${slug}"><meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${post.title}"><meta name="twitter:description" content="${postDesc}"><meta name="twitter:image" content="${img}">
+<link rel="canonical" href="https://alisina-nu.vercel.app/blog/${slug}">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WGYY6MVM5P"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-WGYY6MVM5P')</script>
+</head><body>
+<div class="container" style="max-width:720px;margin:40px auto;padding:0 24px">
+<a href="/" style="color:#2563eb;text-decoration:none;margin-bottom:24px;display:inline-block">&larr; Back to Home</a>
+${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;border-radius:12px;margin:16px 0 24px;max-height:400px;object-fit:cover">` : ''}
+<h1 style="font-size:32px;margin-bottom:8px">${post.title}</h1>
+<p style="color:#94a3b8;font-size:14px;margin-bottom:24px">${post.created_at?.split(' ')[0] || ''} &bull; By ${post.author || 'Alisina Moradi'}</p>
+<div style="font-size:16px;line-height:1.8;color:#334155">${post.content || ''}</div>
+</div>
+<script src="/app.js"></script>
+<script src="/config.js"></script>
+</body></html>`);
+    }
+
     /* Properties */
     if (path === '/properties' && method === 'GET') {
       let query = supabase.from('properties').select('*');

@@ -793,7 +793,7 @@ async function loadBlogPosts() {
     const grid = document.getElementById('blogGrid');
     if (!posts.length) { grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">No posts yet. Check back soon!</p>'; return; }
     grid.innerHTML = posts.slice(0, 3).map(p => `
-      <div class="blog-card">
+      <a href="/blog/${p.slug || p.id}" class="blog-card" style="text-decoration:none;color:inherit;display:block">
         ${p.image ? `<div class="blog-image"><img src="${p.image}" alt="${p.title}" loading="lazy"></div>` : ''}
         <div class="blog-body">
           <div class="blog-date">${p.created_at?.split(' ')[0] || ''}</div>
@@ -801,7 +801,7 @@ async function loadBlogPosts() {
           <p class="blog-excerpt">${p.excerpt || ''}</p>
           <span class="blog-read-more">Read More <i class="fas fa-arrow-right"></i></span>
         </div>
-      </div>
+      </a>
     `).join('');
     hideBlogSkeletons();
   } catch { hideBlogSkeletons(); }
