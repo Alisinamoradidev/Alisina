@@ -81,6 +81,7 @@ td .actions { display: flex; gap: 6px; }
 
 .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); font-size: 15px; }
 
+
 @media (max-width: 768px) {
   .form-grid { grid-template-columns: 1fr; }
   .admin-nav { padding: 8px 12px; }

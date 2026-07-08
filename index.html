@@ -124,6 +124,11 @@
   </header>
 
   <section class="hero" id="home">
+    <div class="scroll-indicator" style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:1px;text-transform:uppercase">
+      <span>Scroll</span>
+      <i class="fas fa-chevron-down" style="font-size:14px"></i>
+    </div>
+    <div class="hero-image"></div>
     <div class="hero-overlay"></div>
     <div class="container hero-content">
       <h1>Find Your Perfect Home</h1>
@@ -179,7 +184,7 @@
     </div>
   </section>
 
-  <section class="section" id="listings">
+  <section class="section reveal" id="listings">
     <div class="container">
       <div class="section-header">
         <h2>Featured Properties</h2>
@@ -198,7 +203,7 @@
           </select>
         </div>
       </div>
-      <div class="listings-grid" id="listingsGrid">
+      <div class="listings-grid stagger" id="listingsGrid">
         <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w60"></div><div class="sk-line w80"></div><div class="sk-line w40"></div></div></div>
         <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w60"></div><div class="sk-line w80"></div><div class="sk-line w40"></div></div></div>
         <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w60"></div><div class="sk-line w80"></div><div class="sk-line w40"></div></div></div>
@@ -206,10 +211,16 @@
         <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w60"></div><div class="sk-line w80"></div><div class="sk-line w40"></div></div></div>
         <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w60"></div><div class="sk-line w80"></div><div class="sk-line w40"></div></div></div>
       </div>
-      <div class="pagination" id="pagination" style="display:none;justify-content:center;gap:8px;margin-top:32px;align-items:center">
-        <button class="btn-outline btn-sm" id="prevPage" onclick="goToPage(currentPage - 1)"><i class="fas fa-chevron-left"></i> Prev</button>
-        <div id="pageNumbers" style="display:flex;gap:4px;align-items:center"></div>
-        <button class="btn-outline btn-sm" id="nextPage" onclick="goToPage(currentPage + 1)">Next <i class="fas fa-chevron-right"></i></button>
+      <div class="pagination" id="pagination">
+        <button class="page-nav" id="prevPage" onclick="goToPage(currentPage - 1)">
+          <i class="fas fa-chevron-left"></i>
+          <span>Prev</span>
+        </button>
+        <div class="page-numbers" id="pageNumbers"></div>
+        <button class="page-nav" id="nextPage" onclick="goToPage(currentPage + 1)">
+          <span>Next</span>
+          <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
       <div class="no-results" id="noResults">
         <i class="fas fa-search"></i>
@@ -224,23 +235,23 @@
     </div>
   </section>
 
-  <section class="section" id="sold" style="background:var(--bg-secondary)">
+  <section class="section reveal" id="sold" style="background:var(--bg-secondary)">
     <div class="container">
       <div class="section-header">
         <h2>Sold Properties</h2>
         <p>Properties we've helped close successfully</p>
       </div>
-      <div class="listings-grid" id="soldGrid"></div>
+      <div class="listings-grid stagger" id="soldGrid"></div>
       <p class="no-results" id="soldEmpty" style="display:none;text-align:center;padding:40px;color:var(--text-secondary)">No sold properties yet.</p>
     </div>
   </section>
-  <section class="section about" id="about">
+  <section class="section about reveal" id="about">
     <div class="container">
       <div class="section-header">
         <h2>Why Choose Us</h2>
         <p>We make finding your dream home effortless</p>
       </div>
-      <div class="features-grid">
+      <div class="features-grid stagger">
         <div class="feature-card">
           <i class="fas fa-map-marker-alt"></i>
           <h3>Prime Locations</h3>
@@ -265,7 +276,7 @@
     </div>
   </section>
 
-  <section class="section agent" id="agent">
+  <section class="section agent reveal" id="agent">
     <div class="container">
       <div class="agent-wrapper">
         <div class="agent-image">
@@ -280,7 +291,7 @@
             find the perfect property. My commitment is to provide transparent, professional, 
             and personalized service to every client.
           </p>
-          <div class="agent-stats">
+          <div class="agent-stats stagger">
             <div class="stat">
               <span class="stat-number">150+</span>
               <span class="stat-label">Properties Sold</span>
@@ -299,13 +310,13 @@
     </div>
   </section>
 
-  <section class="section blog" id="blog">
+  <section class="section blog reveal" id="blog">
     <div class="container">
       <div class="section-header">
         <h2>Latest from the Blog</h2>
         <p>Real estate market insights, tips, and local guides</p>
       </div>
-      <div class="blog-grid" id="blogGrid">
+      <div class="blog-grid stagger" id="blogGrid">
         <div class="skeleton-card"><div class="sk-img h-48"></div><div class="sk-body"><div class="sk-line w40"></div><div class="sk-line w80"></div><div class="sk-line w100"></div></div></div>
         <div class="skeleton-card"><div class="sk-img h-48"></div><div class="sk-body"><div class="sk-line w40"></div><div class="sk-line w80"></div><div class="sk-line w100"></div></div></div>
         <div class="skeleton-card"><div class="sk-img h-48"></div><div class="sk-body"><div class="sk-line w40"></div><div class="sk-line w80"></div><div class="sk-line w100"></div></div></div>
@@ -313,17 +324,17 @@
     </div>
   </section>
 
-  <section class="section testimonials" id="testimonials">
+  <section class="section testimonials reveal" id="testimonials">
     <div class="container">
       <div class="section-header">
         <h2>What My Clients Say</h2>
         <p>Trusted by buyers, sellers, and investors</p>
       </div>
-      <div class="testimonials-grid" id="testimonialsGrid"></div>
+      <div class="testimonials-grid stagger" id="testimonialsGrid"></div>
     </div>
   </section>
 
-  <section class="section calculator" id="calculator">
+  <section class="section calculator reveal" id="calculator">
     <div class="container">
       <div class="section-header">
         <h2>Mortgage Calculator</h2>
@@ -377,7 +388,7 @@
     </div>
   </section>
 
-  <section class="section quiz-section" id="quiz">
+  <section class="section quiz-section reveal" id="quiz">
     <div class="container">
       <div class="section-header">
         <h2>Property Match Quiz</h2>
@@ -394,7 +405,7 @@
     </div>
   </section>
 
-  <section class="section map-section" id="map">
+  <section class="section map-section reveal" id="map">
     <div class="container">
       <div class="section-header">
         <h2>Properties on Map</h2>
@@ -404,7 +415,7 @@
     </div>
   </section>
 
-  <section class="section schedule" id="scheduleSection">
+  <section class="section schedule reveal" id="scheduleSection">
     <div class="container">
       <div class="section-header">
         <h2>Schedule a Viewing</h2>
@@ -437,7 +448,7 @@
     </div>
   </section>
 
-  <section class="section contact" id="contact">
+  <section class="section contact reveal" id="contact">
     <div class="container">
       <div class="section-header">
         <h2>Get In Touch</h2>

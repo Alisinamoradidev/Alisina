@@ -224,7 +224,11 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (propMatch && method === 'PUT') {
-      const { error } = await supabase.from('properties').update({ ...body, updated_at: new Date().toISOString() }).eq('id', propMatch[1]);
+      const upd = { ...body, updated_at: new Date().toISOString() };
+      for (const f of ['title_l10n','location_l10n','description_l10n']) {
+        if (body[f] !== undefined) upd[f] = body[f];
+      }
+      const { error } = await supabase.from('properties').update(upd).eq('id', propMatch[1]);
       if (error) throw error;
       const { data } = await supabase.from('properties').select('*').eq('id', propMatch[1]).single();
       return res.status(200).json(data);
@@ -272,7 +276,11 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (blogMatch && method === 'PUT') {
-      const { error } = await supabase.from('posts').update({ ...body, updated_at: new Date().toISOString() }).eq('id', blogMatch[1]);
+      const upd = { ...body, updated_at: new Date().toISOString() };
+      for (const f of ['title_l10n','excerpt_l10n','content_l10n']) {
+        if (body[f] !== undefined) upd[f] = body[f];
+      }
+      const { error } = await supabase.from('posts').update(upd).eq('id', blogMatch[1]);
       if (error) throw error;
       const { data } = await supabase.from('posts').select('*').eq('id', blogMatch[1]).single();
       return res.status(200).json(data);
@@ -286,7 +294,10 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     /* Testimonials */
     if (path === '/testimonials' && method === 'GET') {
-      const { data, error } = await supabase.from('testimonials').select('*').eq('published', true).order('display_order', { ascending: true }).order('created_at', { ascending: false });
+      const published = url.searchParams.get('published');
+      let query = supabase.from('testimonials').select('*');
+      if (published !== '0') query = query.eq('published', true);
+      const { data, error } = await query.order('display_order', { ascending: true }).order('created_at', { ascending: false });
       if (error) throw error;
       return res.status(200).json(data || []);
     }
@@ -299,7 +310,11 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (testimonialMatch && method === 'PUT') {
-      const { error } = await supabase.from('testimonials').update({ ...body, updated_at: new Date().toISOString() }).eq('id', testimonialMatch[1]);
+      const upd = { ...body, updated_at: new Date().toISOString() };
+      for (const f of ['name_l10n','role_l10n','content_l10n']) {
+        if (body[f] !== undefined) upd[f] = body[f];
+      }
+      const { error } = await supabase.from('testimonials').update(upd).eq('id', testimonialMatch[1]);
       if (error) throw error;
       const { data } = await supabase.from('testimonials').select('*').eq('id', testimonialMatch[1]).single();
       return res.status(200).json(data);

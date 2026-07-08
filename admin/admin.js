@@ -27,6 +27,19 @@ function adminViewChanged(view) {
   else if (view === 'Testimonials') loadTestimonials();
 }
 
+/* Helper: capitalize first letter */
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+/* Build the full l10n JSONB object from EN fields */
+function buildFullL10n(store, prefix, suffix, fields) {
+  const obj = {};
+  for (const f of fields) {
+    const el = document.getElementById(prefix + cap(f));
+    if (el && el.value) obj[f] = { en: el.value, fa: '' };
+  }
+  return obj;
+}
+
 function api(path, options = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -268,6 +281,7 @@ function closePropertyForm() { document.getElementById('propertyModal').style.di
 
 document.getElementById('propertyForm').addEventListener('submit', async e => {
   e.preventDefault();
+  const l10n = buildFullL10n(null, 'pf', '', ['title','location','description']);
   const data = {
     title: document.getElementById('pfTitle').value,
     location: document.getElementById('pfLocation').value,
@@ -284,6 +298,9 @@ document.getElementById('propertyForm').addEventListener('submit', async e => {
     image: document.getElementById('pfImage').value || '',
     gallery: document.getElementById('pfGallery').value.split('\n').map(s => s.trim()).filter(Boolean),
     description: document.getElementById('pfDescription').value || '',
+    title_l10n: l10n.title || null,
+    location_l10n: l10n.location || null,
+    description_l10n: l10n.description || null,
   };
   const btn = document.getElementById('propertySubmit');
   btn.disabled = true; btn.textContent = 'Saving...';
@@ -371,6 +388,7 @@ function closePostForm() { document.getElementById('postModal').style.display = 
 
 document.getElementById('postForm').addEventListener('submit', async e => {
   e.preventDefault();
+  const l10n = buildFullL10n(null, 'pfPost', '', ['title','excerpt','content']);
   const data = {
     title: document.getElementById('pfPostTitle').value,
     slug: document.getElementById('pfPostSlug').value,
@@ -379,6 +397,9 @@ document.getElementById('postForm').addEventListener('submit', async e => {
     image: document.getElementById('pfPostImage').value,
     author: document.getElementById('pfPostAuthor').value,
     published: parseInt(document.getElementById('pfPostPublished').value) === 1,
+    title_l10n: l10n.title || null,
+    excerpt_l10n: l10n.excerpt || null,
+    content_l10n: l10n.content || null,
   };
   const btn = document.getElementById('postSubmit');
   btn.disabled = true; btn.textContent = 'Saving...';
@@ -464,6 +485,7 @@ function closeTestimonialForm() { document.getElementById('testimonialModal').st
 
 document.getElementById('testimonialForm').addEventListener('submit', async e => {
   e.preventDefault();
+  const l10n = buildFullL10n(null, 'tf', '', ['name','role','content']);
   const data = {
     name: document.getElementById('tfName').value,
     role: document.getElementById('tfRole').value,
@@ -472,6 +494,9 @@ document.getElementById('testimonialForm').addEventListener('submit', async e =>
     display_order: parseInt(document.getElementById('tfOrder').value) || 0,
     published: parseInt(document.getElementById('tfPublished').value) === 1,
     image: document.getElementById('tfImage').value,
+    name_l10n: l10n.name || null,
+    role_l10n: l10n.role || null,
+    content_l10n: l10n.content || null,
   };
   const btn = document.getElementById('testimonialSubmit');
   btn.disabled = true; btn.textContent = 'Saving...';
@@ -715,7 +740,25 @@ async function loadStripeSettings() {
     const smtp = await api('/api/payments/settings?key=gmail_smtp');
     document.getElementById('sfGmailEmail').value = (smtp && smtp.email) ? smtp.email : '';
   } catch {}
+  try {
+    const deepl = await api('/api/payments/settings?key=deepl_api_key');
+    document.getElementById('sfDeeplKey').value = (deepl && deepl.key) ? deepl.key : '';
+  } catch {}
 }
+
+document.getElementById('deeplForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('deeplSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    await api('/api/payments/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ key: 'deepl_api_key', value: { key: document.getElementById('sfDeeplKey').value } })
+    });
+    alert('DeepL API key saved');
+  } catch (err) { alert(err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save DeepL Key'; }
+});
 
 document.getElementById('stripeForm')?.addEventListener('submit', async e => {
   e.preventDefault();

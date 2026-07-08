@@ -30,8 +30,8 @@ function renderSoldProperties() {
   const sold = properties.filter(p => p.badge === 'sold');
   if (!sold.length) { grid.innerHTML = ''; if (empty) empty.style.display = 'block'; return; }
   if (empty) empty.style.display = 'none';
-  grid.innerHTML = sold.map(p => `
-    <div class="property-card visible" data-id="${p.id}">
+  grid.innerHTML = sold.map((p, i) => `
+    <div class="property-card" style="--i:${i}" data-id="${p.id}">
       <div class="property-image">
         <img src="${p.image}" alt="${p.title}" loading="lazy">
         <span class="property-badge badge-sold">Sold</span>
@@ -88,10 +88,11 @@ function setFavIcon(btn, id) {
   icon.className = favorites.has(id) ? 'fas fa-heart' : 'far fa-heart';
 }
 
-function createPropertyCard(p) {
+function createPropertyCard(p, idx = 0) {
   const card = document.createElement('div');
   card.className = 'property-card';
   card.dataset.id = p.id;
+  card.style.setProperty('--i', idx);
   card.innerHTML = `
     <div class="property-image">
       <img src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22><rect fill=%22%23d1d5db%22 width=%22600%22 height=%22400%22/><text fill=%22%236b7280%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>No Image</text></svg>'">
@@ -173,7 +174,7 @@ function renderProperties(list) {
   const start = (currentPage - 1) * pageSize;
   const pageItems = list.slice(start, start + pageSize);
   resultsCount.textContent = `Showing ${start + 1}–${Math.min(start + pageSize, list.length)} of ${list.length} properties`;
-  pageItems.forEach(p => listingsGrid.appendChild(createPropertyCard(p)));
+  pageItems.forEach((p, i) => listingsGrid.appendChild(createPropertyCard(p, i)));
   renderPagination(totalPages, list);
   requestAnimationFrame(() => {
     document.querySelectorAll('.property-card').forEach((card, i) => setTimeout(() => card.classList.add('visible'), i * 80));
@@ -198,13 +199,13 @@ function renderPagination(totalPages) {
 
 function pageNum(n) {
   const btn = document.createElement('button');
-  btn.className = `btn-sm ${n === currentPage ? 'btn-primary' : 'btn-outline'}`;
+  btn.className = `page-num${n === currentPage ? ' active' : ''}`;
   btn.textContent = n;
   btn.onclick = () => { currentPage = n; updateListings(); };
   return btn;
 }
 
-function ellipsis() { const s = document.createElement('span'); s.textContent = '...'; s.style.padding = '0 4px'; s.style.color = 'var(--text-muted)'; return s; }
+function ellipsis() { const s = document.createElement('span'); s.className = 'page-dots'; s.textContent = '...'; return s; }
 
 function goToPage(n) { currentPage = n; updateListings(); }
 
@@ -390,8 +391,8 @@ function renderTestimonials() {
       g.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">No testimonials yet.</p>';
       return;
     }
-    g.innerHTML = testimonials.map(t => `
-      <div class="testimonial-card">
+    g.innerHTML = testimonials.map((t, i) => `
+      <div class="testimonial-card" style="--i:${i}">
         <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(Math.min(5, Math.max(1, t.rating || 5)))}</div>
         <p class="testimonial-text">"${t.content}"</p>
         <div class="testimonial-author">
@@ -929,6 +930,7 @@ updateListings();
 loadPropertiesFromApi();
 tryInitMap();
 loadBlogPosts();
+
 /* Open property modal if loaded from /property/:id page */
 /* Newsletter subscription */
 document.getElementById('subscribeForm')?.addEventListener('submit', async e => {
@@ -954,3 +956,46 @@ if (window.__propertyId) {
 }
 updateUserUI();
 if (userToken) syncFavoritesFromServer();
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS — delete this block to remove
+   ═══════════════════════════════════════════════ */
+
+function initAnimations() {
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        entry.target.querySelectorAll('.stat-number').forEach(el => animateCounter(el));
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal, .stagger').forEach(el => revealObserver.observe(el));
+}
+
+function animateCounter(el) {
+  const raw = el.textContent.replace(/[+,%]/g, '').trim();
+  const target = parseInt(raw);
+  if (!target || target < 1 || el.dataset.animated) return;
+  el.dataset.animated = 'true';
+  const suffix = el.textContent.includes('+') ? '+' : el.textContent.includes('%') ? '%' : '';
+  const duration = 1200;
+  const stepTime = Math.max(16, Math.floor(duration / target));
+  let current = 0;
+  const timer = setInterval(() => {
+    current += 1;
+    if (current >= target) { current = target; clearInterval(timer); }
+    el.textContent = current.toLocaleString() + suffix;
+  }, stepTime);
+}
+
+/* Header shadow on scroll */
+document.addEventListener('scroll', () => {
+  const h = document.querySelector('.header');
+  if (!h) return;
+  h.classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+initAnimations();

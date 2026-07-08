@@ -140,6 +140,12 @@
             <div class="form-actions"><button type="submit" class="btn-primary" id="stripeSaveBtn">Save Stripe Keys</button></div>
           </form>
 
+          <h3 style="margin-bottom:8px;color:var(--text)">Auto-Translate</h3>
+          <form id="deeplForm" class="modal-body" style="max-width:500px;padding:0;margin-bottom:24px">
+            <div class="field"><label>DeepL API Key</label><input type="text" id="sfDeeplKey" placeholder="DeepL-Auth-Key ..."><small style="color:var(--text-muted);display:block;margin-top:4px">Free tier: 500k chars/mo. Get one at <a href="https://deepl.com/pro-api" target="_blank">deepl.com/pro-api</a></small></div>
+            <div class="form-actions"><button type="submit" class="btn-primary" id="deeplSaveBtn">Save DeepL Key</button></div>
+          </form>
+
           <h3 style="margin-bottom:8px;color:var(--text)">Bank Transfer Info</h3>
           <form id="bankForm" class="modal-body" style="max-width:500px;padding:0">
             <div class="field"><label>Bank Name</label><input type="text" id="bfBankName"></div>
@@ -173,6 +179,7 @@
             <div class="field"><label>Lat</label><input type="number" step="any" id="pfLat"></div>
             <div class="field"><label>Lng</label><input type="number" step="any" id="pfLng"></div>
           </div>
+
           <div class="field"><label>Main Image URL</label><input type="url" id="pfImage" placeholder="https://..."><input type="file" accept="image/*" onchange="uploadImage(this, 'pfImage')" style="margin-top:6px"></div>
           <div class="field"><label>Gallery Images (one URL per line)</label><textarea id="pfGallery" rows="3" placeholder="https://...&#10;https://...&#10;https://..."></textarea><input type="file" accept="image/*" multiple onchange="uploadImage(this, 'pfGallery', true)" style="margin-top:6px"></div>
           <div class="field"><label>Description</label><textarea id="pfDescription" rows="3"></textarea></div>
@@ -193,6 +200,7 @@
           <div class="field"><label>Slug * (URL-friendly, e.g. market-trends-2026)</label><input type="text" id="pfPostSlug" required></div>
           <div class="field"><label>Excerpt (short summary)</label><textarea id="pfPostExcerpt" rows="2"></textarea></div>
           <div class="field"><label>Content *</label><div id="pfPostEditor" style="min-height:300px;margin-bottom:48px"></div><textarea id="pfPostContent" style="display:none"></textarea></div>
+
           <div class="form-grid" style="grid-template-columns:1fr 1fr">
             <div class="field"><label>Image URL</label><input type="url" id="pfPostImage"><input type="file" accept="image/*" onchange="uploadImage(this, 'pfPostImage')" style="margin-top:6px"></div>
             <div class="field"><label>Author</label><input type="text" id="pfPostAuthor" value="Alisina Moradi"></div>
