@@ -451,12 +451,9 @@ module.exports = async (req, res) => {
           const customerEmail = session.customer_details?.email || metaEmail;
           if (gmailUser && gmailPass) {
             const nodemailer = require('nodemailer');
-            function makeTransporter() {
-              return nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
-            }
             const sends = [];
             if (toEmail) {
-              const t = makeTransporter();
+              const t = nodemailer.createTransport({ service: 'gmail', auth: { user: gmailUser, pass: gmailPass } });
               sends.push(t.sendMail({
                 from: `"Alisina Realty" <${gmailUser}>`, to: toEmail,
                 subject: `New payment received — ${propName}`,
@@ -473,7 +470,7 @@ module.exports = async (req, res) => {
               }).then(() => { console.log('admin email ok'); }).catch(e => { console.error('admin email:', e.message); }));
             }
             if (customerEmail && customerEmail !== toEmail) {
-              const t = makeTransporter();
+              const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
               sends.push(t.sendMail({
                 from: `"Alisina Realty" <${gmailUser}>`, to: customerEmail,
                 subject: `Payment Confirmed — ${propName}`,
