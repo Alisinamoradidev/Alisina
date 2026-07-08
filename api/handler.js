@@ -419,6 +419,31 @@ module.exports = async (req, res) => {
           const propName = prop?.title || `Property #${property_id}`;
           const customerName = session.customer_details?.name || 'Valued Customer';
           const customerEmail = session.customer_details?.email;
+          function emailLayout(title, bodyContent) {
+            return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:24px 0">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+        <tr><td style="background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:32px 40px;text-align:center">
+          <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:600">${title}</h1>
+        </td></tr>
+        <tr><td style="padding:32px 40px;color:#334155;font-size:15px;line-height:1.6">
+          ${bodyContent}
+        </td></tr>
+        <tr><td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;color:#94a3b8;font-size:13px">
+          Alisina Realty &bull; All rights reserved
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`.trim();
+          }
+          const siteUrl = process.env.SITE_URL || 'https://alisina-nu.vercel.app';
           async function sendResend(to, subject, html) {
             if (!resendApiKey) return;
             await fetch('https://api.resend.com/emails', {
@@ -428,15 +453,34 @@ module.exports = async (req, res) => {
           }
           if (toEmail) {
             try {
-              await sendResend(toEmail, `New payment received - ${propName}`,
-                `<h2>New Payment Received</h2><p><strong>Property:</strong> ${propName}</p><p><strong>Amount:</strong> $${amount.toLocaleString()}</p><p><strong>Type:</strong> ${type || 'deposit'}</p><p><strong>Customer:</strong> ${customerEmail || 'No email'}</p><p><strong>Receipt:</strong> <a href="${receiptUrl}">View Receipt</a></p>`
+              await sendResend(toEmail, `New payment received — ${propName}`,
+                emailLayout('New Payment Received', `
+                  <p style="margin:0 0 6px;color:#64748b;font-size:14px">A new payment has come through.</p>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${customerEmail || 'No email'}</td></tr>
+                  </table>
+                  <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
+                `)
               );
             } catch {}
           }
           if (customerEmail) {
             try {
-              await sendResend(customerEmail, `Payment Confirmation - ${propName}`,
-                `<h2>Thank you for your payment!</h2><p>Dear ${customerName},</p><p>Your payment for <strong>${propName}</strong> has been received successfully.</p><p><strong>Amount:</strong> $${amount.toLocaleString()}</p><p><strong>Type:</strong> ${type || 'deposit'}</p><p><strong>Receipt:</strong> <a href="${receiptUrl}">View Receipt</a></p><br><p>If you have any questions, please contact us.</p>`
+              await sendResend(customerEmail, `Payment Confirmation — ${propName}`,
+                emailLayout('Payment Confirmed', `
+                  <p style="margin:0 0 6px;color:#334155">Dear ${customerName},</p>
+                  <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
+                  </table>
+                  <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
+                  <p style="color:#64748b;font-size:14px;margin-top:20px">Thank you for choosing us. If you have any questions, feel free to reply to this email.</p>
+                `)
               );
             } catch {}
           }
