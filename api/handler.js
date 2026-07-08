@@ -617,43 +617,6 @@ module.exports = async (req, res) => {
       }
     }
 
-    /* TEMP — test webhook email flow directly */
-    if (path === '/payments/test-webhook-flow' && method === 'POST') {
-      const stripe = await getStripe();
-      if (!stripe) return res.status(503).json({ error: 'No stripe key' });
-      const pi = await stripe.paymentIntents.create({ amount: 1000, currency: 'usd', payment_method_types: ['card'] });
-      const confirmed = await stripe.paymentIntents.confirm(pi.id, { payment_method: 'pm_card_visa' });
-      const receiptUrl = confirmed.charges?.data[0]?.receipt_url || `https://dashboard.stripe.com/payments/${pi.id}`;
-      const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
-      const toEmail = notif?.value?.email;
-      const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
-      const gmailUser = gmailConfig?.value?.email, gmailPass = gmailConfig?.value?.appPassword;
-      const propName = body.testProp || 'Test Property';
-      const customerName = body.testName || 'Test Customer';
-      const customerEmail = body.testCustomer || 'alisinam485@gmail.com';
-      const amount = body.testAmount || 1000;
-      const type = body.testType || 'deposit';
-      if (gmailUser && gmailPass) {
-        const nodemailer = require('nodemailer');
-        async function sendOne(to, subject, html) {
-          const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
-          try { const info = await t.sendMail({ from: `"Alisina Realty" <${gmailUser}>`, to, subject, html }); t.close(); return info; }
-          catch (e) { t.close(); throw e; }
-        }
-        const results = [];
-        if (toEmail) {
-          try { await sendOne(toEmail, `New payment received — ${propName}`, emailLayout('New Payment Received', `...`)); results.push('admin ok'); }
-          catch (e) { results.push('admin err: ' + e.message); }
-        }
-        if (customerEmail && customerEmail !== toEmail) {
-          try { await sendOne(customerEmail, `Payment Confirmed — ${propName}`, emailLayout('Payment Confirmed', `...`)); results.push('customer ok'); }
-          catch (e) { results.push('customer err: ' + e.message); }
-        }
-        return res.status(200).json({ pi: pi.id, pi_status: confirmed.status, receiptUrl, results });
-      }
-      return res.status(200).json({ pi: pi.id, pi_status: confirmed.status, receiptUrl, error: 'no gmail config' });
-    }
-
     /* Email test endpoint (admin only) */
     if (path === '/payments/test-email' && method === 'POST') {
       const auth = req.headers.authorization;
