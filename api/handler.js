@@ -621,44 +621,6 @@ module.exports = async (req, res) => {
       }
     }
 
-    /* TEMP */
-    if (path === '/payments/trigger-test' && method === 'POST') {
-      const stripe = await getStripe();
-      if (!stripe) return res.status(503).json({ error: 'No stripe' });
-      const pi = await stripe.paymentIntents.create({ amount: 1000, currency: 'usd', payment_method_types: ['card'] });
-      const confirmed = await stripe.paymentIntents.confirm(pi.id, { payment_method: 'pm_card_visa' });
-      const receiptUrl = confirmed.charges?.data[0]?.receipt_url || `https://dashboard.stripe.com/payments/${pi.id}`;
-      const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
-      const toEmail = notif?.value?.email;
-      const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
-      const gmailUser = gmailConfig?.value?.email, gmailPass = gmailConfig?.value?.appPassword;
-      const propName = 'Test Property', customerName = 'Alisina', customerEmail = 'alisinam485@gmail.com', amount = 10, type = 'deposit';
-      if (gmailUser && gmailPass) {
-        const nodemailer = require('nodemailer');
-        function makeTransporter() { return nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } }); }
-        const sends = [];
-        if (toEmail) {
-          const t = makeTransporter();
-          sends.push(t.sendMail({
-            from: `"Alisina Realty" <${gmailUser}>`, to: toEmail,
-            subject: `New payment received — ${propName}`,
-            html: emailLayout('New Payment Received', `<p>...</p><div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>`, 'admin'),
-          }).then(() => ({ to: toEmail, ok: true })).catch(e => ({ to: toEmail, ok: false, err: e.message })));
-        }
-        if (customerEmail && customerEmail !== toEmail) {
-          const t = makeTransporter();
-          sends.push(t.sendMail({
-            from: `"Alisina Realty" <${gmailUser}>`, to: customerEmail,
-            subject: `Payment Confirmed — ${propName}`,
-            html: emailLayout('Payment Confirmed', `<p style="color:#334155">Dear ${customerName},</p><p>Your payment has been received.</p>`, 'customer'),
-          }).then(() => ({ to: customerEmail, ok: true })).catch(e => ({ to: customerEmail, ok: false, err: e.message })));
-        }
-        const results = await Promise.allSettled(sends);
-        return res.status(200).json({ pi: pi.id, results: results.map(r => r.value || r.reason) });
-      }
-      return res.status(200).json({ pi: pi.id, message: 'no gmail' });
-    }
-
     /* Email test endpoint (admin only) */
     if (path === '/payments/test-email' && method === 'POST') {
       const auth = req.headers.authorization;
