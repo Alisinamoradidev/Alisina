@@ -395,6 +395,11 @@ body {
   color: var(--white);
 }
 
+.badge-sold {
+  background: #6b7280;
+  color: var(--white);
+}
+
 .photo-count {
   position: absolute;
   bottom: 10px;
