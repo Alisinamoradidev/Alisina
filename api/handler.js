@@ -451,54 +451,29 @@ module.exports = async (req, res) => {
           const customerEmail = session.customer_details?.email || metaEmail;
           if (gmailUser && gmailPass) {
             const nodemailer = require('nodemailer');
-            const sends = [];
-            /* Admin email via Gmail SMTP */
-            if (toEmail) {
+            const recipients = [toEmail].filter(Boolean);
+            if (customerEmail && customerEmail !== toEmail) recipients.push(customerEmail);
+            if (recipients.length > 0) {
               const t = nodemailer.createTransport({ service: 'gmail', auth: { user: gmailUser, pass: gmailPass } });
-              sends.push(t.sendMail({
-                from: `"Alisina Realty" <${gmailUser}>`, to: toEmail,
-                subject: `New payment received — ${propName}`,
-                html: emailLayout('New Payment Received', `
-                  <p style="margin:0 0 6px;color:#64748b;font-size:14px">A new payment has come through.</p>
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${customerEmail || 'No email'}</td></tr>
-                  </table>
-                  <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
-                `, 'admin'),
-              }).then(() => { console.log('admin email ok'); }).catch(e => { console.error('admin email:', e.message); }));
+              try {
+                await t.sendMail({
+                  from: `"Alisina Realty" <${gmailUser}>`,
+                  to: recipients.join(', '),
+                  subject: `Payment Confirmed — ${propName}`,
+                  html: emailLayout('Payment Confirmed', `
+                    <p style="margin:0 0 6px;color:#334155">Dear ${customerName},</p>
+                    <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
+                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#14b8a6">$${amount.toLocaleString()}</td></tr>
+                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
+                    </table>
+                    <p style="color:#64748b;font-size:14px;margin:20px 0 0">Thank you for your payment.</p>
+                  `, 'customer'),
+                });
+                console.log('email sent to', recipients.join(', '));
+              } catch (e) { console.error('email error:', e.message); }
             }
-            /* Customer email via Resend API (different delivery path) */
-            if (customerEmail && customerEmail !== toEmail) {
-              const { data: resendConfig } = await supabase.from('settings').select('value').eq('key', 'resend_api_key').maybeSingle();
-              const resendKey = resendConfig?.value?.key;
-              if (resendKey) {
-                sends.push(fetch('https://api.resend.com/emails', {
-                  method: 'POST',
-                  headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    from: 'Alisina Realty <onboarding@resend.dev>',
-                    to: [customerEmail],
-                    subject: `Payment Confirmed — ${propName}`,
-                    html: emailLayout('Payment Confirmed', `
-                      <p style="margin:0 0 6px;color:#334155">Dear ${customerName},</p>
-                      <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-                        <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
-                        <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#14b8a6">$${amount.toLocaleString()}</td></tr>
-                        <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
-                      </table>
-                      <p style="color:#64748b;font-size:14px;margin:20px 0 0">Thank you for choosing us. If you have any questions, feel free to reply to this email.</p>
-                    `, 'customer'),
-                  }),
-                }).then(async r => { const b = await r.text(); console.log('resend:', r.status, b); }).catch(e => { console.error('resend error:', e.message); }));
-              } else {
-                console.log('no resend key, skipping customer email');
-              }
-            }
-            await Promise.allSettled(sends);
           }
         } catch (e) {
           console.error('Webhook insert error:', e?.code, e?.message);
@@ -631,20 +606,6 @@ module.exports = async (req, res) => {
       } catch (e) {
         return res.status(500).json({ error: e.message });
       }
-    }
-
-    /* TEMP test resend */
-    if (path === '/payments/test-resend' && method === 'POST') {
-      const { data: resendConfig } = await supabase.from('settings').select('value').eq('key', 'resend_api_key').maybeSingle();
-      const resendKey = resendConfig?.value?.key;
-      if (!resendKey) return res.status(400).json({ error: 'no resend key' });
-      const r = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: 'Alisina Realty <onboarding@resend.dev>', to: ['alisinam485@gmail.com'], subject: 'Test Resend', html: '<p>Test from Resend</p>' }),
-      });
-      const b = await r.text();
-      return res.status(r.status).json({ status: r.status, body: b });
     }
 
     /* Email test endpoint (admin only) */
