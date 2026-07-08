@@ -109,6 +109,33 @@ module.exports = async (req, res) => {
       return res.status(200).json({ status: 'ok' });
     }
 
+    /* Property detail page (SEO) */
+    const seoPropMatch = method === 'GET' && path.match(/^\/property\/(\d+)$/);
+    if (seoPropMatch) {
+      const id = parseInt(seoPropMatch[1]);
+      const { data: p } = await supabase.from('properties').select('*').eq('id', id).maybeSingle();
+      if (!p) return res.status(404).setHeader('Content-Type', 'text/html').end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Property Not Found | Alisina Realty</title><link rel="stylesheet" href="/styles.css"><style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#1e293b;background:#f8fafc;text-align:center;padding:24px}h1{font-size:72px;margin:0;background:linear-gradient(135deg,#1e3a5f,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#64748b;margin:8px 0 24px}a{color:#2563eb}</style></head><body><div><h1>404</h1><p>Property not found</p><a href="/">Back to Home</a></div></body></html>');
+      const price = p.badge === 'rent' ? `$${p.price.toLocaleString()}/mo` : `$${p.price.toLocaleString()}`;
+      const desc = `${p.title} — ${p.beds} bed, ${p.baths} bath ${p.type} in ${p.location}. ${price}. Browse property details, photos, and more.`;
+      const img = p.image || 'https://alisina-nu.vercel.app/images/alisina.jpg';
+      const title = `${p.title} | Alisina Realty`;
+      return res.status(200).setHeader('Content-Type', 'text/html').end(`<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
+<meta name="description" content="${desc.replace(/"/g,'&quot;')}">
+<meta property="og:title" content="${p.title}"><meta property="og:description" content="${desc.replace(/"/g,'&quot;')}"><meta property="og:image" content="${img}"><meta property="og:url" content="https://alisina-nu.vercel.app/property/${id}"><meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${p.title}"><meta name="twitter:description" content="${desc.replace(/"/g,'&quot;')}"><meta name="twitter:image" content="${img}">
+<link rel="canonical" href="https://alisina-nu.vercel.app/property/${id}">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"${p.title}","description":"${desc.replace(/"/g,'&quot;')}","image":"${img}","offers":{"@type":"Offer","priceCurrency":"USD","price":${p.price},"availability":"https://schema.org/InStock"}}</script>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WGYY6MVM5P"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-WGYY6MVM5P')</script>
+</head><body>
+<script>window.__propertyId=${id};</script>
+<script src="/app.js"></script>
+<script src="/config.js"></script>
+</body></html>`);
+    }
+
     /* Properties */
     if (path === '/properties' && method === 'GET') {
       let query = supabase.from('properties').select('*');
