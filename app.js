@@ -164,6 +164,39 @@ function openModal(p) {
     showToast(favorites.has(p.id) ? 'Added to favorites' : 'Removed from favorites');
   };
   $('modalSchedule').onclick = () => { closeModal(); $('scheduleProperty').value = `${p.title} - ${p.location}`; $('scheduleSection').scrollIntoView({ behavior: 'smooth' }); };
+  /* Payment button */
+  const payBtn = $('modalPay');
+  const bankInfoDiv = $('bankInfo');
+  const bankDetails = $('bankInfoDetails');
+  if (p.badge === 'sale') {
+    payBtn.innerHTML = '<i class="fas fa-credit-card"></i> Pay $1,000 Deposit';
+    payBtn.style.display = '';
+    payBtn._payType = 'deposit';
+    payBtn._propId = p.id;
+  } else if (p.badge === 'rent') {
+    const pVal = formatPrice(p.price, 'rent');
+    payBtn.innerHTML = `<i class="fas fa-credit-card"></i> Pay First Month (${pVal})`;
+    payBtn.style.display = '';
+    payBtn._payType = 'rent';
+    payBtn._propId = p.id;
+  } else {
+    payBtn.style.display = 'none';
+  }
+  /* Bank info */
+  fetch(`${API_URL}/api/payments/settings`).then(r => r.json()).then(d => {
+    if (d && d.bank_name) {
+      bankDetails.innerHTML = `
+        <div><strong>Bank:</strong> ${d.bank_name || ''}</div>
+        <div><strong>Account Name:</strong> ${d.account_name || ''}</div>
+        <div><strong>Account Number:</strong> ${d.account_number || ''}</div>
+        ${d.routing ? `<div><strong>Routing:</strong> ${d.routing}</div>` : ''}
+        ${d.iban ? `<div><strong>IBAN:</strong> ${d.iban}</div>` : ''}
+        ${d.swift ? `<div><strong>SWIFT:</strong> ${d.swift}</div>` : ''}`;
+      bankInfoDiv.style.display = '';
+    } else {
+      bankInfoDiv.style.display = 'none';
+    }
+  }).catch(() => { bankInfoDiv.style.display = 'none'; });
 }
 
 function closeModal() { modalOverlay.classList.remove('active'); document.body.style.overflow = ''; }
@@ -178,6 +211,24 @@ $('modalInquire').addEventListener('click', () => {
   $('inquiryType').value = pr.includes('/mo') ? 'rent' : 'buy';
   document.querySelector('#contact').scrollIntoView({ behavior: 'smooth' });
   setTimeout(() => contactForm.querySelector('input[name="name"]').focus(), 600);
+});
+
+$('modalPay').addEventListener('click', async () => {
+  const btn = $('modalPay');
+  if (!btn._propId || !btn._payType) return;
+  const cfgRes = await fetch(`${API_URL}/api/stripe/config`);
+  const cfg = await cfgRes.json();
+  if (!cfg.configured) { showToast('Payment not configured yet'); return; }
+  btn.disabled = true; btn.textContent = 'Redirecting...';
+  try {
+    const res = await fetch(`${API_URL}/api/payments/create-checkout`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ property_id: btn._propId, type: btn._payType })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Payment failed');
+    window.location.href = data.url;
+  } catch (err) { showToast(err.message); btn.disabled = false; btn.textContent = btn._payType === 'deposit' ? 'Pay $1,000 Deposit' : 'Pay Rent'; }
 });
 
 $('mobileToggle').addEventListener('click', () => nav.classList.toggle('active'));
@@ -203,6 +254,8 @@ contactForm.addEventListener('submit', async (e) => {
   }
 });
 if (window.location.search.includes('sent=true')) { showToast('Message sent! I\'ll get back to you soon.'); window.history.replaceState({}, '', window.location.pathname + '#contact'); }
+if (window.location.search.includes('payment=success')) { showToast('Payment successful! Thank you.'); window.history.replaceState({}, '', window.location.pathname); }
+if (window.location.search.includes('payment=canceled')) { showToast('Payment canceled.'); window.history.replaceState({}, '', window.location.pathname); }
 
 function showToast(msg) {
   let t = document.querySelector('.toast');

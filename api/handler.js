@@ -543,7 +543,7 @@ module.exports = async (req, res) => {
       try {
         const { data: payments } = await supabase.from('payments').select('property_id, amount, status').eq('status', 'completed');
         if (!payments) return res.status(200).json([]);
-        const { data: props } = await supabase.from('properties').select('id, title, price, sale_rent');
+        const { data: props } = await supabase.from('properties').select('id, title, price, badge');
         if (!props) return res.status(200).json([]);
         const map = {};
         for (const p of payments) {
@@ -553,7 +553,7 @@ module.exports = async (req, res) => {
           map[id] += parseFloat(p.amount) || 0;
         }
         const result = props.map(p => ({
-          id: p.id, title: p.title, price: p.price, sale_rent: p.sale_rent,
+          id: p.id, title: p.title, price: p.price, badge: p.badge,
           total_collected: map[p.id] || 0,
           balance: Math.max(0, (p.price || 0) - (map[p.id] || 0)),
         }));
