@@ -110,6 +110,9 @@ module.exports = async (req, res) => {
     }
 
     /* Property detail page (SEO) */
+    if (method === 'GET' && path.startsWith('/property/')) {
+      return res.status(200).setHeader('Content-Type', 'text/plain').end('path=' + path + ' url=' + req.url);
+    }
     const seoPropMatch = method === 'GET' && path.match(/^\/property\/(\d+)$/);
     if (seoPropMatch) {
       const id = parseInt(seoPropMatch[1]);
