@@ -449,31 +449,26 @@ module.exports = async (req, res) => {
           const propName = prop?.title || `Property #${property_id}`;
           const customerName = session.customer_details?.name || 'Valued Customer';
           const customerEmail = session.customer_details?.email || metaEmail;
-          if (gmailUser && gmailPass) {
+          if (gmailUser && gmailPass && toEmail) {
             const nodemailer = require('nodemailer');
-            const recipients = [toEmail].filter(Boolean);
-            if (customerEmail && customerEmail !== toEmail) recipients.push(customerEmail);
-            if (recipients.length > 0) {
-              const t = nodemailer.createTransport({ service: 'gmail', auth: { user: gmailUser, pass: gmailPass } });
-              try {
-                await t.sendMail({
-                  from: `"Alisina Realty" <${gmailUser}>`,
-                  to: recipients.join(', '),
-                  subject: `Payment Confirmed — ${propName}`,
-                  html: emailLayout('Payment Confirmed', `
-                    <p style="margin:0 0 6px;color:#334155">Dear ${customerName},</p>
-                    <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
-                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#14b8a6">$${amount.toLocaleString()}</td></tr>
-                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
-                    </table>
-                    <p style="color:#64748b;font-size:14px;margin:20px 0 0">Thank you for your payment.</p>
-                  `, 'customer'),
-                });
-                console.log('email sent to', recipients.join(', '));
-              } catch (e) { console.error('email error:', e.message); }
-            }
+            const t = nodemailer.createTransport({ service: 'gmail', auth: { user: gmailUser, pass: gmailPass } });
+            try {
+              await t.sendMail({
+                from: `"Alisina Realty" <${gmailUser}>`, to: toEmail,
+                subject: `New payment received — ${propName}`,
+                html: emailLayout('New Payment Received', `
+                  <p style="margin:0 0 6px;color:#64748b;font-size:14px">A new payment has come through.</p>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${customerEmail || 'No email'}</td></tr>
+                  </table>
+                  <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
+                `, 'admin'),
+              });
+              console.log('admin email sent');
+            } catch (e) { console.error('admin email error:', e.message); }
           }
         } catch (e) {
           console.error('Webhook insert error:', e?.code, e?.message);
