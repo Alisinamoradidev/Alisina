@@ -452,6 +452,7 @@ module.exports = async (req, res) => {
           if (gmailUser && gmailPass) {
             const nodemailer = require('nodemailer');
             const sends = [];
+            /* Admin email via Gmail SMTP */
             if (toEmail) {
               const t = nodemailer.createTransport({ service: 'gmail', auth: { user: gmailUser, pass: gmailPass } });
               sends.push(t.sendMail({
@@ -469,22 +470,33 @@ module.exports = async (req, res) => {
                 `, 'admin'),
               }).then(() => { console.log('admin email ok'); }).catch(e => { console.error('admin email:', e.message); }));
             }
+            /* Customer email via Resend API (different delivery path) */
             if (customerEmail && customerEmail !== toEmail) {
-              const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
-              sends.push(t.sendMail({
-                from: `"Alisina Realty" <${gmailUser}>`, to: customerEmail,
-                subject: `Payment Confirmed — ${propName}`,
-                html: emailLayout('Payment Confirmed', `
-                  <p style="margin:0 0 6px;color:#334155">Dear ${customerName},</p>
-                  <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#14b8a6">$${amount.toLocaleString()}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
-                  </table>
-                  <p style="color:#64748b;font-size:14px;margin:20px 0 0">Thank you for choosing us. If you have any questions, feel free to reply to this email.</p>
-                `, 'customer'),
-              }).then(() => { console.log('customer email ok'); }).catch(e => { console.error('customer email:', e.message); }));
+              const { data: resendConfig } = await supabase.from('settings').select('value').eq('key', 'resend_api_key').maybeSingle();
+              const resendKey = resendConfig?.value?.key;
+              if (resendKey) {
+                sends.push(fetch('https://api.resend.com/emails', {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    from: 'Alisina Realty <onboarding@resend.dev>',
+                    to: [customerEmail],
+                    subject: `Payment Confirmed — ${propName}`,
+                    html: emailLayout('Payment Confirmed', `
+                      <p style="margin:0 0 6px;color:#334155">Dear ${customerName},</p>
+                      <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+                        <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
+                        <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#14b8a6">$${amount.toLocaleString()}</td></tr>
+                        <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
+                      </table>
+                      <p style="color:#64748b;font-size:14px;margin:20px 0 0">Thank you for choosing us. If you have any questions, feel free to reply to this email.</p>
+                    `, 'customer'),
+                  }),
+                }).then(async r => { const b = await r.text(); console.log('resend:', r.status, b); }).catch(e => { console.error('resend error:', e.message); }));
+              } else {
+                console.log('no resend key, skipping customer email');
+              }
             }
             await Promise.allSettled(sends);
           }
@@ -619,39 +631,6 @@ module.exports = async (req, res) => {
       } catch (e) {
         return res.status(500).json({ error: e.message });
       }
-    }
-
-    /* TEMP */
-    if (path === '/payments/trigger-test' && method === 'POST') {
-      const stripe = await getStripe();
-      if (!stripe) return res.status(503).json({ error: 'No stripe' });
-      const pi = await stripe.paymentIntents.create({ amount: 1000, currency: 'usd', payment_method_types: ['card'] });
-      const confirmed = await stripe.paymentIntents.confirm(pi.id, { payment_method: 'pm_card_visa' });
-      const receiptUrl = confirmed.charges?.data[0]?.receipt_url || `https://dashboard.stripe.com/payments/${pi.id}`;
-      const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
-      const toEmail = notif?.value?.email;
-      const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
-      const gmailUser = gmailConfig?.value?.email, gmailPass = gmailConfig?.value?.appPassword;
-      const propName = 'Test Property', customerName = 'Alisina', customerEmail = 'alisinam485@gmail.com', amount = 10, type = 'deposit';
-      if (gmailUser && gmailPass) {
-        const nodemailer = require('nodemailer');
-        const sends = [];
-        if (toEmail) {
-          const t = nodemailer.createTransport({ service: 'gmail', auth: { user: gmailUser, pass: gmailPass } });
-          sends.push(t.sendMail({ from: `"Alisina Realty" <${gmailUser}>`, to: toEmail, subject: `New payment received — ${propName}`,
-            html: emailLayout('New Payment Received', `<p>test</p><div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>`, 'admin'),
-          }).then(() => ({ to: toEmail, ok: true })).catch(e => ({ to: toEmail, ok: false, err: e.message })));
-        }
-        if (customerEmail && customerEmail !== toEmail) {
-          const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
-          sends.push(t.sendMail({ from: `"Alisina Realty" <${gmailUser}>`, to: customerEmail, subject: `Payment Confirmed — ${propName}`,
-            html: emailLayout('Payment Confirmed', `<p style="color:#334155">Dear ${customerName},</p><p>Your payment has been received.</p>`, 'customer'),
-          }).then(() => ({ to: customerEmail, ok: true })).catch(e => ({ to: customerEmail, ok: false, err: e.message })));
-        }
-        const results = await Promise.allSettled(sends);
-        return res.status(200).json({ pi: pi.id, results: results.map(r => r.value?.to || r.value?.err || r.reason) });
-      }
-      return res.status(200).json({ pi: pi.id, message: 'no gmail' });
     }
 
     /* Email test endpoint (admin only) */
