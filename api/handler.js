@@ -372,7 +372,7 @@ module.exports = async (req, res) => {
         mode: 'payment',
         success_url: `${SITE_URL}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${SITE_URL}?payment=canceled`,
-        metadata: { property_id: String(property_id), type, email: email || '' },
+        metadata: { property_id: String(property_id), type },
         ...(email ? { customer_email: email } : {}),
       });
       return res.status(200).json({ url: session.url });
@@ -391,7 +391,7 @@ module.exports = async (req, res) => {
       }
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
-        const { property_id, type, email: metaEmail } = session.metadata || {};
+        const { property_id, type } = session.metadata || {};
         const amount = session.amount_total ? session.amount_total / 100 : 0;
         let receiptUrl = '';
         try {
@@ -419,7 +419,7 @@ module.exports = async (req, res) => {
           const { data: prop } = await supabase.from('properties').select('title').eq('id', parseInt(property_id) || 0).maybeSingle();
           const propName = prop?.title || `Property #${property_id}`;
           const customerName = session.customer_details?.name || 'Valued Customer';
-          const customerEmail = session.customer_details?.email || metaEmail;
+          const customerEmail = session.customer_details?.email;
           function emailLayout(title, bodyContent) {
             return `
 <!DOCTYPE html>
@@ -620,6 +620,34 @@ module.exports = async (req, res) => {
         return res.status(200).json(result);
       } catch (e) {
         return res.status(500).json({ error: e.message });
+      }
+    }
+
+    /* Email test endpoint (admin only) */
+    if (path === '/payments/test-email' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const { testEmail } = body;
+      try {
+        const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
+        const gmailUser = gmailConfig?.value?.email;
+        const gmailPass = gmailConfig?.value?.appPassword;
+        if (!gmailUser || !gmailPass) return res.status(400).json({ error: 'Gmail not configured' });
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com', port: 587, secure: false,
+          auth: { user: gmailUser, pass: gmailPass },
+        });
+        const info = await transporter.sendMail({
+          from: `"Alisina Realty" <${gmailUser}>`,
+          to: testEmail || gmailUser,
+          subject: 'Test email from Vercel',
+          html: '<p>This is a test — your Gmail SMTP is working!</p>',
+        });
+        return res.status(200).json({ success: true, messageId: info.messageId });
+      } catch (e) {
+        return res.status(500).json({ error: e.message, code: e.code });
       }
     }
 
