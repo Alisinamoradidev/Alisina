@@ -821,5 +821,13 @@ updateListings();
 loadPropertiesFromApi();
 tryInitMap();
 loadBlogPosts();
+/* Open property modal if loaded from /property/:id page */
+if (window.__propertyId) {
+  const checkProp = setInterval(() => {
+    const p = properties.find(x => x.id === window.__propertyId);
+    if (p) { clearInterval(checkProp); openModal(p); }
+  }, 100);
+  setTimeout(() => clearInterval(checkProp), 10000);
+}
 updateUserUI();
 if (userToken) syncFavoritesFromServer();
