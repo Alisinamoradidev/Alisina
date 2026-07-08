@@ -404,41 +404,6 @@ module.exports = async (req, res) => {
         ...(email ? { customer_email: email } : {}),
       });
       return res.status(200).json({ url: session.url });
-    }
-
-    /* TEMP test customer email */
-    if (path === '/payments/test-customer' && method === 'POST') {
-      const stripe = await getStripe();
-      if (!stripe) return res.status(503).json({ error: 'no stripe' });
-      const pi = await stripe.paymentIntents.create({ amount: 1000, currency: 'usd', payment_method_types: ['card'] });
-      const confirmed = await stripe.paymentIntents.confirm(pi.id, { payment_method: 'pm_card_visa' });
-      const receiptUrl = confirmed.charges?.data[0]?.receipt_url || `https://dashboard.stripe.com/payments/${pi.id}`;
-      const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
-      const toEmail = notif?.value?.email;
-      const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
-      const gmailUser = gmailConfig?.value?.email, gmailPass = gmailConfig?.value?.appPassword;
-      const customerEmail = 'alisinam485@gmail.com';
-      if (gmailUser && gmailPass) {
-        const nodemailer = require('nodemailer');
-        const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
-        const results = [];
-        for (const email of [toEmail, customerEmail].filter(Boolean)) {
-          try {
-            const info = await t.sendMail({
-              from: `"Alisina Realty" <${gmailUser}>`, to: email,
-              subject: email === toEmail ? `New payment received — Test Property` : `Payment confirmed — Test Property`,
-              html: email === toEmail
-                ? `<p>Test admin email.</p><a href="${receiptUrl}">Receipt</a>`
-                : `<p>Test customer email. Thank you!</p><a href="${receiptUrl}">Receipt</a>`,
-            });
-            results.push({ email, ok: true, messageId: info.messageId });
-          } catch (e) { results.push({ email, ok: false, error: e.message }); }
-        }
-        return res.status(200).json({ ok: true, results });
-      }
-      return res.status(400).json({ error: 'not configured' });
-    }
-
     if (path === '/payments/webhook' && method === 'POST') {
       const stripe = await getStripe();
       const whsec = await getWebhookSecret();
