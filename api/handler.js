@@ -413,10 +413,10 @@ module.exports = async (req, res) => {
           /* Send email notification if configured */
           const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
           const toEmail = notif?.value?.email;
+          const { data: prop } = await supabase.from('properties').select('title').eq('id', parseInt(property_id) || 0).maybeSingle();
+          const propName = prop?.title || `Property #${property_id}`;
           if (toEmail) {
             try {
-              const { data: prop } = await supabase.from('properties').select('title').eq('id', parseInt(property_id) || 0).single();
-              const propName = prop?.title || `Property #${property_id}`;
               await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(toEmail), {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -426,6 +426,25 @@ module.exports = async (req, res) => {
                   Type: type || 'deposit',
                   Customer: session.customer_details?.email || 'No email',
                   Receipt: receiptUrl,
+                })
+              });
+            } catch {}
+          }
+          /* Send confirmation email to customer */
+          const customerEmail = session.customer_details?.email;
+          if (customerEmail) {
+            try {
+              await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(customerEmail), {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  _subject: `Payment Confirmation - ${propName}`,
+                  _template: 'box',
+                  Name: session.customer_details?.name || 'Valued Customer',
+                  Property: propName,
+                  Amount: `$${amount.toLocaleString()}`,
+                  Type: type || 'deposit',
+                  'Receipt URL': receiptUrl,
+                  _footer: 'Thank you for your payment. If you have any questions, please contact us.',
                 })
               });
             } catch {}
