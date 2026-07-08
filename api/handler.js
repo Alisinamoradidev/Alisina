@@ -633,6 +633,20 @@ module.exports = async (req, res) => {
       }
     }
 
+    /* TEMP test resend */
+    if (path === '/payments/test-resend' && method === 'POST') {
+      const { data: resendConfig } = await supabase.from('settings').select('value').eq('key', 'resend_api_key').maybeSingle();
+      const resendKey = resendConfig?.value?.key;
+      if (!resendKey) return res.status(400).json({ error: 'no resend key' });
+      const r = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: 'Alisina Realty <onboarding@resend.dev>', to: ['alisinam485@gmail.com'], subject: 'Test Resend', html: '<p>Test from Resend</p>' }),
+      });
+      const b = await r.text();
+      return res.status(r.status).json({ status: r.status, body: b });
+    }
+
     /* Email test endpoint (admin only) */
     if (path === '/payments/test-email' && method === 'POST') {
       const auth = req.headers.authorization;
