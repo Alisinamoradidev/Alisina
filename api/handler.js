@@ -603,32 +603,6 @@ module.exports = async (req, res) => {
       }
     }
 
-    /* TEMP test admin email */
-    if (path === '/payments/test-admin' && method === 'POST') {
-      const stripe = await getStripe();
-      if (!stripe) return res.status(503).json({ error: 'no stripe' });
-      const pi = await stripe.paymentIntents.create({ amount: 1000, currency: 'usd', payment_method_types: ['card'] });
-      const confirmed = await stripe.paymentIntents.confirm(pi.id, { payment_method: 'pm_card_visa' });
-      const receiptUrl = confirmed.charges?.data[0]?.receipt_url || `https://dashboard.stripe.com/payments/${pi.id}`;
-      const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
-      const toEmail = notif?.value?.email;
-      const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
-      const gmailUser = gmailConfig?.value?.email, gmailPass = gmailConfig?.value?.appPassword;
-      if (gmailUser && gmailPass && toEmail) {
-        const nodemailer = require('nodemailer');
-        const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
-        try {
-          const info = await t.sendMail({
-            from: `"Alisina Realty" <${gmailUser}>`, to: toEmail,
-            subject: `New payment received — Test`,
-            html: emailLayout('New Payment Received', `<p>test</p><div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>`, 'admin'),
-          });
-          return res.status(200).json({ ok: true, pi: pi.id, messageId: info.messageId });
-        } catch (e) { return res.status(500).json({ error: e.message }); }
-      }
-      return res.status(400).json({ error: 'not configured' });
-    }
-
     /* Email test endpoint (admin only) */
     if (path === '/payments/test-email' && method === 'POST') {
       const auth = req.headers.authorization;
