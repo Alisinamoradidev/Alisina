@@ -444,52 +444,52 @@ module.exports = async (req, res) => {
 </body>
 </html>`.trim();
           }
-          console.log('customer email from session:', customerEmail, 'admin email:', toEmail);
-          async function sendGmail(to, subject, html) {
-            console.log('sendGmail called, to:', to);
-            if (!gmailUser || !gmailPass) { console.error('sendGmail: no credentials'); return; }
+          console.log('customer email:', customerEmail, 'admin email:', toEmail);
+          if (!gmailUser || !gmailPass) { console.error('Gmail not configured'); } else {
             const nodemailer = require('nodemailer');
             const transporter = nodemailer.createTransport({
               host: 'smtp.gmail.com', port: 587, secure: false,
               auth: { user: gmailUser, pass: gmailPass },
             });
-            try {
-              const info = await transporter.sendMail({ from: `"Alisina Realty" <${gmailUser}>`, to, subject, html });
-              console.log('sendGmail success:', info.messageId);
-            } catch (e) {
-              console.error('sendGmail error:', e.message, e.code);
+            if (toEmail) {
+              try {
+                const info = await transporter.sendMail({
+                  from: `"Alisina Realty" <${gmailUser}>`, to: toEmail,
+                  subject: `New payment received — ${propName}`,
+                  html: emailLayout('New Payment Received', `
+                    <p style="margin:0 0 6px;color:#64748b;font-size:14px">A new payment has come through.</p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
+                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
+                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
+                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${customerEmail || 'No email'}</td></tr>
+                    </table>
+                    <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
+                  `),
+                });
+                console.log('admin email sent:', info.messageId);
+              } catch (e) { console.error('admin email error:', e.message); }
+            }
+            if (customerEmail) {
+              try {
+                const info = await transporter.sendMail({
+                  from: `"Alisina Realty" <${gmailUser}>`, to: customerEmail,
+                  subject: `Payment Confirmed — ${propName}`,
+                  html: emailLayout('Payment Confirmed', `
+                    <p style="margin:0 0 6px;color:#334155">Dear ${customerName},</p>
+                    <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
+                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
+                      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
+                    </table>
+                    <p style="color:#64748b;font-size:14px;margin:20px 0 0">Thank you for choosing us. If you have any questions, feel free to reply to this email.</p>
+                  `),
+                });
+                console.log('customer email sent:', info.messageId);
+              } catch (e) { console.error('customer email error:', e.message); }
             }
           }
-          const emailPromises = [];
-          if (toEmail) {
-            emailPromises.push(sendGmail(toEmail, `New payment received — ${propName}`,
-              emailLayout('New Payment Received', `
-                <p style="margin:0 0 6px;color:#64748b;font-size:14px">A new payment has come through.</p>
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
-                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
-                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
-                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${customerEmail || 'No email'}</td></tr>
-                </table>
-                <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
-              `)
-            ));
-          }
-          if (customerEmail) {
-            emailPromises.push(sendGmail(customerEmail, `Payment Confirmed — ${propName}`,
-              emailLayout('Payment Confirmed', `
-                <p style="margin:0 0 6px;color:#334155">Dear ${customerName},</p>
-                <p style="color:#64748b;font-size:14px">Your payment has been received successfully. Here are the details:</p>
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
-                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
-                  <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
-                </table>
-                <p style="color:#64748b;font-size:14px;margin:20px 0 0">Thank you for choosing us. If you have any questions, feel free to reply to this email.</p>
-              `)
-            ));
-          }
-          await Promise.allSettled(emailPromises);
         } catch (e) {
           console.error('Webhook insert error:', e?.code, e?.message);
         }
