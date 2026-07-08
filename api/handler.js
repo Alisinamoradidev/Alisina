@@ -77,7 +77,9 @@ function getAuthUser(auth) {
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : auth;
   if (!token.startsWith('simple_')) return null;
   try {
-    return JSON.parse(Buffer.from(token.replace('simple_', ''), 'base64').toString());
+    const payload = JSON.parse(Buffer.from(token.replace('simple_', ''), 'base64').toString());
+    if (payload.exp && Date.now() > payload.exp) return null;
+    return payload;
   } catch { return null; }
 }
 
@@ -276,7 +278,7 @@ module.exports = async (req, res) => {
       if (username === process.env.ADMIN_USERNAME || username === 'admin') {
         const pw = process.env.ADMIN_PASSWORD || 'admin123';
         if (password !== pw) return res.status(401).json({ error: 'Invalid credentials' });
-        const token = Buffer.from(JSON.stringify({ id: 1, username, role: 'admin' })).toString('base64');
+        const token = Buffer.from(JSON.stringify({ id: 1, username, role: 'admin', exp: Date.now() + 86400000 })).toString('base64');
         return res.status(200).json({ token: `simple_${token}` });
       }
       return res.status(401).json({ error: 'Invalid credentials' });

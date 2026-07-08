@@ -5,6 +5,7 @@ function api(path, options = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   return fetch(`${API}${path}`, { ...options, headers }).then(async r => {
+    if (r.status === 401) { localStorage.removeItem('admin_token'); token = null; showLogin(); throw new Error('Session expired'); }
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || 'Request failed');
     return data;
