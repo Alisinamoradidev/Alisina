@@ -140,21 +140,22 @@ router.post('/webauthn/register/complete', require('../middleware/auth'), (req, 
 
 router.post('/webauthn/login/begin', (req, res) => {
   try {
-    const { username } = req.body;
-    if (!username) return res.status(400).json({ error: 'Username required' });
-
+    const { username } = req.body || {};
     const db = getDb();
-    const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    let user = null;
+    let allowCredentials = [];
 
-    const passkeys = db.prepare('SELECT * FROM passkeys WHERE user_id = ?').all(user.id);
-    if (passkeys.length === 0) return res.status(404).json({ error: 'No passkey registered for this user' });
-
-    const allowCredentials = passkeys.map(pk => ({
-      id: pk.credential_id,
-      type: 'public-key',
-      transports: JSON.parse(pk.transports || '[]'),
-    }));
+    if (username) {
+      user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      const passkeys = db.prepare('SELECT * FROM passkeys WHERE user_id = ?').all(user.id);
+      if (passkeys.length === 0) return res.status(404).json({ error: 'No passkey registered for this user' });
+      allowCredentials = passkeys.map(pk => ({
+        id: pk.credential_id,
+        type: 'public-key',
+        transports: JSON.parse(pk.transports || '[]'),
+      }));
+    }
 
     const rpId = getRpId(req);
     const options = generateAuthenticationOptions({
@@ -163,7 +164,8 @@ router.post('/webauthn/login/begin', (req, res) => {
       userVerification: 'preferred',
     });
 
-    challengeStore.set(`auth_${user.id}`, { challenge: options.challenge, userId: user.id });
+    const storeKey = user ? `auth_${user.id}` : 'auth_any';
+    challengeStore.set(storeKey, { challenge: options.challenge, userId: user?.id || null });
     res.json(options);
   } catch (err) {
     console.error('webauthn login begin error:', err);
@@ -183,7 +185,7 @@ router.post('/webauthn/login/complete', (req, res) => {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(stored.user_id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const challengeData = challengeStore.get(`auth_${user.id}`);
+    const challengeData = challengeStore.get(`auth_${user.id}`) || challengeStore.get('auth_any');
     if (!challengeData) return res.status(400).json({ error: 'No authentication challenge found. Try again.' });
 
     const rpId = getRpId(req);
@@ -208,6 +210,7 @@ router.post('/webauthn/login/complete', (req, res) => {
 
     db.prepare('UPDATE passkeys SET counter = ? WHERE id = ?').run(verification.authenticationInfo.newCounter, stored.id);
     challengeStore.delete(`auth_${user.id}`);
+    challengeStore.delete('auth_any');
 
     const token = jwt.sign(
       { id: user.id, username: user.username },

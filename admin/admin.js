@@ -1130,21 +1130,81 @@ async function checkPasskeyStatus() {
   } catch {}
 }
 
-// Passkey detection on login page
-document.getElementById('loginUser').addEventListener('blur', async function() {
-  const username = this.value.trim();
-  if (!username) return;
+// Conditional mediation passkey — auto-prompt when user focuses username
+let conditionalAbortController;
+
+async function setupConditionalPasskey() {
+  if (!webauthnSupport()) return;
+  conditionalAbortController?.abort();
+  conditionalAbortController = new AbortController();
+
   try {
-    const res = await fetch(`${API}/api/auth/webauthn/check/${encodeURIComponent(username)}`);
+    const res = await fetch(`${API}/api/auth/webauthn/login/begin`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const opts = await res.json();
+    if (!res.ok) return;
+
+    opts.challenge = base64ToArrayBuffer(opts.challenge);
+    if (opts.allowCredentials) {
+      opts.allowCredentials.forEach(c => { c.id = base64ToArrayBuffer(c.id); });
+    }
+
+    const cred = await navigator.credentials.get({
+      mediation: 'conditional',
+      publicKey: opts,
+      signal: conditionalAbortController.signal,
+    });
+    if (!cred) return;
+
+    const authData = {
+      id: cred.id,
+      rawId: arrayBufferToBase64(cred.rawId),
+      type: cred.type,
+      response: {
+        authenticatorData: arrayBufferToBase64(cred.response.authenticatorData),
+        clientDataJSON: arrayBufferToBase64(cred.response.clientDataJSON),
+        signature: arrayBufferToBase64(cred.response.signature),
+        userHandle: cred.response.userHandle ? arrayBufferToBase64(cred.response.userHandle) : null,
+      },
+    };
+
+    const completeRes = await fetch(`${API}/api/auth/webauthn/login/complete`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(authData)
+    });
+    const completeData = await completeRes.json();
+    if (!completeRes.ok) return;
+
+    token = completeData.token;
+    localStorage.setItem('admin_token', token);
+    showAdmin();
+  } catch (e) {
+    if (e.name === 'NotAllowedError' || e.name === 'AbortError') return;
+  }
+}
+
+// Check for passkey on login page load
+async function checkPasskeyOnLogin() {
+  try {
+    const res = await fetch(`${API}/api/auth/webauthn/check/admin`);
     const data = await res.json();
     if (data.hasPasskey) {
       document.getElementById('passkeyLoginBtn').style.display = 'flex';
-      document.getElementById('loginError').textContent = 'Passkey found — click to sign in';
+      setupConditionalPasskey();
     } else {
       document.getElementById('passkeyLoginBtn').style.display = 'none';
     }
   } catch {}
-});
+}
+
+// Hook into showLogin
+const origShowLogin_ = showLogin;
+showLogin = function() {
+  origShowLogin_();
+  checkPasskeyOnLogin();
+};
 
 // Settings password form
 document.getElementById('settingsPasswordForm').addEventListener('submit', async function(e) {

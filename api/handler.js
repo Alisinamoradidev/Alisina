@@ -511,28 +511,31 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (path === '/auth/webauthn/login/begin' && method === 'POST') {
-      const { username } = body;
-      if (!username) return res.status(400).json({ error: 'Username required' });
-
-      const isAdmin = username === (process.env.ADMIN_USERNAME || 'admin');
-      if (!isAdmin) return res.status(404).json({ error: 'User not found' });
+      const { username } = body || {};
 
       const rpId = getRpId(req);
 
-      const { data: keys } = await supabase.from('webauthn_passkeys').select('*').eq('username', username);
-      if (!keys?.length) return res.status(404).json({ error: 'No passkey registered for this user' });
+      let allowCredentials = [];
+      if (username) {
+        const isAdmin = username === (process.env.ADMIN_USERNAME || 'admin');
+        if (!isAdmin) return res.status(404).json({ error: 'User not found' });
+        const { data: keys } = await supabase.from('webauthn_passkeys').select('*').eq('username', username);
+        if (!keys?.length) return res.status(404).json({ error: 'No passkey registered for this user' });
+        allowCredentials = keys.map(k => ({
+          id: Buffer.from(k.credential_id, 'base64url'),
+          type: 'public-key',
+        }));
+      }
 
       const opts = await generateAuthenticationOptions({
         rpID: rpId,
-        allowCredentials: keys.map(k => ({
-          id: Buffer.from(k.credential_id, 'base64url'),
-          type: 'public-key',
-        })),
+        allowCredentials: username ? allowCredentials : [],
         userVerification: 'preferred',
       });
 
-      challengeStore.set(`auth_${username}`, opts.challenge);
-      setTimeout(() => challengeStore.delete(`auth_${username}`), 120000);
+      const storeKey = username || 'any';
+      challengeStore.set(`auth_${storeKey}`, opts.challenge);
+      setTimeout(() => challengeStore.delete(`auth_${storeKey}`), 120000);
 
       return res.json(opts);
     }
@@ -544,7 +547,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const stored = (keys || []).find(k => k.credential_id === body.id);
       if (!stored) return res.status(404).json({ error: 'Passkey not found' });
 
-      const expectedChallenge = challengeStore.get(`auth_${stored.username}`);
+      const expectedChallenge = challengeStore.get(`auth_${stored.username}`) || challengeStore.get('auth_any');
       if (!expectedChallenge) return res.status(400).json({ error: 'Authentication challenge expired. Try again.' });
 
       const origin = getOrigin(req);
@@ -574,6 +577,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
       await supabase.from('webauthn_passkeys').update({ counter: verification.authenticationInfo.newCounter }).eq('id', stored.id);
       challengeStore.delete(`auth_${stored.username}`);
+      challengeStore.delete('auth_any');
 
       const token = Buffer.from(JSON.stringify({ id: stored.user_id, username: stored.username, role: 'admin', exp: Date.now() + 86400000 })).toString('base64');
       return res.json({ token: `simple_${token}`, verified: true });
