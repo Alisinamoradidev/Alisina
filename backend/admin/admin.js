@@ -513,9 +513,6 @@ async function loginWithPasskey() {
   const err = document.getElementById('loginError');
   if (!webauthnSupport()) { err.textContent = 'Passkey not supported on this browser'; return; }
 
-  // Abort conditional mediation so it doesn't conflict
-  conditionalAbortController?.abort();
-
   const username = document.getElementById('loginUser').value.trim();
 
   try {
@@ -567,72 +564,5 @@ async function loginWithPasskey() {
     err.textContent = e.message;
   }
 }
-
-// Try conditional passkey at login (browser autofill UI)
-let conditionalAbortController;
-
-async function tryConditionalPasskey() {
-  if (!webauthnSupport()) return;
-  conditionalAbortController?.abort();
-  conditionalAbortController = new AbortController();
-
-  try {
-    const res = await fetch(`${API}/api/auth/webauthn/login/begin`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({})
-    });
-    const opts = await res.json();
-    if (!res.ok) return;
-
-    const challengeToken = opts.challengeToken;
-    const rawChallenge = opts.challenge;
-    delete opts.challengeToken;
-
-    opts.challenge = base64ToArrayBuffer(opts.challenge);
-    if (opts.allowCredentials) {
-      opts.allowCredentials.forEach(c => { c.id = base64ToArrayBuffer(c.id); });
-    }
-
-    const cred = await navigator.credentials.get({
-      mediation: 'conditional',
-      publicKey: opts,
-      signal: conditionalAbortController.signal,
-    });
-    if (!cred) return;
-
-    const authData = {
-      id: cred.id,
-      rawId: arrayBufferToBase64(cred.rawId),
-      type: cred.type,
-      challenge: rawChallenge,
-      challengeToken,
-      response: {
-        authenticatorData: arrayBufferToBase64(cred.response.authenticatorData),
-        clientDataJSON: arrayBufferToBase64(cred.response.clientDataJSON),
-        signature: arrayBufferToBase64(cred.response.signature),
-        userHandle: cred.response.userHandle ? arrayBufferToBase64(cred.response.userHandle) : null,
-      },
-    };
-
-    const completeRes = await fetch(`${API}/api/auth/webauthn/login/complete`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(authData)
-    });
-    const completeData = await completeRes.json();
-    if (!completeRes.ok) return;
-
-    token = completeData.token;
-    localStorage.setItem('admin_token', token);
-    showAdmin();
-  } catch (e) {
-    if (e.name === 'NotAllowedError' || e.name === 'AbortError') return;
-  }
-}
-
-const origShowLogin_ = showLogin;
-showLogin = function() {
-  origShowLogin_();
-  tryConditionalPasskey();
-};
 
 checkAuth();
