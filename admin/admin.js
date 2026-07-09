@@ -1010,6 +1010,9 @@ async function loginWithPasskey() {
   const err = document.getElementById('loginError');
   if (!webauthnSupport()) { err.textContent = 'Passkey not supported on this browser'; return; }
 
+  // Abort conditional mediation so it doesn't conflict
+  conditionalAbortController?.abort();
+
   const username = document.getElementById('loginUser').value.trim();
 
   try {
