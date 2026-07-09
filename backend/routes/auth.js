@@ -228,6 +228,14 @@ router.get('/webauthn/status', require('../middleware/auth'), (req, res) => {
   res.json({ passkeys: passkeys.length, list: passkeys });
 });
 
+router.get('/webauthn/check/:username', (req, res) => {
+  const db = getDb();
+  const user = db.prepare('SELECT id FROM users WHERE username = ?').get(req.params.username);
+  if (!user) return res.json({ hasPasskey: false });
+  const count = db.prepare('SELECT COUNT(*) AS c FROM passkeys WHERE user_id = ?').get(user.id);
+  res.json({ hasPasskey: count.c > 0 });
+});
+
 router.delete('/webauthn/passkeys', require('../middleware/auth'), (req, res) => {
   const db = getDb();
   db.prepare('DELETE FROM passkeys WHERE user_id = ?').run(req.user.id);

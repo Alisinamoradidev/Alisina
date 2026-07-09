@@ -35,7 +35,7 @@
             <p class="login-error" id="loginError"></p>
             <button type="submit" class="btn-login" id="loginBtn">Sign In</button>
             <div class="passkey-divider"><span>or</span></div>
-            <button type="button" class="btn-passkey" id="passkeyLoginBtn" onclick="loginWithPasskey()"><i class="fas fa-fingerprint"></i> Sign in with fingerprint / face</button>
+            <button type="button" class="btn-passkey" id="passkeyLoginBtn" onclick="loginWithPasskey()" style="display:none"><i class="fas fa-fingerprint"></i> Sign in with fingerprint / face</button>
           </form>
           <div class="card-footer">
             <span><span class="status-dot"></span> System Ready</span>
@@ -52,7 +52,7 @@
           <h1><i class="fas fa-building"></i> Admin Panel</h1>
           <div class="admin-header-right">
             <span id="userDisplay">admin</span>
-            <button class="btn-outline" onclick="showChangePassword()"><i class="fas fa-key"></i></button>
+            <button class="btn-header-icon" data-view="settings" title="Settings"><i class="fas fa-cog"></i></button>
             <button class="btn-outline" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
           </div>
         </div>
@@ -67,6 +67,7 @@
         <button class="nav-btn" data-view="schedules"><i class="fas fa-calendar"></i> Schedules</button>
         <button class="nav-btn" data-view="payments"><i class="fas fa-credit-card"></i> Payments</button>
         <button class="nav-btn" data-view="bank"><i class="fas fa-university"></i> Bank Info</button>
+        <button class="nav-btn" data-view="settings"><i class="fas fa-cog"></i> Settings</button>
       </nav>
 
       <main class="admin-content">
@@ -178,15 +179,27 @@
             <div class="field"><label>SWIFT/BIC</label><input type="text" id="bfSwift"></div>
             <div class="form-actions"><button type="submit" class="btn-primary" id="bankSaveBtn">Save Bank Info</button></div>
           </form>
+        </div>
 
-          <h3 style="margin-bottom:8px;color:var(--text);margin-top:32px">Passkey (biometric login)</h3>
-          <div class="modal-body" style="max-width:500px;padding:0">
+        <div id="viewSettings" class="view">
+          <div class="view-header"><h2>Account Settings</h2></div>
+
+          <div style="max-width:500px">
+            <h3 style="margin-bottom:12px;color:var(--text)">Change Password</h3>
+            <form id="settingsPasswordForm" class="modal-body" style="padding:0;margin-bottom:32px">
+              <div class="field"><label>Current Password</label><input type="password" id="settingsPwCurrent" required></div>
+              <div class="field"><label>New Password</label><input type="password" id="settingsPwNew" required></div>
+              <p class="form-error" id="settingsPasswordError"></p>
+              <div class="form-actions" style="justify-content:flex-start;padding:0"><button type="submit" class="btn-primary">Update Password</button></div>
+            </form>
+
+            <h3 style="margin-bottom:12px;color:var(--text)">Passkey (fingerprint / face)</h3>
             <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px">Use your fingerprint, Face ID, or Windows Hello to sign in instead of a password.</p>
-            <div class="form-actions" style="justify-content:flex-start">
-              <button type="button" class="btn-primary" id="setupPasskeyBtn" onclick="setupPasskey()"><i class="fas fa-fingerprint"></i> Set up passkey</button>
-              <button type="button" class="btn-outline" id="removePasskeyBtn" onclick="removePasskey()" style="display:none"><i class="fas fa-trash"></i> Remove passkey</button>
+            <div class="form-actions" style="justify-content:flex-start;margin-bottom:8px">
+              <button type="button" class="btn-primary" id="settingsSetupPasskeyBtn" onclick="setupPasskey()"><i class="fas fa-fingerprint"></i> Set up passkey</button>
+              <button type="button" class="btn-outline" id="settingsRemovePasskeyBtn" onclick="removePasskey()" style="display:none"><i class="fas fa-trash"></i> Remove passkey</button>
             </div>
-            <p id="passkeyStatus" style="font-size:13px;color:var(--text-muted);margin-top:8px"></p>
+            <p id="settingsPasskeyStatus" style="font-size:13px;color:var(--text-muted)"></p>
           </div>
         </div>
       </main>

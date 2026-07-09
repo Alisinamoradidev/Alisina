@@ -118,7 +118,17 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (v === 'payments') loadPayments();
     if (v === 'testimonials') loadTestimonials();
     if (v === 'bank') { loadBankInfo(); loadStripeSettings(); }
+    if (v === 'settings') checkPasskeyStatus();
   });
+});
+
+document.querySelector('.btn-header-icon')?.addEventListener('click', function() {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const settingsNav = document.querySelector('.nav-btn[data-view="settings"]');
+  if (settingsNav) settingsNav.classList.add('active');
+  document.getElementById('viewSettings').classList.add('active');
+  checkPasskeyStatus();
 });
 
 /* Dashboard */
@@ -1082,9 +1092,9 @@ async function setupPasskey() {
     const completeData = await completeRes.json();
     if (!completeRes.ok) throw new Error(completeData.error);
 
-    document.getElementById('passkeyStatus').textContent = 'Passkey set up successfully!';
-    document.getElementById('setupPasskeyBtn').style.display = 'none';
-    document.getElementById('removePasskeyBtn').style.display = 'inline-flex';
+    document.getElementById('settingsPasskeyStatus').textContent = 'Passkey set up successfully!';
+    document.getElementById('settingsSetupPasskeyBtn').style.display = 'none';
+    document.getElementById('settingsRemovePasskeyBtn').style.display = 'inline-flex';
   } catch (e) {
     if (e.name === 'NotAllowedError') return;
     alert(e.message);
@@ -1098,9 +1108,9 @@ async function removePasskey() {
     await fetch(`${API}/api/auth/webauthn/passkeys`, {
       method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
     });
-    document.getElementById('passkeyStatus').textContent = 'Passkey removed.';
-    document.getElementById('setupPasskeyBtn').style.display = 'inline-flex';
-    document.getElementById('removePasskeyBtn').style.display = 'none';
+    document.getElementById('settingsPasskeyStatus').textContent = 'Passkey removed.';
+    document.getElementById('settingsSetupPasskeyBtn').style.display = 'inline-flex';
+    document.getElementById('settingsRemovePasskeyBtn').style.display = 'none';
   } catch {}
 }
 
@@ -1111,20 +1121,48 @@ async function checkPasskeyStatus() {
     });
     const data = await res.json();
     if (data.passkeys > 0) {
-      document.getElementById('passkeyStatus').textContent = `Passkey ready (${data.passkeys} registered)`;
-      document.getElementById('setupPasskeyBtn').style.display = 'none';
-      document.getElementById('removePasskeyBtn').style.display = 'inline-flex';
+      document.getElementById('settingsPasskeyStatus').textContent = `Passkey ready (${data.passkeys} registered)`;
+      document.getElementById('settingsSetupPasskeyBtn').style.display = 'none';
+      document.getElementById('settingsRemovePasskeyBtn').style.display = 'inline-flex';
     } else {
-      document.getElementById('passkeyStatus').textContent = 'No passkey set up yet';
+      document.getElementById('settingsPasskeyStatus').textContent = 'No passkey set up yet';
     }
   } catch {}
 }
 
-// Check passkey status when bank view loads
-const origBankLoad = loadBankInfo;
-loadBankInfo = function() {
-  origBankLoad?.();
-  checkPasskeyStatus();
-};
+// Passkey detection on login page
+document.getElementById('loginUser').addEventListener('blur', async function() {
+  const username = this.value.trim();
+  if (!username) return;
+  try {
+    const res = await fetch(`${API}/api/auth/webauthn/check/${encodeURIComponent(username)}`);
+    const data = await res.json();
+    if (data.hasPasskey) {
+      document.getElementById('passkeyLoginBtn').style.display = 'flex';
+      document.getElementById('loginError').textContent = 'Passkey found — click to sign in';
+    } else {
+      document.getElementById('passkeyLoginBtn').style.display = 'none';
+    }
+  } catch {}
+});
+
+// Settings password form
+document.getElementById('settingsPasswordForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const current = document.getElementById('settingsPwCurrent').value;
+  const newPw = document.getElementById('settingsPwNew').value;
+  const err = document.getElementById('settingsPasswordError');
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = 'Updating...'; err.textContent = '';
+  try {
+    await api('/api/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword: current, newPassword: newPw }) });
+    err.style.color = '#22c55e'; err.textContent = 'Password updated';
+    document.getElementById('settingsPwCurrent').value = '';
+    document.getElementById('settingsPwNew').value = '';
+  } catch (e) {
+    err.style.color = '#dc2626'; err.textContent = e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Update Password';
+});
 
 checkAuth();

@@ -558,4 +558,20 @@ async function loginWithPasskey() {
   }
 }
 
+// Passkey detection on login page
+document.getElementById('loginUser').addEventListener('blur', async function() {
+  const username = this.value.trim();
+  if (!username) return;
+  try {
+    const res = await fetch(`${API}/api/auth/webauthn/check/${encodeURIComponent(username)}`);
+    const data = await res.json();
+    if (data.hasPasskey) {
+      document.getElementById('passkeyLoginBtn').style.display = 'flex';
+      document.getElementById('loginError').textContent = 'Passkey found — click to sign in';
+    } else {
+      document.getElementById('passkeyLoginBtn').style.display = 'none';
+    }
+  } catch {}
+});
+
 checkAuth();
