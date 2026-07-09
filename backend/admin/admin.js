@@ -491,4 +491,71 @@ function stopLogin3D() {
   if (loginScene3d) { loginScene3d.cleanup(); }
 }
 
+/* ═══ WebAuthn — Passkey (biometric) login ═══ */
+
+function base64ToArrayBuffer(b64) {
+  const bin = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(bin, c => c.charCodeAt(0)).buffer;
+}
+
+function arrayBufferToBase64(buf) {
+  const bytes = new Uint8Array(buf);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function webauthnSupport() {
+  return typeof PublicKeyCredential !== 'undefined';
+}
+
+async function loginWithPasskey() {
+  const err = document.getElementById('loginError');
+  if (!webauthnSupport()) { err.textContent = 'Passkey not supported on this browser'; return; }
+
+  const username = document.getElementById('loginUser').value.trim();
+  if (!username) { err.textContent = 'Enter your username first'; return; }
+
+  try {
+    const beginRes = await fetch(`${API}/api/auth/webauthn/login/begin`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    const beginData = await beginRes.json();
+    if (!beginRes.ok) throw new Error(beginData.error);
+
+    beginData.challenge = base64ToArrayBuffer(beginData.challenge);
+    beginData.allowCredentials?.forEach(c => { c.id = base64ToArrayBuffer(c.id); });
+
+    const cred = await navigator.credentials.get({ publicKey: beginData });
+    if (!cred) throw new Error('Passkey authentication cancelled');
+
+    const authData = {
+      id: cred.id,
+      rawId: arrayBufferToBase64(cred.rawId),
+      type: cred.type,
+      response: {
+        authenticatorData: arrayBufferToBase64(cred.response.authenticatorData),
+        clientDataJSON: arrayBufferToBase64(cred.response.clientDataJSON),
+        signature: arrayBufferToBase64(cred.response.signature),
+        userHandle: cred.response.userHandle ? arrayBufferToBase64(cred.response.userHandle) : null,
+      },
+    };
+
+    const completeRes = await fetch(`${API}/api/auth/webauthn/login/complete`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(authData)
+    });
+    const completeData = await completeRes.json();
+    if (!completeRes.ok) throw new Error(completeData.error);
+
+    token = completeData.token;
+    localStorage.setItem('admin_token', token);
+    showAdmin();
+  } catch (e) {
+    if (e.name === 'NotAllowedError') return;
+    err.textContent = e.message;
+  }
+}
+
 checkAuth();

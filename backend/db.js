@@ -100,6 +100,17 @@ function initTables() {
       FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
       UNIQUE(user_id, property_id)
     );
+
+    CREATE TABLE IF NOT EXISTS passkeys (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      credential_id TEXT UNIQUE NOT NULL,
+      public_key TEXT NOT NULL,
+      counter INTEGER NOT NULL DEFAULT 0,
+      transports TEXT DEFAULT '[]',
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
   `);
 
   const existing = db.prepare('SELECT COUNT(*) as count FROM users').get();

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Wave Auth</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      overflow: hidden; height: 100vh;
+      background: linear-gradient(135deg, #faf6f0 0%, #f0ebe3 50%, #e8e0d6 100%);
+    }
+
+    .waves-bg {
+      position: fixed; inset: 0; z-index: 0;
+      overflow: hidden;
+    }
+    .waves-bg svg {
+      position: absolute; bottom: 0; left: 0;
+      width: 200%; height: 60%;
+      min-height: 400px;
+    }
+    .wave-1 { fill: rgba(180, 140, 100, 0.08); animation: waveMove 12s ease-in-out infinite alternate; }
+    .wave-2 { fill: rgba(160, 120, 80, 0.06); animation: waveMove 16s ease-in-out infinite alternate-reverse; }
+    .wave-3 { fill: rgba(140, 100, 60, 0.04); animation: waveMove 20s ease-in-out infinite alternate; }
+
+    @keyframes waveMove {
+      0% { transform: translateX(0) translateY(0); }
+      100% { transform: translateX(-50%) translateY(-8px); }
+    }
+
+    .overlay {
+      position: fixed; inset: 0; z-index: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      width: 100%; max-width: 420px;
+      padding: 48px 40px 40px;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(32px) saturate(1.3);
+      -webkit-backdrop-filter: blur(32px) saturate(1.3);
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow:
+        0 24px 80px rgba(140, 100, 60, 0.08),
+        0 8px 32px rgba(0, 0, 0, 0.04);
+      position: relative;
+      animation: fadeUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes fadeUp {
+      0% { opacity: 0; transform: translateY(24px) scale(0.97); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .auth-card::before {
+      content: '';
+      position: absolute; inset: -1px; border-radius: 28px; padding: 1px;
+      background: linear-gradient(135deg, rgba(180, 140, 100, 0.15), rgba(200, 170, 130, 0.08) 30%, transparent 50%, rgba(180, 140, 100, 0.05) 70%, rgba(160, 120, 80, 0.1));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .card-icon {
+      width: 68px; height: 68px; margin: 0 auto 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #b48c64, #c8aa82);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; color: #fff;
+      box-shadow: 0 8px 32px rgba(140, 100, 60, 0.2);
+      position: relative;
+    }
+    .card-icon::after {
+      content: '';
+      position: absolute; inset: -4px; border-radius: 24px;
+      background: linear-gradient(135deg, rgba(180, 140, 100, 0.15), transparent, rgba(200, 170, 130, 0.15));
+      z-index: -1; filter: blur(8px);
+    }
+
+    .card-header {
+      text-align: center; margin-bottom: 32px;
+    }
+    .card-header h1 {
+      font-size: 24px; font-weight: 700; color: #2d2418;
+      letter-spacing: -0.3px;
+    }
+    .card-header p {
+      font-size: 14px; color: #8a7a68;
+      margin-top: 6px;
+    }
+
+    .field-group {
+      position: relative; margin-bottom: 18px;
+    }
+    .field-group input {
+      width: 100%; padding: 17px 17px 17px 50px;
+      border: 1.5px solid rgba(140, 100, 60, 0.12);
+      border-radius: 14px; font-size: 15px; font-family: inherit;
+      background: rgba(255, 255, 255, 0.7); color: #2d2418;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .field-group input::placeholder { color: #b0a090; font-weight: 400; }
+    .field-group input:focus {
+      border-color: #b48c64;
+      box-shadow: 0 0 0 4px rgba(180, 140, 100, 0.1);
+    }
+    .field-group .input-icon {
+      position: absolute; left: 17px; top: 50%;
+      transform: translateY(-50%);
+      color: #b0a090; font-size: 17px;
+      transition: color 0.3s ease; z-index: 1; pointer-events: none;
+    }
+    .field-group input:focus ~ .input-icon { color: #b48c64; }
+
+    .auth-error {
+      font-size: 13px; color: #c0392b;
+      min-height: 20px; text-align: center; margin-bottom: 4px;
+    }
+
+    .btn-auth {
+      width: 100%; padding: 17px; border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 700; font-family: inherit; color: #fff;
+      background: linear-gradient(135deg, #b48c64, #a07850);
+      background-size: 200% 200%;
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+      box-shadow: 0 4px 20px rgba(140, 100, 60, 0.2);
+      letter-spacing: 0.3px;
+    }
+    .btn-auth:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(140, 100, 60, 0.25); }
+    .btn-auth:active { transform: translateY(0) scale(0.98); }
+    .btn-auth:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    .auth-toggle {
+      text-align: center; margin-top: 22px;
+      font-size: 14px; color: #8a7a68;
+    }
+    .auth-toggle a {
+      color: #b48c64;
+      text-decoration: none; font-weight: 600; cursor: pointer;
+      transition: color 0.2s;
+    }
+    .auth-toggle a:hover { color: #8a6a40; }
+
+    .field-hidden { display: none; }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: 36px 24px 28px; }
+      .card-icon { width: 56px; height: 56px; font-size: 24px; }
+      .card-header h1 { font-size: 20px; }
+      .field-group input { padding: 14px 14px 14px 44px; font-size: 14px; }
+      .field-group .input-icon { left: 14px; font-size: 15px; }
+      .btn-auth { padding: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="waves-bg">
+    <svg viewBox="0 0 1440 600" preserveAspectRatio="none">
+      <path class="wave-1" d="M0,300 C360,180 720,400 1080,260 C1260,200 1350,280 1440,240 L1440,600 L0,600 Z"/>
+      <path class="wave-2" d="M0,380 C240,280 480,460 720,340 C960,220 1200,420 1440,320 L1440,600 L0,600 Z"/>
+      <path class="wave-3" d="M0,440 C400,340 640,500 960,400 C1200,320 1320,440 1440,380 L1440,600 L0,600 Z"/>
+    </svg>
+  </div>
+
+  <div class="overlay">
+    <div class="auth-card" id="authCard">
+      <div class="card-icon" id="cardIcon">
+        <i class="fas fa-user-lock"></i>
+      </div>
+      <div class="card-header">
+        <h1 id="authTitle">Sign In</h1>
+        <p id="authSub">Welcome back! Sign in to save your favorites.</p>
+      </div>
+
+      <form id="authForm">
+        <div class="field-group field-hidden" id="nameField">
+          <i class="fas fa-user input-icon"></i>
+          <input type="text" id="authName" placeholder="Full Name">
+        </div>
+        <div class="field-group">
+          <i class="fas fa-envelope input-icon"></i>
+          <input type="email" id="authEmail" placeholder="Email Address" required>
+        </div>
+        <div class="field-group">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password" id="authPassword" placeholder="Password" required minlength="6">
+        </div>
+
+        <p class="auth-error" id="authError"></p>
+
+        <button type="submit" class="btn-auth" id="authBtn">Sign In</button>
+      </form>
+
+      <div class="auth-toggle">
+        <span id="toggleText">Don't have an account?</span>
+        <a id="toggleLink">Register</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let isLogin = true;
+
+    function setMode(login) {
+      isLogin = login;
+      document.getElementById('authTitle').textContent = login ? 'Sign In' : 'Create Account';
+      document.getElementById('authSub').textContent = login
+        ? 'Welcome back! Sign in to save your favorites.'
+        : 'Join now to save properties and get updates.';
+      document.getElementById('authBtn').textContent = login ? 'Sign In' : 'Create Account';
+      document.getElementById('toggleText').textContent = login
+        ? "Don't have an account?"
+        : 'Already have an account?';
+      document.getElementById('toggleLink').textContent = login ? 'Register' : 'Sign In';
+      document.getElementById('nameField').style.display = login ? 'none' : 'block';
+      document.getElementById('authName').required = !login;
+      document.getElementById('cardIcon').innerHTML = login
+        ? '<i class="fas fa-user-lock"></i>'
+        : '<i class="fas fa-user-plus"></i>';
+      document.getElementById('authError').textContent = '';
+    }
+
+    document.getElementById('toggleLink').addEventListener('click', () => setMode(!isLogin));
+
+    document.getElementById('authForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('authBtn');
+      const err = document.getElementById('authError');
+      const email = document.getElementById('authEmail').value;
+      const password = document.getElementById('authPassword').value;
+      const name = document.getElementById('authName').value;
+
+      if (!email || !password) { err.textContent = 'Please fill in all fields'; return; }
+      if (password.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
+      if (!isLogin && !name) { err.textContent = 'Name is required'; return; }
+
+      btn.disabled = true;
+      btn.textContent = isLogin ? 'Signing in...' : 'Creating account...';
+      err.textContent = '';
+
+      try {
+        const endpoint = isLogin ? '/api/users/login' : '/api/users/register';
+        const body = isLogin ? { email, password } : { name, email, password };
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+        alert(isLogin ? 'Signed in successfully!' : 'Account created!');
+      } catch (e) {
+        err.textContent = e.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = isLogin ? 'Sign In' : 'Create Account';
+      }
+    });
+  </script>
+
+</body>
+</html>

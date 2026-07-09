@@ -115,6 +115,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 @keyframes dotPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
 
+.passkey-divider {
+  display: flex; align-items: center; gap: 12px; margin: 18px 0; color: #b0a090; font-size: 13px;
+}
+.passkey-divider::before, .passkey-divider::after { content: ''; flex: 1; height: 1px; background: rgba(140,100,60,0.12); }
+.btn-passkey {
+  width: 100%; padding: 16px; border: 1.5px solid rgba(140,100,60,0.12); border-radius: 16px;
+  font-size: 15px; font-weight: 600; font-family: inherit; color: #2d2418;
+  background: rgba(255,255,255,0.5); cursor: pointer;
+  transition: all 0.25s ease; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-passkey:hover { background: rgba(255,255,255,0.8); border-color: #b48c64; box-shadow: 0 4px 16px rgba(180,140,100,0.08); }
+.btn-passkey i { font-size: 18px; }
+
 @media (max-width: 480px) {
   .login-card { padding: 36px 24px 28px; }
   .card-logo .icon-wrap { width: 56px; height: 56px; font-size: 24px; }

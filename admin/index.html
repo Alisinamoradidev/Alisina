@@ -34,6 +34,8 @@
             </div>
             <p class="login-error" id="loginError"></p>
             <button type="submit" class="btn-login" id="loginBtn">Sign In</button>
+            <div class="passkey-divider"><span>or</span></div>
+            <button type="button" class="btn-passkey" id="passkeyLoginBtn" onclick="loginWithPasskey()"><i class="fas fa-fingerprint"></i> Sign in with fingerprint / face</button>
           </form>
           <div class="card-footer">
             <span><span class="status-dot"></span> System Ready</span>
@@ -176,6 +178,16 @@
             <div class="field"><label>SWIFT/BIC</label><input type="text" id="bfSwift"></div>
             <div class="form-actions"><button type="submit" class="btn-primary" id="bankSaveBtn">Save Bank Info</button></div>
           </form>
+
+          <h3 style="margin-bottom:8px;color:var(--text);margin-top:32px">Passkey (biometric login)</h3>
+          <div class="modal-body" style="max-width:500px;padding:0">
+            <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px">Use your fingerprint, Face ID, or Windows Hello to sign in instead of a password.</p>
+            <div class="form-actions" style="justify-content:flex-start">
+              <button type="button" class="btn-primary" id="setupPasskeyBtn" onclick="setupPasskey()"><i class="fas fa-fingerprint"></i> Set up passkey</button>
+              <button type="button" class="btn-outline" id="removePasskeyBtn" onclick="removePasskey()" style="display:none"><i class="fas fa-trash"></i> Remove passkey</button>
+            </div>
+            <p id="passkeyStatus" style="font-size:13px;color:var(--text-muted);margin-top:8px"></p>
+          </div>
         </div>
       </main>
     </div>
