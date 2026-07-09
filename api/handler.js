@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 const Stripe = require('stripe');
 const bcrypt = require('bcryptjs');
 const {
@@ -9,6 +10,11 @@ const {
 } = require('@simplewebauthn/server');
 
 const rpName = 'Alisina Admin';
+const CHALLENGE_SECRET = process.env.JWT_SECRET || process.env.ADMIN_PASSWORD || 'opencode-fallback-key';
+
+function signChallenge(challenge) {
+  return crypto.createHmac('sha256', CHALLENGE_SECRET).update(challenge).digest('hex');
+}
 
 function getRpId(req) {
   const host = req.headers.host || 'localhost';
@@ -18,35 +24,6 @@ function getRpId(req) {
 function getOrigin(req) {
   const proto = req.headers['x-forwarded-proto'] || 'http';
   return `${proto}://${req.headers.host || 'localhost'}`;
-}
-
-const challengeStore = new Map();
-
-async function setChallenge(key, challenge) {
-  challengeStore.set(key, challenge);
-  setTimeout(() => challengeStore.delete(key), 120000);
-  try {
-    await supabase.from('webauthn_challenges').upsert({
-      key,
-      challenge,
-      expires_at: new Date(Date.now() + 120000).toISOString(),
-    }, { onConflict: 'key' });
-  } catch {}
-}
-
-async function getChallenge(key) {
-  const mem = challengeStore.get(key);
-  if (mem) return mem;
-  try {
-    const { data } = await supabase.from('webauthn_challenges').select('challenge, expires_at').eq('key', key).maybeSingle();
-    if (data && new Date(data.expires_at) > new Date()) return data.challenge;
-  } catch {}
-  return null;
-}
-
-async function deleteChallenge(key) {
-  challengeStore.delete(key);
-  try { await supabase.from('webauthn_challenges').delete().eq('key', key); } catch {}
 }
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -487,9 +464,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         })),
       });
 
-      await setChallenge(`reg_${user.id}`, opts.challenge);
-
-      return res.json(opts);
+      return res.json({ ...opts, challengeToken: signChallenge(opts.challenge) });
     }
 
     if (path === '/auth/webauthn/register/complete' && method === 'POST') {
@@ -497,8 +472,10 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const user = getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-      const expectedChallenge = await getChallenge(`reg_${user.id}`);
-      if (!expectedChallenge) return res.status(400).json({ error: 'Registration challenge expired. Try again.' });
+      if (!body.challengeToken || signChallenge(body.challenge) !== body.challengeToken) {
+        return res.status(400).json({ error: 'Invalid or expired challenge' });
+      }
+      const expectedChallenge = body.challenge;
 
       const origin = getOrigin(req);
       const rpId = getRpId(req);
@@ -531,8 +508,6 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         transports: JSON.stringify(credential.transports || []),
       });
 
-      await deleteChallenge(`reg_${user.id}`);
-
       return res.json({ verified: true });
     }
 
@@ -560,9 +535,8 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       });
 
       const storeKey = username || 'any';
-      await setChallenge(`auth_${storeKey}`, opts.challenge);
 
-      return res.json(opts);
+      return res.json({ ...opts, challengeToken: signChallenge(opts.challenge) });
     }
 
     if (path === '/auth/webauthn/login/complete' && method === 'POST') {
@@ -572,8 +546,10 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const stored = (keys || []).find(k => k.credential_id === body.id);
       if (!stored) return res.status(404).json({ error: 'Passkey not found' });
 
-      const expectedChallenge = await getChallenge(`auth_${stored.username}`) || await getChallenge('auth_any');
-      if (!expectedChallenge) return res.status(400).json({ error: 'Authentication challenge expired. Try again.' });
+      if (!body.challengeToken || signChallenge(body.challenge || body.rawChallenge) !== body.challengeToken) {
+        return res.status(400).json({ error: 'Invalid or expired challenge' });
+      }
+      const expectedChallenge = body.challenge || body.rawChallenge;
 
       const origin = getOrigin(req);
       const rpId = getRpId(req);
@@ -601,8 +577,6 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       }
 
       await supabase.from('webauthn_passkeys').update({ counter: verification.authenticationInfo.newCounter }).eq('id', stored.id);
-      await deleteChallenge(`auth_${stored.username}`);
-      await deleteChallenge('auth_any');
 
       const token = Buffer.from(JSON.stringify({ id: stored.user_id, username: stored.username, role: 'admin', exp: Date.now() + 86400000 })).toString('base64');
       return res.json({ token: `simple_${token}`, verified: true });

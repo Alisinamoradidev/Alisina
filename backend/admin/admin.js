@@ -526,6 +526,10 @@ async function loginWithPasskey() {
     const beginData = await beginRes.json();
     if (!beginRes.ok) throw new Error(beginData.error);
 
+    const challengeToken = beginData.challengeToken;
+    const rawChallenge = beginData.challenge;
+    delete beginData.challengeToken;
+
     beginData.challenge = base64ToArrayBuffer(beginData.challenge);
     if (beginData.allowCredentials) {
       beginData.allowCredentials.forEach(c => { c.id = base64ToArrayBuffer(c.id); });
@@ -538,6 +542,8 @@ async function loginWithPasskey() {
       id: cred.id,
       rawId: arrayBufferToBase64(cred.rawId),
       type: cred.type,
+      challenge: rawChallenge,
+      challengeToken,
       response: {
         authenticatorData: arrayBufferToBase64(cred.response.authenticatorData),
         clientDataJSON: arrayBufferToBase64(cred.response.clientDataJSON),
@@ -578,6 +584,10 @@ async function tryConditionalPasskey() {
     const opts = await res.json();
     if (!res.ok) return;
 
+    const challengeToken = opts.challengeToken;
+    const rawChallenge = opts.challenge;
+    delete opts.challengeToken;
+
     opts.challenge = base64ToArrayBuffer(opts.challenge);
     if (opts.allowCredentials) {
       opts.allowCredentials.forEach(c => { c.id = base64ToArrayBuffer(c.id); });
@@ -594,6 +604,8 @@ async function tryConditionalPasskey() {
       id: cred.id,
       rawId: arrayBufferToBase64(cred.rawId),
       type: cred.type,
+      challenge: rawChallenge,
+      challengeToken,
       response: {
         authenticatorData: arrayBufferToBase64(cred.response.authenticatorData),
         clientDataJSON: arrayBufferToBase64(cred.response.clientDataJSON),
