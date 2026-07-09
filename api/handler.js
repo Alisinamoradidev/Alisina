@@ -458,6 +458,10 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         userName: user.username || 'admin',
         userDisplayName: 'Admin',
         attestationType: 'none',
+        authenticatorSelection: {
+          residentKey: 'required',
+          userVerification: 'preferred',
+        },
         excludeCredentials: (existingKeys || []).map(k => ({
           id: k.credential_id,
           type: 'public-key',
