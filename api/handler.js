@@ -459,7 +459,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         userDisplayName: 'Admin',
         attestationType: 'none',
         excludeCredentials: (existingKeys || []).map(k => ({
-          id: Buffer.from(k.credential_id, 'base64url'),
+          id: k.credential_id,
           type: 'public-key',
         })),
       });
@@ -502,7 +502,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       await supabase.from('webauthn_passkeys').insert({
         user_id: user.id,
         username: user.username || 'admin',
-        credential_id: Buffer.from(credential.id).toString('base64url'),
+        credential_id: credential.id,
         public_key: Buffer.from(credential.publicKey).toString('base64'),
         counter: credential.counter,
         transports: JSON.stringify(credential.transports || []),
@@ -523,7 +523,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         const { data: keys } = await supabase.from('webauthn_passkeys').select('*').eq('username', username);
         if (!keys?.length) return res.status(404).json({ error: 'No passkey registered for this user' });
         allowCredentials = keys.map(k => ({
-          id: Buffer.from(k.credential_id, 'base64url'),
+          id: k.credential_id,
           type: 'public-key',
         }));
       }
