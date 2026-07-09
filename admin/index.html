@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/dist/face-api.js"></script>
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
@@ -36,6 +37,7 @@
             <button type="submit" class="btn-login" id="loginBtn">Sign In</button>
             <div class="passkey-divider"><span>or</span></div>
             <button type="button" class="btn-passkey" id="passkeyLoginBtn" onclick="loginWithPasskey()"><i class="fas fa-fingerprint"></i> Sign in with fingerprint / face</button>
+            <button type="button" class="btn-face" id="faceLoginBtn" onclick="loginWithFace()"><i class="fas fa-camera"></i> Sign in with face</button>
           </form>
           <div class="card-footer">
             <span><span class="status-dot"></span> System Ready</span>
@@ -200,6 +202,14 @@
               <button type="button" class="btn-outline" id="settingsRemovePasskeyBtn" onclick="removePasskey()" style="display:none"><i class="fas fa-trash"></i> Remove passkey</button>
             </div>
             <p id="settingsPasskeyStatus" style="font-size:13px;color:var(--text-muted)"></p>
+
+            <h3 style="margin-bottom:12px;color:var(--text);margin-top:32px">Face Login</h3>
+            <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px">Use your webcam to sign in. The image is processed in your browser — only a mathematical representation is stored on the server.</p>
+            <div class="form-actions" style="justify-content:flex-start;margin-bottom:8px">
+              <button type="button" class="btn-primary" id="settingsSetupFaceBtn" onclick="enrollFace()"><i class="fas fa-camera"></i> Set up face login</button>
+              <button type="button" class="btn-outline" id="settingsRemoveFaceBtn" onclick="removeFace()" style="display:none"><i class="fas fa-trash"></i> Remove face</button>
+            </div>
+            <p id="settingsFaceStatus" style="font-size:13px;color:var(--text-muted)"></p>
           </div>
         </div>
       </main>
@@ -297,6 +307,10 @@
       </div>
     </div>
   </div>
+
+  <!-- Hidden video for face capture -->
+  <video id="faceVideo" style="display:none" playsinline></video>
+  <canvas id="faceCanvas" style="display:none"></canvas>
 
   <script src="admin.js"></script>
 </body>

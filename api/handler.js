@@ -602,6 +602,70 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       return res.json({ message: 'Passkeys removed' });
     }
 
+    /* ─── Face Login ─── */
+
+    if (path === '/auth/face/descriptor' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+      const { descriptor } = body;
+      if (!descriptor || !Array.isArray(descriptor) || descriptor.length !== 128) {
+        return res.status(400).json({ error: 'Invalid face descriptor' });
+      }
+
+      const { data: existing } = await supabase.from('face_data').select('user_id').eq('user_id', user.id).maybeSingle();
+      if (existing) {
+        await supabase.from('face_data').update({ face_descriptor: JSON.stringify(descriptor) }).eq('user_id', user.id);
+      } else {
+        await supabase.from('face_data').insert({ user_id: user.id, face_descriptor: JSON.stringify(descriptor) });
+      }
+      return res.json({ success: true });
+    }
+
+    if (path === '/auth/face/descriptor' && method === 'DELETE') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      await supabase.from('face_data').delete().eq('user_id', user.id);
+      return res.json({ success: true });
+    }
+
+    if (path === '/auth/face/compare' && method === 'POST') {
+      const { descriptor } = body;
+      if (!descriptor || !Array.isArray(descriptor) || descriptor.length !== 128) {
+        return res.status(400).json({ error: 'Invalid face descriptor' });
+      }
+
+      const { data } = await supabase.from('face_data').select('*').maybeSingle();
+      if (!data) return res.status(404).json({ error: 'No face enrolled' });
+
+      const stored = JSON.parse(data.face_descriptor);
+
+      let dot = 0, normA = 0, normB = 0;
+      for (let i = 0; i < 128; i++) {
+        dot += descriptor[i] * stored[i];
+        normA += descriptor[i] * descriptor[i];
+        normB += stored[i] * stored[i];
+      }
+      const similarity = dot / (Math.sqrt(normA) * Math.sqrt(normB));
+
+      if (similarity < 0.5) {
+        return res.status(401).json({ error: 'Face does not match', similarity: Math.round(similarity * 10000) / 10000 });
+      }
+
+      const token = Buffer.from(JSON.stringify({ id: data.user_id, role: 'admin', exp: Date.now() + 86400000 })).toString('base64');
+      return res.json({ token: `simple_${token}`, similarity: Math.round(similarity * 10000) / 10000, verified: true });
+    }
+
+    if (path === '/auth/face/status' && method === 'GET') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const { data } = await supabase.from('face_data').select('user_id').eq('user_id', user.id).maybeSingle();
+      return res.json({ enrolled: !!data });
+    }
+
     /* Users */
     if (path === '/users/register' && method === 'POST') {
       const allowed = await checkRateLimit('register_' + (body.email || 'unknown'), 3, 300);

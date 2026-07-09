@@ -118,7 +118,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (v === 'payments') loadPayments();
     if (v === 'testimonials') loadTestimonials();
     if (v === 'bank') { loadBankInfo(); loadStripeSettings(); }
-    if (v === 'settings') checkPasskeyStatus();
+    if (v === 'settings') { checkPasskeyStatus(); checkFaceStatus(); }
   });
 });
 
@@ -1139,6 +1139,154 @@ async function checkPasskeyStatus() {
       document.getElementById('settingsRemovePasskeyBtn').style.display = 'inline-flex';
     } else {
       document.getElementById('settingsPasskeyStatus').textContent = 'No passkey set up yet';
+    }
+  } catch {}
+}
+
+/* ─── Face Login ─── */
+
+let faceModelsLoaded = false;
+
+async function loadFaceModels() {
+  if (faceModelsLoaded) return;
+  try {
+    await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhacksthings.github.io/face-api.js/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('https://justadudewhacksthings.github.io/face-api.js/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('https://justadudewhacksthings.github.io/face-api.js/models');
+    faceModelsLoaded = true;
+  } catch (e) {
+    throw new Error('Failed to load face models: ' + e.message);
+  }
+}
+
+function getFaceVideo() { return document.getElementById('faceVideo'); }
+
+async function startFaceCamera() {
+  const video = getFaceVideo();
+  video.style.display = 'block';
+  video.style.position = 'fixed';
+  video.style.bottom = '20px';
+  video.style.right = '20px';
+  video.style.width = '200px';
+  video.style.height = '150px';
+  video.style.borderRadius = '12px';
+  video.style.border = '2px solid var(--primary)';
+  video.style.zIndex = '9999';
+  video.style.objectFit = 'cover';
+  video.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
+
+  const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+  video.srcObject = stream;
+  await video.play();
+  return stream;
+}
+
+function stopFaceCamera(stream) {
+  const video = getFaceVideo();
+  video.style.display = 'none';
+  video.srcObject = null;
+  if (stream) stream.getTracks().forEach(t => t.stop());
+}
+
+async function captureFaceDescriptor() {
+  const video = getFaceVideo();
+  const result = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+  if (!result) throw new Error('No face detected. Make sure your face is visible and well-lit.');
+  return Array.from(result.descriptor);
+}
+
+async function enrollFace() {
+  if (typeof faceapi === 'undefined') { alert('Face API not loaded. Check internet connection.'); return; }
+
+  const btn = document.getElementById('settingsSetupFaceBtn');
+  btn.disabled = true; btn.textContent = 'Opening camera...';
+
+  let stream;
+  try {
+    await loadFaceModels();
+    stream = await startFaceCamera();
+
+    await new Promise(r => setTimeout(r, 500));
+    btn.textContent = 'Capturing...';
+
+    const descriptor = await captureFaceDescriptor();
+    stopFaceCamera(stream); stream = null;
+
+    await api('/api/auth/face/descriptor', {
+      method: 'POST',
+      body: JSON.stringify({ descriptor }),
+    });
+
+    document.getElementById('settingsFaceStatus').textContent = 'Face login set up successfully!';
+    document.getElementById('settingsSetupFaceBtn').style.display = 'none';
+    document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    if (stream) stopFaceCamera(stream);
+    btn.disabled = false; btn.textContent = 'Set up face login';
+  }
+}
+
+async function removeFace() {
+  if (!confirm('Remove your face login?')) return;
+  try {
+    await api('/api/auth/face/descriptor', { method: 'DELETE' });
+    document.getElementById('settingsFaceStatus').textContent = 'Face login removed.';
+    document.getElementById('settingsSetupFaceBtn').style.display = 'inline-flex';
+    document.getElementById('settingsRemoveFaceBtn').style.display = 'none';
+  } catch {}
+}
+
+async function loginWithFace() {
+  if (typeof faceapi === 'undefined') { document.getElementById('loginError').textContent = 'Face API not loaded. Check internet connection.'; return; }
+
+  const err = document.getElementById('loginError');
+  const btn = document.getElementById('faceLoginBtn');
+  btn.disabled = true; btn.textContent = 'Opening camera...'; err.textContent = '';
+
+  let stream;
+  try {
+    await loadFaceModels();
+    stream = await startFaceCamera();
+
+    await new Promise(r => setTimeout(r, 500));
+    btn.textContent = 'Scanning...';
+
+    const descriptor = await captureFaceDescriptor();
+    stopFaceCamera(stream); stream = null;
+
+    const res = await fetch(`${API}/api/auth/face/compare`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ descriptor }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    token = data.token;
+    localStorage.setItem('admin_token', token);
+    showAdmin();
+  } catch (e) {
+    if (e.name === 'NotAllowedError') return;
+    err.textContent = e.message;
+  } finally {
+    if (stream) stopFaceCamera(stream);
+    btn.disabled = false; btn.textContent = 'Sign in with face';
+  }
+}
+
+async function checkFaceStatus() {
+  try {
+    const res = await fetch(`${API}/api/auth/face/status`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.enrolled) {
+      document.getElementById('settingsFaceStatus').textContent = 'Face login ready';
+      document.getElementById('settingsSetupFaceBtn').style.display = 'none';
+      document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
+    } else {
+      document.getElementById('settingsFaceStatus').textContent = 'No face set up yet';
     }
   } catch {}
 }
