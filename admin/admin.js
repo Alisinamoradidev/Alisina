@@ -864,33 +864,33 @@ function startLogin3D() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   /* Lights */
-  scene.add(new THREE.AmbientLight(0x222244, 0.5));
-  const l1 = new THREE.PointLight(0x6366f1, 2, 20); l1.position.set(5, 5, 5); scene.add(l1);
-  const l2 = new THREE.PointLight(0xec4899, 1.5, 20); l2.position.set(-5, -3, 5); scene.add(l2);
-  const l3 = new THREE.PointLight(0x22d3ee, 0.8, 20); l3.position.set(0, -5, 5); scene.add(l3);
+  scene.add(new THREE.AmbientLight(0xffeedd, 0.6));
+  const l1 = new THREE.PointLight(0xd4943a, 2, 20); l1.position.set(5, 5, 5); scene.add(l1);
+  const l2 = new THREE.PointLight(0xc06040, 1.5, 20); l2.position.set(-5, -3, 5); scene.add(l2);
+  const l3 = new THREE.PointLight(0x86efac, 0.8, 20); l3.position.set(0, -5, 5); scene.add(l3);
 
   /* Center icosahedron */
   const ico = new THREE.Mesh(
     new THREE.IcosahedronGeometry(1.6, 1),
-    new THREE.MeshPhysicalMaterial({ color: 0x6366f1, metalness: 0.2, roughness: 0.15, transparent: true, opacity: 0.9, clearcoat: 0.4, clearcoatRoughness: 0.3, emissive: 0x312e81, emissiveIntensity: 0.15 })
+    new THREE.MeshPhysicalMaterial({ color: 0xd4943a, metalness: 0.15, roughness: 0.2, transparent: true, opacity: 0.85, clearcoat: 0.3, clearcoatRoughness: 0.3, emissive: 0x8a6a40, emissiveIntensity: 0.1 })
   );
   scene.add(ico);
   const wire = new THREE.Mesh(
     new THREE.IcosahedronGeometry(1.65, 1),
-    new THREE.MeshPhysicalMaterial({ color: 0x818cf8, wireframe: true, transparent: true, opacity: 0.15, emissive: 0x6366f1, emissiveIntensity: 0.05 })
+    new THREE.MeshPhysicalMaterial({ color: 0xf0c68a, wireframe: true, transparent: true, opacity: 0.12, emissive: 0xd4943a, emissiveIntensity: 0.03 })
   );
   ico.add(wire);
 
   /* Rings */
   const ring = new THREE.Mesh(
     new THREE.TorusGeometry(2.4, 0.025, 16, 80),
-    new THREE.MeshPhysicalMaterial({ color: 0x818cf8, emissive: 0x6366f1, emissiveIntensity: 0.3, transparent: true, opacity: 0.3, metalness: 0.8, roughness: 0.2 })
+    new THREE.MeshPhysicalMaterial({ color: 0xf0c68a, emissive: 0xd4943a, emissiveIntensity: 0.15, transparent: true, opacity: 0.25, metalness: 0.3, roughness: 0.4 })
   );
   ring.rotation.x = Math.PI / 2.5; scene.add(ring);
 
   const ring2 = new THREE.Mesh(
     new THREE.TorusGeometry(2.8, 0.015, 16, 80),
-    new THREE.MeshPhysicalMaterial({ color: 0xa855f7, emissive: 0xa855f7, emissiveIntensity: 0.2, transparent: true, opacity: 0.2, metalness: 0.6, roughness: 0.3 })
+    new THREE.MeshPhysicalMaterial({ color: 0xc06040, emissive: 0xc06040, emissiveIntensity: 0.1, transparent: true, opacity: 0.15, metalness: 0.2, roughness: 0.5 })
   );
   ring2.rotation.x = Math.PI / 1.8; ring2.rotation.z = 0.5; scene.add(ring2);
 
@@ -899,9 +899,9 @@ function startLogin3D() {
   const dotGeo = new THREE.SphereGeometry(0.04, 8, 8);
   for (let i = 0; i < 40; i++) {
     const dot = new THREE.Mesh(dotGeo, new THREE.MeshPhysicalMaterial({
-      color: i % 3 === 0 ? 0x818cf8 : i % 3 === 1 ? 0xa855f7 : 0x22d3ee,
-      emissive: i % 3 === 0 ? 0x6366f1 : i % 3 === 1 ? 0xa855f7 : 0x22d3ee,
-      emissiveIntensity: 0.5, transparent: true, opacity: 0.6
+      color: i % 3 === 0 ? 0xf0c68a : i % 3 === 1 ? 0xc06040 : 0x86efac,
+      emissive: i % 3 === 0 ? 0xd4943a : i % 3 === 1 ? 0xc06040 : 0x34a853,
+      emissiveIntensity: 0.15, transparent: true, opacity: 0.3
     }));
     const radius = 3.2 + Math.random() * 0.8;
     const theta = (i / 40) * Math.PI * 2;
@@ -923,7 +923,7 @@ function startLogin3D() {
   }
   const pGeo = new THREE.BufferGeometry();
   pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const pMat = new THREE.PointsMaterial({ color: 0x818cf8, size: 0.04, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, sizeAttenuation: true });
+  const pMat = new THREE.PointsMaterial({ color: 0xf0c68a, size: 0.035, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, sizeAttenuation: true });
   const particles = new THREE.Points(pGeo, pMat);
   scene.add(particles);
 
