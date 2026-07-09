@@ -7,20 +7,40 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
   <div id="app">
-    <div id="loginView" class="login-view">
-      <div class="login-card">
-        <div class="login-logo"><i class="fas fa-building"></i> Alisina Real Estate</div>
-        <p class="login-subtitle">Admin Panel</p>
-        <form id="loginForm">
-          <div class="field"><label>Username</label><input type="text" id="loginUser" required autocomplete="username"></div>
-          <div class="field"><label>Password</label><input type="password" id="loginPass" required autocomplete="current-password"></div>
-          <p class="login-error" id="loginError"></p>
-          <button type="submit" class="btn-primary" id="loginBtn">Sign In</button>
-        </form>
+    <div id="loginView" class="login-view" style="display:flex">
+      <canvas id="three-canvas"></canvas>
+      <div class="overlay">
+        <div class="login-card">
+          <div class="card-logo">
+            <div class="icon-wrap"><i class="fas fa-building"></i></div>
+            <h1>Admin Panel</h1>
+            <p>Alisina Real Estate</p>
+          </div>
+          <form id="loginForm">
+            <div class="field-group">
+              <i class="fas fa-user input-icon"></i>
+              <input type="text" id="loginUser" placeholder="Username" required autocomplete="username">
+            </div>
+            <div class="field-group">
+              <i class="fas fa-lock input-icon"></i>
+              <input type="password" id="loginPass" placeholder="Password" required autocomplete="current-password">
+            </div>
+            <p class="login-error" id="loginError"></p>
+            <button type="submit" class="btn-login" id="loginBtn">Sign In</button>
+          </form>
+          <div class="card-footer">
+            <span><span class="status-dot"></span> System Ready</span>
+            <span>&middot;</span>
+            <a href="#">Forgot password?</a>
+          </div>
+        </div>
       </div>
     </div>
 
