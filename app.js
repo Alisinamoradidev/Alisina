@@ -732,6 +732,8 @@ function showAuthModal(mode) {
     document.getElementById('authToggleText').textContent = "Don't have an account?";
     document.getElementById('authToggleLink').textContent = 'Register';
     document.getElementById('authNameField').style.display = 'none';
+    const ci = document.getElementById('cardIcon');
+    if (ci) ci.innerHTML = '<i class="fas fa-user-lock"></i>';
   } else {
     document.getElementById('authModalTitle').textContent = 'Create Account';
     document.getElementById('authModalSub').textContent = 'Join to save favorites!';
@@ -739,6 +741,8 @@ function showAuthModal(mode) {
     document.getElementById('authToggleText').textContent = 'Already have an account?';
     document.getElementById('authToggleLink').textContent = 'Sign In';
     document.getElementById('authNameField').style.display = 'block';
+    const ci = document.getElementById('cardIcon');
+    if (ci) ci.innerHTML = '<i class="fas fa-user-plus"></i>';
   }
 }
 

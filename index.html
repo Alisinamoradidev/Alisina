@@ -622,34 +622,47 @@
     </div>
   </div>
   <div class="modal-overlay" id="authModal">
-    <div class="modal auth-modal">
-      <button class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
-      <div class="auth-modal-header">
-        <div class="auth-modal-icon"><i class="fas fa-user-lock"></i></div>
+
+    <!-- Wave background -->
+    <div class="auth-waves" id="authWaves">
+      <svg viewBox="0 0 1440 600" preserveAspectRatio="none">
+        <path class="wv-1" d="M0,300 C360,180 720,400 1080,260 C1260,200 1350,280 1440,240 L1440,600 L0,600 Z"/>
+        <path class="wv-2" d="M0,380 C240,280 480,460 720,340 C960,220 1200,420 1440,320 L1440,600 L0,600 Z"/>
+        <path class="wv-3" d="M0,440 C400,340 640,500 960,400 C1200,320 1320,440 1440,380 L1440,600 L0,600 Z"/>
+      </svg>
+    </div>
+    <div class="auth-card" id="authCard">
+      <button class="auth-card-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
+      <div class="auth-card-icon" id="cardIcon">
+        <i class="fas fa-user-lock"></i>
+      </div>
+      <div class="auth-card-header">
         <h3 id="authModalTitle">Sign In</h3>
         <p id="authModalSub">Welcome back! Sign in to save your favorites.</p>
       </div>
-      <div class="auth-modal-body">
-        <form id="authForm">
-          <div id="authNameField" class="auth-field" style="display:none">
-            <label for="authName">Full Name</label>
-            <input type="text" id="authName" placeholder="John Doe" required>
-          </div>
-          <div class="auth-field">
-            <label for="authEmail">Email Address</label>
-            <input type="email" id="authEmail" placeholder="you@example.com" required>
-          </div>
-          <div class="auth-field">
-            <label for="authPassword">Password</label>
-            <input type="password" id="authPassword" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" required minlength="6">
-          </div>
-          <p class="login-error" id="authError"></p>
-          <button type="submit" class="btn-auth" id="authBtn">Sign In</button>
-        </form>
-        <p class="auth-toggle-text">
-          <span id="authToggleText">Don't have an account?</span>
-          <a href="#" onclick="toggleAuthMode()" id="authToggleLink">Register</a>
-        </p>
+
+      <form id="authForm">
+        <div class="auth-field-group auth-field-hidden" id="authNameField">
+          <i class="fas fa-user auth-field-icon"></i>
+          <input type="text" id="authName" placeholder="Full Name">
+        </div>
+        <div class="auth-field-group">
+          <i class="fas fa-envelope auth-field-icon"></i>
+          <input type="email" id="authEmail" placeholder="Email Address" required>
+        </div>
+        <div class="auth-field-group">
+          <i class="fas fa-lock auth-field-icon"></i>
+          <input type="password" id="authPassword" placeholder="Password" required minlength="6">
+        </div>
+
+        <p class="auth-error" id="authError"></p>
+
+        <button type="submit" class="btn-auth" id="authBtn">Sign In</button>
+      </form>
+
+      <div class="auth-toggle-text">
+        <span id="authToggleText">Don't have an account?</span>
+        <a href="#" onclick="toggleAuthMode()" id="authToggleLink">Register</a>
       </div>
     </div>
   </div>
