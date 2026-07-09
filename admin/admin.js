@@ -1011,18 +1011,19 @@ async function loginWithPasskey() {
   if (!webauthnSupport()) { err.textContent = 'Passkey not supported on this browser'; return; }
 
   const username = document.getElementById('loginUser').value.trim();
-  if (!username) { err.textContent = 'Enter your username first'; return; }
 
   try {
     const beginRes = await fetch(`${API}/api/auth/webauthn/login/begin`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username })
+      body: JSON.stringify(username ? { username } : {})
     });
     const beginData = await beginRes.json();
     if (!beginRes.ok) throw new Error(beginData.error);
 
     beginData.challenge = base64ToArrayBuffer(beginData.challenge);
-    beginData.allowCredentials?.forEach(c => { c.id = base64ToArrayBuffer(c.id); });
+    if (beginData.allowCredentials) {
+      beginData.allowCredentials.forEach(c => { c.id = base64ToArrayBuffer(c.id); });
+    }
 
     const cred = await navigator.credentials.get({ publicKey: beginData });
     if (!cred) throw new Error('Passkey authentication cancelled');
@@ -1130,10 +1131,10 @@ async function checkPasskeyStatus() {
   } catch {}
 }
 
-// Conditional mediation passkey — auto-prompt when user focuses username
+// Try conditional passkey at login (browser autofill UI)
 let conditionalAbortController;
 
-async function setupConditionalPasskey() {
+async function tryConditionalPasskey() {
   if (!webauthnSupport()) return;
   conditionalAbortController?.abort();
   conditionalAbortController = new AbortController();
@@ -1185,25 +1186,11 @@ async function setupConditionalPasskey() {
   }
 }
 
-// Check for passkey on login page load
-async function checkPasskeyOnLogin() {
-  try {
-    const res = await fetch(`${API}/api/auth/webauthn/check/admin`);
-    const data = await res.json();
-    if (data.hasPasskey) {
-      document.getElementById('passkeyLoginBtn').style.display = 'flex';
-      setupConditionalPasskey();
-    } else {
-      document.getElementById('passkeyLoginBtn').style.display = 'none';
-    }
-  } catch {}
-}
-
-// Hook into showLogin
+// Hook into showLogin to try conditional passkey
 const origShowLogin_ = showLogin;
 showLogin = function() {
   origShowLogin_();
-  checkPasskeyOnLogin();
+  tryConditionalPasskey();
 };
 
 // Settings password form
