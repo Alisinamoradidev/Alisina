@@ -1,6 +1,26 @@
 const { createClient } = require('@supabase/supabase-js');
 const Stripe = require('stripe');
 const bcrypt = require('bcryptjs');
+const {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse,
+} = require('@simplewebauthn/server');
+
+const rpName = 'Alisina Admin';
+
+function getRpId(req) {
+  const host = req.headers.host || 'localhost';
+  return host.split(':')[0];
+}
+
+function getOrigin(req) {
+  const proto = req.headers['x-forwarded-proto'] || 'http';
+  return `${proto}://${req.headers.host || 'localhost'}`;
+}
+
+const challengeStore = new Map();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -406,6 +426,173 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/auth/password' && method === 'PUT') {
       return res.status(200).json({ message: 'Password updated (static admin)' });
+    }
+
+    /* ─── WebAuthn ─── */
+
+    const webauthnCheckMatch = method === 'GET' && path.match(/^\/auth\/webauthn\/check\/(.+)$/);
+    if (webauthnCheckMatch) {
+      const username = decodeURIComponent(webauthnCheckMatch[1]);
+      const isAdmin = username === (process.env.ADMIN_USERNAME || 'admin');
+      if (!isAdmin) return res.json({ hasPasskey: false });
+      const { data: keys } = await supabase.from('webauthn_passkeys').select('id').eq('user_id', 1);
+      return res.json({ hasPasskey: (keys || []).length > 0 });
+    }
+
+    if (path === '/auth/webauthn/register/begin' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+      const rpId = getRpId(req);
+
+      const { data: existingKeys } = await supabase.from('webauthn_passkeys').select('*').eq('user_id', user.id);
+
+      const opts = await generateRegistrationOptions({
+        rpName,
+        rpID: rpId,
+        userName: user.username || 'admin',
+        userDisplayName: 'Admin',
+        attestationType: 'none',
+        excludeCredentials: (existingKeys || []).map(k => ({
+          id: Buffer.from(k.credential_id, 'base64url'),
+          type: 'public-key',
+        })),
+      });
+
+      challengeStore.set(`reg_${user.id}`, opts.challenge);
+      setTimeout(() => challengeStore.delete(`reg_${user.id}`), 120000);
+
+      return res.json(opts);
+    }
+
+    if (path === '/auth/webauthn/register/complete' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+      const expectedChallenge = challengeStore.get(`reg_${user.id}`);
+      if (!expectedChallenge) return res.status(400).json({ error: 'Registration challenge expired. Try again.' });
+
+      const origin = getOrigin(req);
+      const rpId = getRpId(req);
+
+      let verification;
+      try {
+        verification = await verifyRegistrationResponse({
+          response: body,
+          expectedChallenge,
+          expectedOrigin: origin,
+          expectedRPID: rpId,
+        });
+      } catch (e) {
+        return res.status(400).json({ error: e.message });
+      }
+
+      if (!verification.verified) {
+        return res.status(400).json({ error: 'Registration verification failed' });
+      }
+
+      const { registrationInfo } = verification;
+      const { credential } = registrationInfo;
+
+      await supabase.from('webauthn_passkeys').insert({
+        user_id: user.id,
+        username: user.username || 'admin',
+        credential_id: Buffer.from(credential.id).toString('base64url'),
+        public_key: Buffer.from(credential.publicKey).toString('base64'),
+        counter: credential.counter,
+        transports: JSON.stringify(credential.transports || []),
+      });
+
+      challengeStore.delete(`reg_${user.id}`);
+
+      return res.json({ verified: true });
+    }
+
+    if (path === '/auth/webauthn/login/begin' && method === 'POST') {
+      const { username } = body;
+      if (!username) return res.status(400).json({ error: 'Username required' });
+
+      const isAdmin = username === (process.env.ADMIN_USERNAME || 'admin');
+      if (!isAdmin) return res.status(404).json({ error: 'User not found' });
+
+      const rpId = getRpId(req);
+
+      const { data: keys } = await supabase.from('webauthn_passkeys').select('*').eq('username', username);
+      if (!keys?.length) return res.status(404).json({ error: 'No passkey registered for this user' });
+
+      const opts = await generateAuthenticationOptions({
+        rpID: rpId,
+        allowCredentials: keys.map(k => ({
+          id: Buffer.from(k.credential_id, 'base64url'),
+          type: 'public-key',
+        })),
+        userVerification: 'preferred',
+      });
+
+      challengeStore.set(`auth_${username}`, opts.challenge);
+      setTimeout(() => challengeStore.delete(`auth_${username}`), 120000);
+
+      return res.json(opts);
+    }
+
+    if (path === '/auth/webauthn/login/complete' && method === 'POST') {
+      if (!body.id || !body.response) return res.status(400).json({ error: 'Missing credential data' });
+
+      const { data: keys } = await supabase.from('webauthn_passkeys').select('*');
+      const stored = (keys || []).find(k => k.credential_id === body.id);
+      if (!stored) return res.status(404).json({ error: 'Passkey not found' });
+
+      const expectedChallenge = challengeStore.get(`auth_${stored.username}`);
+      if (!expectedChallenge) return res.status(400).json({ error: 'Authentication challenge expired. Try again.' });
+
+      const origin = getOrigin(req);
+      const rpId = getRpId(req);
+
+      let verification;
+      try {
+        verification = await verifyAuthenticationResponse({
+          response: body,
+          expectedChallenge,
+          expectedOrigin: origin,
+          expectedRPID: rpId,
+          credential: {
+            id: stored.credential_id,
+            publicKey: Buffer.from(stored.public_key, 'base64'),
+            counter: stored.counter,
+            transports: JSON.parse(stored.transports || '[]'),
+          },
+        });
+      } catch (e) {
+        return res.status(400).json({ error: e.message });
+      }
+
+      if (!verification.verified) {
+        return res.status(400).json({ error: 'Authentication verification failed' });
+      }
+
+      await supabase.from('webauthn_passkeys').update({ counter: verification.authenticationInfo.newCounter }).eq('id', stored.id);
+      challengeStore.delete(`auth_${stored.username}`);
+
+      const token = Buffer.from(JSON.stringify({ id: stored.user_id, username: stored.username, role: 'admin', exp: Date.now() + 86400000 })).toString('base64');
+      return res.json({ token: `simple_${token}`, verified: true });
+    }
+
+    if (path === '/auth/webauthn/status' && method === 'GET') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const { data: passkeys } = await supabase.from('webauthn_passkeys').select('id, created_at').eq('user_id', user.id);
+      return res.json({ passkeys: (passkeys || []).length, list: passkeys || [] });
+    }
+
+    if (path === '/auth/webauthn/passkeys' && method === 'DELETE') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      await supabase.from('webauthn_passkeys').delete().eq('user_id', user.id);
+      return res.json({ message: 'Passkeys removed' });
     }
 
     /* Users */
