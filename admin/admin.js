@@ -1149,9 +1149,10 @@ let faceModelsLoaded = false;
 
 async function loadFaceModels() {
   if (faceModelsLoaded) return;
-  await faceapi.nets.tinyFaceDetector.loadFromUri('/admin/models');
-  await faceapi.nets.faceLandmark68Net.loadFromUri('/admin/models');
-  await faceapi.nets.faceRecognitionNet.loadFromUri('/admin/models');
+  const modelUrl = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model';
+  await faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl);
+  await faceapi.nets.faceLandmark68Net.loadFromUri(modelUrl);
+  await faceapi.nets.faceRecognitionNet.loadFromUri(modelUrl);
   faceModelsLoaded = true;
 }
 
@@ -1194,12 +1195,17 @@ function timeoutPromise(promise, ms) {
 
 async function captureFaceDescriptor() {
   const video = getFaceVideo();
-  const result = await timeoutPromise(
-    faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor(),
+  let waited = 0;
+  while (!video.videoWidth && waited < 3000) {
+    await new Promise(r => setTimeout(r, 100));
+    waited += 100;
+  }
+  const desc = await timeoutPromise(
+    faceapi.computeFaceDescriptor(video),
     10000
   );
-  if (!result) throw new Error('No face detected. Make sure your face is visible and well-lit.');
-  return Array.from(result.descriptor);
+  if (!desc || desc.length !== 128) throw new Error('Failed to compute face descriptor.');
+  return Array.from(desc);
 }
 
 async function enrollFace() {
