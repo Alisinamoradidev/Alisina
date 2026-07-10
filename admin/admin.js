@@ -1220,10 +1220,77 @@ async function captureFaceDescriptor() {
   return Array.from(desc);
 }
 
-async function enrollFace() {
+async function saveDescriptor(descriptor) {
+  await api('/api/auth/face/descriptor', {
+    method: 'POST',
+    body: JSON.stringify({ descriptor }),
+  });
+  document.getElementById('settingsFaceStatus').textContent = 'Face login set up successfully!';
+  document.getElementById('settingsSetupFaceBtn').style.display = 'none';
+  document.getElementById('settingsWebcamFaceBtn').style.display = 'none';
+  document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
+}
+
+async function enrollFaceFromPhoto(input) {
   if (typeof faceapi === 'undefined') { alert('Face API not loaded. Check internet connection.'); return; }
 
+  const file = input.files[0];
+  if (!file) return;
+
   const btn = document.getElementById('settingsSetupFaceBtn');
+  btn.disabled = true; btn.textContent = 'Loading face models...';
+
+  try {
+    await loadFaceModels();
+    btn.textContent = 'Processing photo...';
+
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('Failed to load image'));
+      el.src = URL.createObjectURL(file);
+    });
+
+    btn.textContent = 'Detecting face...';
+
+    let detection;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      detection = await timeoutPromise(
+        faceapi.detectSingleFace(img),
+        15000
+      );
+      if (detection) break;
+    }
+    if (!detection) throw new Error('No face detected in the photo. Try a different photo.');
+
+    btn.textContent = 'Computing...';
+
+    const canvas = document.getElementById('faceCanvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    const desc = await timeoutPromise(
+      faceapi.computeFaceDescriptor(canvas),
+      10000
+    );
+    if (!desc || desc.length !== 128) throw new Error('Failed to compute face descriptor.');
+
+    await saveDescriptor(Array.from(desc));
+    URL.revokeObjectURL(img.src);
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Upload a photo';
+    input.value = '';
+  }
+}
+
+async function enrollFaceFromWebcam() {
+  if (typeof faceapi === 'undefined') { alert('Face API not loaded. Check internet connection.'); return; }
+
+  const btn = document.getElementById('settingsWebcamFaceBtn');
   btn.disabled = true; btn.textContent = 'Loading face models...';
 
   let stream;
@@ -1238,19 +1305,12 @@ async function enrollFace() {
     const descriptor = await captureFaceDescriptor();
     stopFaceCamera(stream); stream = null;
 
-    await api('/api/auth/face/descriptor', {
-      method: 'POST',
-      body: JSON.stringify({ descriptor }),
-    });
-
-    document.getElementById('settingsFaceStatus').textContent = 'Face login set up successfully!';
-    document.getElementById('settingsSetupFaceBtn').style.display = 'none';
-    document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
+    await saveDescriptor(descriptor);
   } catch (e) {
     alert(e.message === 'Timed out' ? 'Face detection timed out. Make sure your face is visible and the room is well-lit.' : e.message);
   } finally {
     if (stream) stopFaceCamera(stream);
-    btn.disabled = false; btn.textContent = 'Set up face login';
+    btn.disabled = false; btn.textContent = 'Use webcam';
   }
 }
 
@@ -1260,6 +1320,7 @@ async function removeFace() {
     await api('/api/auth/face/descriptor', { method: 'DELETE' });
     document.getElementById('settingsFaceStatus').textContent = 'Face login removed.';
     document.getElementById('settingsSetupFaceBtn').style.display = 'inline-flex';
+    document.getElementById('settingsWebcamFaceBtn').style.display = 'inline-flex';
     document.getElementById('settingsRemoveFaceBtn').style.display = 'none';
   } catch {}
 }
@@ -1311,6 +1372,7 @@ async function checkFaceStatus() {
     if (data.enrolled) {
       document.getElementById('settingsFaceStatus').textContent = 'Face login ready';
       document.getElementById('settingsSetupFaceBtn').style.display = 'none';
+      document.getElementById('settingsWebcamFaceBtn').style.display = 'none';
       document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
     } else {
       document.getElementById('settingsFaceStatus').textContent = 'No face set up yet';
