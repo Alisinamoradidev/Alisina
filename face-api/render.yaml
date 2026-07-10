@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: face-api
+    runtime: image
+    repo: https://github.com/AliSinamoradidev/Alisina
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./face-api/Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: "8000"
