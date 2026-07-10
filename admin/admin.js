@@ -1193,27 +1193,17 @@ function timeoutPromise(promise, ms) {
   ]).finally(() => clearTimeout(timer));
 }
 
-async function captureFaceDescriptor() {
-  const video = getFaceVideo();
+async function captureFaceDescriptor(input) {
   let waited = 0;
-  while (!video.videoWidth && waited < 3000) {
-    await new Promise(r => setTimeout(r, 100));
-    waited += 100;
+  if (input instanceof HTMLVideoElement) {
+    while (!input.videoWidth && waited < 3000) {
+      await new Promise(r => setTimeout(r, 100));
+      waited += 100;
+    }
   }
-
-  let detection;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    detection = await timeoutPromise(
-      faceapi.detectSingleFace(video),
-      15000
-    );
-    if (detection) break;
-    await new Promise(r => setTimeout(r, 200));
-  }
-  if (!detection) throw new Error('No face detected. Make sure your face is visible and well-lit.');
 
   const desc = await timeoutPromise(
-    faceapi.computeFaceDescriptor(video),
+    faceapi.computeFaceDescriptor(input),
     10000
   );
   if (!desc || desc.length !== 128) throw new Error('Failed to compute face descriptor.');
@@ -1251,18 +1241,6 @@ async function enrollFaceFromPhoto(input) {
       el.src = URL.createObjectURL(file);
     });
 
-    btn.textContent = 'Detecting face...';
-
-    let detection;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      detection = await timeoutPromise(
-        faceapi.detectSingleFace(img),
-        15000
-      );
-      if (detection) break;
-    }
-    if (!detection) throw new Error('No face detected in the photo. Try a different photo.');
-
     btn.textContent = 'Computing...';
 
     const canvas = document.getElementById('faceCanvas');
@@ -1271,13 +1249,9 @@ async function enrollFaceFromPhoto(input) {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0);
 
-    const desc = await timeoutPromise(
-      faceapi.computeFaceDescriptor(canvas),
-      10000
-    );
-    if (!desc || desc.length !== 128) throw new Error('Failed to compute face descriptor.');
+    const descriptor = await captureFaceDescriptor(canvas);
 
-    await saveDescriptor(Array.from(desc));
+    await saveDescriptor(descriptor);
     URL.revokeObjectURL(img.src);
   } catch (e) {
     alert(e.message);
@@ -1302,7 +1276,7 @@ async function enrollFaceFromWebcam() {
     await new Promise(r => setTimeout(r, 800));
     btn.textContent = 'Capturing...';
 
-    const descriptor = await captureFaceDescriptor();
+    const descriptor = await captureFaceDescriptor(document.getElementById('faceVideo'));
     stopFaceCamera(stream); stream = null;
 
     await saveDescriptor(descriptor);
@@ -1341,7 +1315,7 @@ async function loginWithFace() {
     await new Promise(r => setTimeout(r, 800));
     btn.textContent = 'Scanning...';
 
-    const descriptor = await captureFaceDescriptor();
+    const descriptor = await captureFaceDescriptor(document.getElementById('faceVideo'));
     stopFaceCamera(stream); stream = null;
 
     const res = await fetch(`${API}/api/auth/face/compare`, {
