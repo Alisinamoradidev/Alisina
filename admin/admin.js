@@ -1200,6 +1200,18 @@ async function captureFaceDescriptor() {
     await new Promise(r => setTimeout(r, 100));
     waited += 100;
   }
+
+  let detection;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    detection = await timeoutPromise(
+      faceapi.detectSingleFace(video),
+      15000
+    );
+    if (detection) break;
+    await new Promise(r => setTimeout(r, 200));
+  }
+  if (!detection) throw new Error('No face detected. Make sure your face is visible and well-lit.');
+
   const desc = await timeoutPromise(
     faceapi.computeFaceDescriptor(video),
     10000

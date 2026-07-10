@@ -650,7 +650,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       }
       const similarity = dot / (Math.sqrt(normA) * Math.sqrt(normB));
 
-      if (similarity < 0.5) {
+      if (similarity < 0.6) {
         return res.status(401).json({ error: 'Face does not match', similarity: Math.round(similarity * 10000) / 10000 });
       }
 
