@@ -1207,7 +1207,11 @@ async function captureFaceDescriptor(input) {
     10000
   );
   if (!desc || desc.length !== 128) throw new Error('Failed to compute face descriptor.');
-  return Array.from(desc);
+
+  const arr = Array.from(desc);
+  const norm = Math.sqrt(arr.reduce((s, v) => s + v * v, 0));
+  if (norm < 0.5) throw new Error('No face detected. Make sure your face is visible and well-lit.');
+  return arr;
 }
 
 async function saveDescriptor(descriptor) {
