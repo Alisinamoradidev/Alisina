@@ -1150,9 +1150,9 @@ let faceModelsLoaded = false;
 async function loadFaceModels() {
   if (faceModelsLoaded) return;
   try {
-    await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhacksthings.github.io/face-api.js/models');
-    await faceapi.nets.faceLandmark68Net.loadFromUri('https://justadudewhacksthings.github.io/face-api.js/models');
-    await faceapi.nets.faceRecognitionNet.loadFromUri('https://justadudewhacksthings.github.io/face-api.js/models');
+    await faceapi.nets.tinyFaceDetector.loadFromUri('/admin/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/admin/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('/admin/models');
     faceModelsLoaded = true;
   } catch (e) {
     throw new Error('Failed to load face models: ' + e.message);
