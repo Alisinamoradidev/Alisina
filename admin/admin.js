@@ -1202,6 +1202,29 @@ async function captureFaceDescriptor(input) {
     }
   }
 
+  const isVideo = input instanceof HTMLVideoElement;
+
+  if (isVideo) {
+    const canvas = document.getElementById('faceCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 160;
+    canvas.height = 120;
+    ctx.drawImage(input, 0, 0, 160, 120);
+    const data1 = ctx.getImageData(0, 0, 160, 120).data;
+
+    await new Promise(r => setTimeout(r, 300));
+
+    ctx.drawImage(input, 0, 0, 160, 120);
+    const data2 = ctx.getImageData(0, 0, 160, 120).data;
+
+    let diff = 0;
+    for (let i = 0; i < data1.length; i += 4) {
+      diff += Math.abs(data1[i] - data2[i]) + Math.abs(data1[i + 1] - data2[i + 1]) + Math.abs(data1[i + 2] - data2[i + 2]);
+    }
+    diff /= 160 * 120 * 3;
+    if (diff < 2) throw new Error('No face detected. Hold your face in front of the camera.');
+  }
+
   const desc = await timeoutPromise(
     faceapi.computeFaceDescriptor(input),
     10000
