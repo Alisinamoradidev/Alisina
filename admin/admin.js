@@ -1149,14 +1149,10 @@ let faceModelsLoaded = false;
 
 async function loadFaceModels() {
   if (faceModelsLoaded) return;
-  try {
-    await faceapi.nets.tinyFaceDetector.loadFromUri('/admin/models');
-    await faceapi.nets.faceLandmark68Net.loadFromUri('/admin/models');
-    await faceapi.nets.faceRecognitionNet.loadFromUri('/admin/models');
-    faceModelsLoaded = true;
-  } catch (e) {
-    throw new Error('Failed to load face models: ' + e.message);
-  }
+  await faceapi.nets.tinyFaceDetector.loadFromUri('/admin/models');
+  await faceapi.nets.faceLandmark68Net.loadFromUri('/admin/models');
+  await faceapi.nets.faceRecognitionNet.loadFromUri('/admin/models');
+  faceModelsLoaded = true;
 }
 
 function getFaceVideo() { return document.getElementById('faceVideo'); }
@@ -1188,9 +1184,20 @@ function stopFaceCamera(stream) {
   if (stream) stream.getTracks().forEach(t => t.stop());
 }
 
+function timeoutPromise(promise, ms) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Timed out')), ms); }),
+  ]).finally(() => clearTimeout(timer));
+}
+
 async function captureFaceDescriptor() {
   const video = getFaceVideo();
-  const result = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+  const result = await timeoutPromise(
+    faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor(),
+    10000
+  );
   if (!result) throw new Error('No face detected. Make sure your face is visible and well-lit.');
   return Array.from(result.descriptor);
 }
@@ -1199,14 +1206,15 @@ async function enrollFace() {
   if (typeof faceapi === 'undefined') { alert('Face API not loaded. Check internet connection.'); return; }
 
   const btn = document.getElementById('settingsSetupFaceBtn');
-  btn.disabled = true; btn.textContent = 'Opening camera...';
+  btn.disabled = true; btn.textContent = 'Loading face models...';
 
   let stream;
   try {
     await loadFaceModels();
-    stream = await startFaceCamera();
+    btn.textContent = 'Opening camera...';
+    stream = await timeoutPromise(startFaceCamera(), 15000);
 
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 800));
     btn.textContent = 'Capturing...';
 
     const descriptor = await captureFaceDescriptor();
@@ -1221,7 +1229,7 @@ async function enrollFace() {
     document.getElementById('settingsSetupFaceBtn').style.display = 'none';
     document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
   } catch (e) {
-    alert(e.message);
+    alert(e.message === 'Timed out' ? 'Face detection timed out. Make sure your face is visible and the room is well-lit.' : e.message);
   } finally {
     if (stream) stopFaceCamera(stream);
     btn.disabled = false; btn.textContent = 'Set up face login';
@@ -1243,14 +1251,15 @@ async function loginWithFace() {
 
   const err = document.getElementById('loginError');
   const btn = document.getElementById('faceLoginBtn');
-  btn.disabled = true; btn.textContent = 'Opening camera...'; err.textContent = '';
+  btn.disabled = true; btn.textContent = 'Loading face models...'; err.textContent = '';
 
   let stream;
   try {
     await loadFaceModels();
-    stream = await startFaceCamera();
+    btn.textContent = 'Opening camera...';
+    stream = await timeoutPromise(startFaceCamera(), 15000);
 
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 800));
     btn.textContent = 'Scanning...';
 
     const descriptor = await captureFaceDescriptor();
