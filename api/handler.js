@@ -862,6 +862,8 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
               });
               console.log('admin email sent');
             } catch (e) { console.error('admin email error:', e.message); }
+          } else {
+            console.error('admin email skipped — missing config:', { gmailUser: !!gmailUser, gmailPass: !!gmailPass, toEmail: !!toEmail });
           }
         } catch (e) {
           console.error('Webhook insert error:', e?.code, e?.message);
@@ -901,6 +903,49 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       } catch (e) {
         if (e?.code === 'PGRST205') return res.status(200).json([]);
         throw e;
+      }
+    }
+
+    /* Manual resend payment notification email */
+    const notifyMatch = path.match(/^\/payments\/(\d+)\/notify$/);
+    if (notifyMatch && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const payId = parseInt(notifyMatch[1]);
+      try {
+        const { data: payment } = await supabase.from('payments').select('*').eq('id', payId).maybeSingle();
+        if (!payment) return res.status(404).json({ error: 'Payment not found' });
+        const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
+        const gmailUser = gmailConfig?.value?.email;
+        const gmailPass = gmailConfig?.value?.appPassword;
+        const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
+        const toEmail = notif?.value?.email;
+        if (!gmailUser || !gmailPass) return res.status(400).json({ error: 'Gmail SMTP not configured' });
+        if (!toEmail) return res.status(400).json({ error: 'Notification email not configured' });
+        const { data: prop } = await supabase.from('properties').select('title').eq('id', payment.property_id || 0).maybeSingle();
+        const propName = prop?.title || `Property #${payment.property_id}`;
+        const nodemailer = require('nodemailer');
+        const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
+        await t.sendMail({
+          from: `"Alisina Realty" <${gmailUser}>`, to: toEmail,
+          subject: `Payment notification — ${propName}`,
+          html: emailLayout('Payment Notification', `
+            <p style="margin:0 0 6px;color:#64748b;font-size:14px">Payment details from your records.</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+              <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
+              <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${(payment.amount || 0).toLocaleString()}</td></tr>
+              <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${payment.type || 'deposit'}</td></tr>
+              <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${payment.customer_name || payment.user_email || 'N/A'}</td></tr>
+              <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Date</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${new Date(payment.created_at).toLocaleDateString()}</td></tr>
+            </table>
+            ${payment.receipt_url ? `<div style="text-align:center;margin:24px 0 8px"><a href="${payment.receipt_url}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>` : ''}
+          `, 'admin'),
+        });
+        return res.status(200).json({ success: true, message: `Email sent to ${toEmail}` });
+      } catch (e) {
+        console.error('resend notification error:', e.message);
+        return res.status(500).json({ error: e.message });
       }
     }
 

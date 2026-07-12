@@ -689,7 +689,7 @@ async function loadPayments() {
         <td><span style="color:${p.status === 'completed' ? 'var(--primary)' : p.status === 'refunded' ? '#d97706' : '#dc2626'}">${p.status}</span></td>
         <td>${receiptHtml}</td>
         <td>${p.created_at?.split('T')[0] || ''}</td>
-        <td><div class="actions">${refundBtn}<button class="btn-danger btn-sm" onclick="deletePayment(${p.id})"><i class="fas fa-trash"></i></button></div></td>`;
+        <td><div class="actions">${refundBtn}<button class="btn-outline btn-sm" onclick="notifyPayment(${p.id})" title="Send email notification"><i class="fas fa-envelope"></i></button><button class="btn-danger btn-sm" onclick="deletePayment(${p.id})"><i class="fas fa-trash"></i></button></div></td>`;
       tbody.appendChild(tr);
     });
     document.getElementById('selectAllPayments').checked = false;
@@ -703,6 +703,13 @@ async function refundPayment(id) {
     alert('Payment refunded');
     loadPayments();
   } catch (err) { alert(err.message); }
+}
+
+async function notifyPayment(id) {
+  try {
+    const result = await api(`/api/payments/${id}/notify`, { method: 'POST' });
+    alert(result.message || 'Notification sent');
+  } catch (err) { alert('Failed: ' + err.message); }
 }
 
 async function deletePayment(id) {
