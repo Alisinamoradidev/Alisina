@@ -401,38 +401,6 @@ function renderTestimonials() {
   }).catch(() => {});
 }
 
-/* Mortgage Calculator */
-function fmtCurrency(v) {
-  if (isNaN(v) || v < 0) v = 0;
-  return `$${Math.round(v).toLocaleString()}`;
-}
-
-function calculateMortgage() {
-  const price = Math.max(0, parseFloat($('calcPrice').value) || 0);
-  const downPct = Math.min(100, Math.max(0, parseFloat($('calcDown').value) || 0));
-  const rate = Math.max(0, parseFloat($('calcRate').value) || 0);
-  const term = Math.max(1, parseInt($('calcTerm').value) || 30);
-  const loan = price * (1 - downPct / 100);
-  const mr = rate / 100 / 12;
-  const n = term * 12;
-  let pi = 0;
-  if (mr > 0 && n > 0 && loan > 0) {
-    const factor = Math.pow(1 + mr, n);
-    pi = loan * (mr * factor) / (factor - 1);
-  } else if (loan > 0) {
-    pi = loan / n;
-  }
-  const tax = price * 0.012 / 12;
-  const ins = price * 0.005 / 12;
-  const total = pi + tax + ins;
-  $('calcMonthly').textContent = fmtCurrency(total);
-  $('calcPI').textContent = fmtCurrency(pi);
-  $('calcTax').textContent = fmtCurrency(tax);
-  $('calcInsurance').textContent = fmtCurrency(ins);
-}
-$('calcBtn').addEventListener('click', calculateMortgage);
-document.querySelectorAll('#calcPrice, #calcDown, #calcRate, #calcTerm').forEach(el => { el.addEventListener('input', calculateMortgage); el.addEventListener('change', calculateMortgage); });
-
 /* FAQ Chatbot */
 const faqData = [
   { q: "How do I buy a property?", a: "First, get pre-approved for a mortgage. Then contact me to view properties that match your budget. I'll guide you through the entire process — from offer to closing." },
@@ -779,7 +747,6 @@ const _origFavToggle = function(id) {
 };
 /* Patch the fav click in listingsGrid handler */
 renderTestimonials();
-calculateMortgage();
 resetQuiz();
 updateListings();
 loadPropertiesFromApi();

@@ -998,22 +998,6 @@ body {
     font-size: 22px;
   }
 
-  .calculator-wrapper {
-    grid-template-columns: 1fr;
-  }
-
-  .calculator-result {
-    padding: 20px;
-  }
-
-  .calc-amount {
-    font-size: 28px;
-  }
-
-  .calc-monthly {
-    padding-bottom: 14px;
-  }
-
   .whatsapp-btn {
     bottom: 76px;
     right: 16px;
@@ -1379,102 +1363,6 @@ body {
 .testimonial-role {
   font-size: 13px;
   color: var(--text-secondary);
-}
-
-/* Mortgage Calculator */
-.calculator-wrapper {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.calculator-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.calc-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.calc-group label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.calc-group input,
-.calc-group select {
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 15px;
-  outline: none;
-  background: var(--card-bg);
-  color: var(--text);
-  transition: border-color var(--transition);
-}
-
-.calc-group input:focus,
-.calc-group select:focus {
-  border-color: var(--primary);
-}
-
-.calculator-result {
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  padding: 32px;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.calc-monthly {
-  text-align: center;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--muted);
-}
-
-.calc-label {
-  display: block;
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-}
-
-.calc-amount {
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.calc-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.calc-breakdown > div {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.calc-breakdown span:last-child {
-  font-weight: 600;
-  color: var(--text);
-}
-
-.calc-note {
-  font-size: 12px;
-  color: var(--text-secondary);
-  text-align: center;
 }
 
 /* Toast */
