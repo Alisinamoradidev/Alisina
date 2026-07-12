@@ -16,7 +16,7 @@ WORKDIR /app
 COPY face-api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python -c "from insightface.app import FaceAnalysis; FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider']).prepare(ctx_id=0, det_size=(640, 640))"
+RUN python -c "from insightface.app import FaceAnalysis; FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider']).prepare(ctx_id=0, det_size=(640, 640))"
 
 COPY face-api/main.py .
 

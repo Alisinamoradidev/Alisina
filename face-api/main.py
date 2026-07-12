@@ -32,7 +32,7 @@ def get_face_app():
     if face_app is None:
         logger.info("Initializing InsightFace (buffalo_l)...")
         face_app = FaceAnalysis(
-            name="buffalo_l",
+            name="buffalo_s",
             providers=["CPUExecutionProvider"],
         )
         face_app.prepare(ctx_id=0, det_size=(640, 640))
@@ -151,4 +151,4 @@ async def verify_face(req: VerifyRequest):
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "model": "buffalo_l"}
+    return {"status": "ok", "model": "buffalo_s"}
