@@ -283,13 +283,76 @@ td .actions { display: flex; gap: 6px; }
   #propertiesTable th:nth-child(6),
   #propertiesTable td:nth-child(6) { display: none; }
 
-  /* Payments table — hide less important cols */
-  #paymentsTable th:nth-child(2),
-  #paymentsTable td:nth-child(2) { display: none; }
-  #paymentsTable th:nth-child(4),
-  #paymentsTable td:nth-child(4) { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #paymentsTable th:nth-child(8),
-  #paymentsTable td:nth-child(8) { display: none; }
+  /* Payments table — card layout on mobile */
+  #paymentsTable thead { display: none; }
+  #paymentsTable tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+  }
+  #paymentsTable tbody tr td {
+    border: none;
+    padding: 0;
+    font-size: 13px;
+  }
+  #paymentsTable tbody tr td:nth-child(1) { /* checkbox — top-left */
+    grid-column: 1;
+    grid-row: 1;
+  }
+  #paymentsTable tbody tr td:nth-child(3) { /* Property */
+    grid-column: 1 / -1;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  #paymentsTable tbody tr td:nth-child(4) { /* Email */
+    grid-column: 1 / -1;
+    font-size: 12px;
+    color: var(--text-muted);
+    max-width: none;
+    overflow: visible;
+    white-space: normal;
+  }
+  #paymentsTable tbody tr td:nth-child(5) { /* Amount */
+    grid-column: 1;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--primary);
+  }
+  #paymentsTable tbody tr td:nth-child(6) { /* Type */
+    grid-column: 2;
+    text-align: right;
+  }
+  #paymentsTable tbody tr td:nth-child(7) { /* Status */
+    grid-column: 1;
+    font-size: 12px;
+  }
+  #paymentsTable tbody tr td:nth-child(9) { /* Date */
+    grid-column: 2;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+  #paymentsTable tbody tr td:nth-child(10) { /* Actions */
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  #paymentsTable tbody tr td:nth-child(10) .actions {
+    gap: 8px;
+  }
+  #paymentsTable tbody tr td:nth-child(10) .actions .btn-outline,
+  #paymentsTable tbody tr td:nth-child(10) .actions .btn-danger {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  #paymentsTable tbody tr td:nth-child(2) { display: none; } /* ID */
+  #paymentsTable tbody tr td:nth-child(8) { display: none; } /* Receipt */
 
   /* Blog table */
   #postsTable th:nth-child(3),
@@ -337,12 +400,6 @@ td .actions { display: flex; gap: 6px; }
   #propertiesTable td:nth-child(3) { display: none; }
   #propertiesTable th:nth-child(7),
   #propertiesTable td:nth-child(7) { display: none; }
-
-  /* Payments table — hide receipt and status */
-  #paymentsTable th:nth-child(7),
-  #paymentsTable td:nth-child(7) { display: none; }
-  #paymentsTable th:nth-child(9),
-  #paymentsTable td:nth-child(9) { display: none; }
 
   /* Blog table — hide date */
   #postsTable th:nth-child(5),
