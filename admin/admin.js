@@ -47,7 +47,7 @@ function api(path, options = {}) {
     if (r.status === 401 && !path.includes('/auth/login')) { localStorage.removeItem('admin_token'); token = null; showLogin(); throw new Error('Session expired'); }
     const text = await r.text();
     let data;
-    try { data = JSON.parse(text); } catch { throw new Error('Server error — try again'); }
+    try { data = JSON.parse(text); } catch { throw new Error(`Server error (${r.status}) — try again`); }
     if (!r.ok) throw new Error(data.error || 'Request failed');
     return data;
   });

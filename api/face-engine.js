@@ -11,7 +11,7 @@ async function loadModels() {
   const modelPath = path.join(__dirname, 'models');
   await tfCore.setBackend('cpu');
   await tfCore.ready();
-  await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
+  await faceapi.nets.tinyFaceDetector.loadFromDisk(modelPath);
   await faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
   await faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath);
   modelsLoaded = true;
@@ -33,10 +33,12 @@ async function decodeBase64Image(data) {
   return tfCore.tensor4d(rgb, [1, h, w, 3]);
 }
 
+const DETECT_OPTS = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+
 async function processImage(base64) {
   await loadModels();
   const tensor = await decodeBase64Image(base64);
-  const detections = await faceapi.detectAllFaces(tensor)
+  const detections = await faceapi.detectAllFaces(tensor, DETECT_OPTS)
     .withFaceLandmarks()
     .withFaceDescriptors();
   tensor.dispose();
@@ -57,7 +59,7 @@ async function verifyImage(base64, storedEmbeddings) {
   if (!storedEmbeddings || storedEmbeddings.length === 0) throw new Error('No stored embeddings provided');
 
   const tensor = await decodeBase64Image(base64);
-  const detections = await faceapi.detectAllFaces(tensor)
+  const detections = await faceapi.detectAllFaces(tensor, DETECT_OPTS)
     .withFaceLandmarks()
     .withFaceDescriptors();
   tensor.dispose();
