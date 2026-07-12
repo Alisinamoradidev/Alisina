@@ -46,14 +46,16 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  font-family: ...;
   color: var(--text);
   background: var(--bg);
   line-height: 1.6;
   transition: background var(--transition), color var(--transition);
+  overflow-x: hidden;
 }
 
 .container {
@@ -1007,6 +1009,31 @@ body {
     height: 46px;
     font-size: 22px;
   }
+
+  .blog-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section {
+    padding: 48px 0;
+  }
+
+  .section-header {
+    margin-bottom: 32px;
+  }
+
+  .hero {
+    min-height: auto;
+    padding: 100px 0 48px;
+  }
+
+  .hero-content p {
+    margin-bottom: 24px;
+  }
+
+  .container {
+    padding: 0 16px;
+  }
 }
 
 /* Modal */
@@ -1454,6 +1481,8 @@ body {
   transform: translateY(12px);
   transition: opacity 0.3s ease, transform 0.3s ease;
   pointer-events: none;
+  max-width: calc(100vw - 48px);
+  word-wrap: break-word;
 }
 
 .toast.visible {
@@ -2045,6 +2074,10 @@ body {
 
   #propertyMap {
     height: 350px;
+  }
+
+  .map-popup-wrapper .leaflet-popup-content {
+    width: 240px !important;
   }
 
   .chat-widget {
