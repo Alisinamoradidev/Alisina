@@ -84,7 +84,7 @@ async function verifyImage(base64, storedEmbeddings) {
     }
   }
 
-  const matched = bestDistance < 0.6;
+  const matched = bestDistance < 0.4;
   return { match: matched, distance: bestDistance, best_index: bestIndex, det_score: score };
 }
 

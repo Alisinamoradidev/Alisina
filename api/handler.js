@@ -652,7 +652,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/auth/face/compare' && method === 'POST') {
       const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
-      const allowed = await checkRateLimit('face_login_' + ip, 10, 300);
+      const allowed = await checkRateLimit('face_login_' + ip, 30, 300);
       if (!allowed) return res.status(429).json({ error: 'Too many face login attempts. Try again later.' });
 
       const { image } = body;
