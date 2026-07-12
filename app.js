@@ -69,7 +69,7 @@ async function loadContactInfo() {
     const fb = c.facebook_url || '#';
     const ig = c.instagram_url || '#';
     const li = c.linkedin_url || '#';
-    const fsEmail = c.formsubmit_email || email;
+    const fsEmail = c.formsubmit_email || c.email || email;
 
     /* WhatsApp button */
     const waBtn = document.querySelector('.whatsapp-btn');
