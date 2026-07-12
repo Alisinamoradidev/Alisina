@@ -7,12 +7,6 @@ import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from PIL import Image
-
-import cv2
-import onnxruntime as ort
-import insightface
-from insightface.app import FaceAnalysis
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -32,11 +26,10 @@ face_app = None
 def get_face_app():
     global face_app
     if face_app is None:
+        logger.info("Loading InsightFace modules...")
+        import cv2
+        from insightface.app import FaceAnalysis
         logger.info("Initializing InsightFace (buffalo_s)...")
-        opts = ort.SessionOptions()
-        opts.intra_op_num_threads = 1
-        opts.inter_op_num_threads = 1
-        opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         face_app = FaceAnalysis(
             name="buffalo_s",
             providers=["CPUExecutionProvider"],
@@ -50,7 +43,8 @@ LIVENESS_THRESHOLD = 0.5
 SIMILARITY_THRESHOLD = 0.4
 
 
-def decode_image(data: str) -> np.ndarray:
+def decode_image(data: str):
+    from PIL import Image
     if "," in data:
         data = data.split(",", 1)[1]
     raw = base64.b64decode(data)
@@ -147,7 +141,6 @@ async def verify_face(req: VerifyRequest):
             best_index = i
 
     matched = best_distance < SIMILARITY_THRESHOLD
-
     gc.collect()
 
     return {
