@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/handler.js": {
-      "maxDuration": 10
+      "maxDuration": 30,
+      "includeFiles": "node_modules/@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm-threaded-simd.wasm"
     }
   },
   "routes": [

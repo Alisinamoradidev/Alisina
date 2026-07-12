@@ -1197,32 +1197,41 @@ function captureFrameAsBase64(input) {
 }
 
 async function enrollFaceFromPhoto(input) {
-  const file = input.files[0];
-  if (!file) return;
+  const files = Array.from(input.files);
+  if (!files.length) return;
+
+  if (files.length < 3) {
+    alert('Please select at least 3 photos of your face.');
+    input.value = '';
+    return;
+  }
 
   const btn = document.getElementById('settingsSetupFaceBtn');
-  btn.disabled = true; btn.textContent = 'Processing photo...';
+  btn.disabled = true; btn.textContent = 'Processing photos...';
   const status = document.getElementById('settingsFaceStatus');
 
   try {
-    const img = await new Promise((resolve, reject) => {
-      const el = new Image();
-      el.onload = () => resolve(el);
-      el.onerror = () => reject(new Error('Failed to load image'));
-      el.src = URL.createObjectURL(file);
-    });
-
-    const b64 = captureFrameAsBase64(img);
-    URL.revokeObjectURL(img.src);
+    const images = [];
+    for (const file of files) {
+      const img = await new Promise((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = () => reject(new Error('Failed to load image'));
+        el.src = URL.createObjectURL(file);
+      });
+      const b64 = captureFrameAsBase64(img);
+      URL.revokeObjectURL(img.src);
+      images.push(b64);
+    }
 
     btn.textContent = 'Verifying face...';
     const res = await api('/api/auth/face/descriptor', {
       method: 'POST',
-      body: JSON.stringify({ images: [b64] }),
+      body: JSON.stringify({ images }),
     });
 
     if (res.success) {
-      status.textContent = 'Face login set up successfully!';
+      status.textContent = `Face login set up with ${res.enrolled} photos!`;
       document.getElementById('settingsSetupFaceBtn').style.display = 'none';
       document.getElementById('settingsWebcamFaceBtn').style.display = 'none';
       document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
@@ -1231,7 +1240,7 @@ async function enrollFaceFromPhoto(input) {
     status.textContent = '';
     alert(e.message);
   } finally {
-    btn.disabled = false; btn.textContent = 'Upload a photo';
+    btn.disabled = false; btn.textContent = 'Upload 3+ photos';
     input.value = '';
   }
 }

@@ -204,10 +204,10 @@
             <p id="settingsPasskeyStatus" style="font-size:13px;color:var(--text-muted)"></p>
 
             <h3 style="margin-bottom:12px;color:var(--text);margin-top:32px">Face Login</h3>
-            <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px">Enroll your face for passwordless login. The server uses InsightFace (ArcFace + RetinaFace) with anti-spoofing to verify your identity.</p>
+            <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px">Enroll your face for passwordless login. Provide 3-10 photos and the server will store your face embeddings.</p>
             <div class="form-actions" style="justify-content:flex-start;margin-bottom:8px">
-              <input type="file" id="faceUploadInput" accept="image/*" style="display:none" onchange="enrollFaceFromPhoto(this)">
-              <button type="button" class="btn-primary" id="settingsSetupFaceBtn" onclick="document.getElementById('faceUploadInput').click()"><i class="fas fa-upload"></i> Upload a photo</button>
+              <input type="file" id="faceUploadInput" accept="image/*" multiple style="display:none" onchange="enrollFaceFromPhoto(this)">
+              <button type="button" class="btn-primary" id="settingsSetupFaceBtn" onclick="document.getElementById('faceUploadInput').click()"><i class="fas fa-upload"></i> Upload 3+ photos</button>
               <button type="button" class="btn-outline" id="settingsWebcamFaceBtn" onclick="enrollFaceMulti()"><i class="fas fa-camera"></i> Enroll with webcam (5 photos)</button>
               <button type="button" class="btn-outline" id="settingsRemoveFaceBtn" onclick="removeFace()" style="display:none"><i class="fas fa-trash"></i> Remove face</button>
             </div>
