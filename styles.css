@@ -107,7 +107,6 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 100%;
 }
 
 .nav a {
@@ -131,6 +130,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
 }
 
 .theme-toggle {
@@ -894,31 +894,37 @@ body {
   .nav {
     display: none;
     position: absolute;
-    top: 100%;
-    right: 12px;
-    left: auto;
+    top: calc(100% + 6px);
+    right: 0;
     width: max-content;
-    min-width: 180px;
+    min-width: 160px;
     background: var(--bg-card);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    flex-direction: column;
-    padding: 8px;
-    gap: 2px;
     border: 1px solid var(--border);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    padding: 6px;
+    gap: 2px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
     z-index: 1001;
+    flex-direction: column;
   }
   .nav a {
-    padding: 10px 16px;
+    padding: 10px 14px;
     border-radius: 8px;
     font-size: 14px;
     white-space: nowrap;
   }
+  .nav a:hover {
+    background: color-mix(in srgb, var(--primary) 10%, var(--bg));
+  }
 
   .mobile-toggle {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--muted);
   }
 
   .modal-image {
