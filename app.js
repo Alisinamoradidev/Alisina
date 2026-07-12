@@ -266,7 +266,6 @@ function openModal(p) {
     if (cf) setFavIcon(cf, p.id);
     showToast(favorites.has(p.id) ? 'Added to favorites' : 'Removed from favorites');
   };
-  $('modalSchedule').onclick = () => { closeModal(); $('scheduleProperty').value = `${p.title} - ${p.location}`; $('scheduleSection').scrollIntoView({ behavior: 'smooth' }); };
   /* Payment button */
   const payBtn = $('modalPay');
   const bankInfoDiv = $('bankInfo');
@@ -410,7 +409,6 @@ const faqData = [
   { q: "How long does the buying process take?", a: "From offer to closing usually takes 30-45 days, depending on financing and inspections." },
   { q: "Can I rent with bad credit?", a: "Yes, some landlords accept tenants with less-than-perfect credit, especially with a larger security deposit or co-signer." },
   { q: "What properties are available?", a: "I have a wide range of properties — houses, apartments, condos, and villas. Use the search filters above to find exactly what you need!" },
-  { q: "How do I schedule a viewing?", a: "Click the 'Schedule Viewing' button on any property, or use the scheduling form below. I'll confirm the appointment within 24 hours." },
   { q: "Do you help with selling too?", a: "Absolutely! I provide market analysis, professional photography, listing management, and negotiation services to get you the best price." },
   { q: "What areas do you serve?", a: "I cover all major areas. Check the listings to see available properties in your preferred location." }
 ];
@@ -449,40 +447,6 @@ function showFaqOptions() {
 
 $('chatToggle').addEventListener('click', toggleChat);
 $('chatClose').addEventListener('click', () => $('chatBody').classList.remove('open'));
-
-/* Schedule Viewing */
-$('scheduleForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData($('scheduleForm')));
-  const btn = $('scheduleForm').querySelector('.btn-submit');
-  btn.textContent = 'Sending...'; btn.disabled = true;
-
-  const sendToBackend = () => {
-    return fetch(`${API_URL}/api/contact/schedule`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).then(r => r.json()).then(r => {
-      if (r.success) return true;
-      throw new Error(r.error || 'Failed');
-    });
-  };
-
-  const sendToFormSubmit = () => {
-    return fetch('https://formsubmit.co/ajax/alisinamoradi2718281@gmail.com', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, _subject: 'Viewing Request - Alisina Moradi Real Estate' })
-    }).then(r => r.json()).then(r => {
-      if (r.success) return true;
-      throw new Error(r.error || 'Failed');
-    });
-  };
-
-  sendToBackend()
-    .catch(sendToFormSubmit)
-    .then(() => { showToast('Viewing request sent! I\'ll confirm within 24 hours.'); $('scheduleForm').reset(); })
-    .catch(() => showToast('Network error. Try again.'))
-    .finally(() => { btn.textContent = 'Request Viewing'; btn.disabled = false; });
-});
 
 /* Property Match Quiz */
 function startQuiz() {

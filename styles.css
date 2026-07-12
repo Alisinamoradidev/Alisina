@@ -1533,86 +1533,6 @@ body {
   border-color: var(--primary);
 }
 
-/* Schedule Viewing */
-.schedule-wrapper {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  align-items: start;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.schedule-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.schedule-form input,
-.schedule-form textarea {
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 15px;
-  outline: none;
-  transition: border-color var(--transition);
-  font-family: inherit;
-  background: var(--card-bg);
-  color: var(--text);
-}
-
-.schedule-form input:focus,
-.schedule-form textarea:focus {
-  border-color: var(--primary);
-}
-
-.schedule-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.schedule-info {
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  padding: 32px;
-  box-shadow: var(--shadow);
-}
-
-.schedule-info i {
-  font-size: 36px;
-  color: var(--primary);
-  margin-bottom: 16px;
-  display: block;
-}
-
-.schedule-info h3 {
-  font-size: 20px;
-  margin-bottom: 16px;
-  color: var(--text);
-}
-
-.schedule-info ul {
-  list-style: none;
-  padding: 0;
-}
-
-.schedule-info li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 15px;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-}
-
-.schedule-info li i {
-  font-size: 14px;
-  margin-bottom: 0;
-  color: var(--accent);
-}
-
 /* Property Match Quiz */
 .quiz-wrapper {
   max-width: 600px;
@@ -1963,15 +1883,6 @@ body {
     right: -10px;
   }
 
-  .schedule-wrapper {
-    grid-template-columns: 1fr;
-    gap: 28px;
-  }
-
-  .schedule-row {
-    grid-template-columns: 1fr;
-  }
-
   #propertyMap {
     height: 350px;
   }
@@ -2045,8 +1956,7 @@ body {
 .blog-card,
 .feature-card,
 .testimonial-card,
-.agent-wrapper,
-.schedule-info {
+.agent-wrapper {
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               box-shadow 0.35s ease;
 }
@@ -2054,8 +1964,7 @@ body {
 .blog-card:hover,
 .feature-card:hover,
 .testimonial-card:hover,
-.agent-wrapper:hover,
-.schedule-info:hover {
+.agent-wrapper:hover {
   transform: translateY(-6px);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
 }
