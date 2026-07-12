@@ -45,7 +45,9 @@ function api(path, options = {}) {
   if (token) headers['Authorization'] = `Bearer ${token}`;
   return fetch(`${API}${path}`, { ...options, headers }).then(async r => {
     if (r.status === 401 && !path.includes('/auth/login')) { localStorage.removeItem('admin_token'); token = null; showLogin(); throw new Error('Session expired'); }
-    const data = await r.json();
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch { throw new Error('Server error — try again'); }
     if (!r.ok) throw new Error(data.error || 'Request failed');
     return data;
   });
@@ -1182,18 +1184,27 @@ function timeoutPromise(promise, ms) {
   ]).finally(() => clearTimeout(timer));
 }
 
-function captureFrameAsBase64(input) {
+function captureFrameAsBase64(input, maxSize) {
+  maxSize = maxSize || 320;
   const canvas = document.createElement('canvas');
+  let w, h;
   if (input instanceof HTMLVideoElement) {
-    canvas.width = input.videoWidth || 640;
-    canvas.height = input.videoHeight || 480;
+    w = input.videoWidth || 640;
+    h = input.videoHeight || 480;
   } else {
-    canvas.width = input.naturalWidth || input.width;
-    canvas.height = input.naturalHeight || input.height;
+    w = input.naturalWidth || input.width;
+    h = input.naturalHeight || input.height;
   }
+  if (w > maxSize || h > maxSize) {
+    const scale = maxSize / Math.max(w, h);
+    w = Math.round(w * scale);
+    h = Math.round(h * scale);
+  }
+  canvas.width = w;
+  canvas.height = h;
   const ctx = canvas.getContext('2d');
-  ctx.drawImage(input, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', 0.92);
+  ctx.drawImage(input, 0, 0, w, h);
+  return canvas.toDataURL('image/jpeg', 0.85);
 }
 
 async function enrollFaceFromPhoto(input) {
@@ -1330,7 +1341,9 @@ async function loginWithFace() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: b64 }),
     });
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { throw new Error('Server error — try again'); }
     if (!res.ok) throw new Error(data.error);
 
     token = data.token;
