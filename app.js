@@ -69,7 +69,6 @@ async function loadContactInfo() {
     const fb = c.facebook_url || '#';
     const ig = c.instagram_url || '#';
     const li = c.linkedin_url || '#';
-    const fsEmail = c.formsubmit_email || c.email || email;
 
     /* WhatsApp button */
     const waBtn = document.querySelector('.whatsapp-btn');
@@ -85,7 +84,7 @@ async function loadContactInfo() {
 
     /* Contact form action */
     const contactForm = document.getElementById('contactForm');
-    if (contactForm) contactForm.action = `https://formsubmit.co/${fsEmail}`;
+    if (contactForm) contactForm.action = `https://formsubmit.co/${email}`;
 
     /* Footer social links */
     const socialLinks = document.querySelectorAll('.footer-social .social-icons a');

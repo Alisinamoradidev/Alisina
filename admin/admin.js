@@ -820,7 +820,6 @@ async function loadContactInfo() {
     document.getElementById('ciFacebook').value = d.facebook_url || '';
     document.getElementById('ciInstagram').value = d.instagram_url || '';
     document.getElementById('ciLinkedin').value = d.linkedin_url || '';
-    document.getElementById('ciFormsubmit').value = d.formsubmit_email || '';
   } catch {}
 }
 
@@ -840,7 +839,6 @@ document.getElementById('contactInfoForm')?.addEventListener('submit', async e =
         facebook_url: document.getElementById('ciFacebook').value,
         instagram_url: document.getElementById('ciInstagram').value,
         linkedin_url: document.getElementById('ciLinkedin').value,
-        formsubmit_email: document.getElementById('ciFormsubmit').value,
       })
     });
     alert('Contact info saved! Refresh your website to see changes.');
