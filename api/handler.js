@@ -926,6 +926,31 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       }
     }
 
+    /* Contact Info Settings */
+    if (path === '/settings/contact' && method === 'GET') {
+      try {
+        const { data } = await supabase.from('settings').select('value').eq('key', 'contact_info').maybeSingle();
+        return res.status(200).json(data?.value || {
+          phone: '', email: '', address: '', whatsapp: '', whatsapp_message: 'Hi, I\'m interested in your properties',
+          facebook_url: '', instagram_url: '', linkedin_url: '', formsubmit_email: ''
+        });
+      } catch { return res.status(200).json({}); }
+    }
+
+    if (path === '/settings/contact' && method === 'PUT') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      try {
+        const { error } = await supabase.from('settings').upsert({ key: 'contact_info', value: body, updated_at: new Date().toISOString() });
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      } catch (e) {
+        if (e?.code === 'PGRST205') return res.status(200).json({ message: 'Settings table not ready' });
+        throw e;
+      }
+    }
+
     /* Refund Payment */
     if (path === '/payments/refund' && method === 'POST') {
       const auth = req.headers.authorization;

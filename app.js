@@ -52,6 +52,51 @@ function renderSoldProperties() {
 function hideSkeletons() { document.querySelectorAll('.skeleton-card').forEach(e => e.remove()); }
 
 const $ = id => document.getElementById(id);
+
+/* Load contact info from backend and update all hardcoded values */
+async function loadContactInfo() {
+  try {
+    const r = await fetch(`${API_URL}/api/settings/contact`);
+    if (!r.ok) return;
+    const c = await r.json();
+    if (!c || !c.phone && !c.email) return;
+
+    const phone = c.phone || '+93778747337';
+    const email = c.email || 'alisinamoradi2718281@gmail.com';
+    const address = c.address || 'Dasht-e-Barchi';
+    const whatsapp = c.whatsapp || phone;
+    const waMsg = encodeURIComponent(c.whatsapp_message || 'Hi, I\'m interested in your properties');
+    const fb = c.facebook_url || '#';
+    const ig = c.instagram_url || '#';
+    const li = c.linkedin_url || '#';
+    const fsEmail = c.formsubmit_email || email;
+
+    /* WhatsApp button */
+    const waBtn = document.querySelector('.whatsapp-btn');
+    if (waBtn) waBtn.href = `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}?text=${waMsg}`;
+
+    /* Contact section info */
+    const emailEl = document.querySelector('[data-contact="email"]');
+    const phoneEl = document.querySelector('[data-contact="phone"]');
+    const addressEl = document.querySelector('[data-contact="address"]');
+    if (emailEl) emailEl.textContent = email;
+    if (phoneEl) phoneEl.textContent = phone;
+    if (addressEl) addressEl.textContent = address;
+
+    /* Contact form action */
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) contactForm.action = `https://formsubmit.co/${fsEmail}`;
+
+    /* Footer social links */
+    const socialLinks = document.querySelectorAll('.footer-social .social-icons a');
+    if (socialLinks.length >= 3) {
+      if (fb !== '#') socialLinks[0].href = fb;
+      if (ig !== '#') socialLinks[1].href = ig;
+      if (li !== '#') socialLinks[2].href = li;
+    }
+  } catch {}
+}
+
 const listingsGrid = $('listingsGrid');
 const noResults = $('noResults');
 const resultsCount = $('resultsCount');
@@ -716,6 +761,7 @@ updateListings();
 loadPropertiesFromApi();
 tryInitMap();
 loadBlogPosts();
+loadContactInfo();
 
 /* Open property modal if loaded from /property/:id page */
 if (window.__propertyId) {

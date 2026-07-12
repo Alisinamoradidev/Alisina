@@ -897,11 +897,12 @@ body {
     top: calc(100% + 10px);
     right: 0;
     width: 220px;
-    background: #1a1a2e;
+    background: linear-gradient(145deg, #fdf6ee, #fdf0e0);
+    border: 1px solid #e8d5bf;
     border-radius: 16px;
     padding: 8px;
     gap: 2px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08);
+    box-shadow: 0 12px 40px rgba(180,130,80,0.2), 0 2px 8px rgba(180,130,80,0.1);
     z-index: 1001;
     flex-direction: column;
     animation: menuSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -915,13 +916,13 @@ body {
     border-radius: 10px;
     font-size: 15px;
     font-weight: 500;
-    color: rgba(255,255,255,0.7);
+    color: #5a3e28;
     white-space: nowrap;
     transition: all 0.15s ease;
   }
   .nav a:hover {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
+    background: rgba(180,130,80,0.12);
+    color: #3a2510;
     padding-left: 20px;
   }
 

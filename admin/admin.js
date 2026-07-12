@@ -120,6 +120,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (v === 'payments') loadPayments();
     if (v === 'testimonials') loadTestimonials();
     if (v === 'bank') { loadBankInfo(); loadStripeSettings(); }
+    if (v === 'contactinfo') loadContactInfo();
     if (v === 'settings') { checkPasskeyStatus(); checkFaceStatus(); }
   });
 });
@@ -805,6 +806,46 @@ document.getElementById('stripeForm')?.addEventListener('submit', async e => {
     document.getElementById('sfWhsec').value = '';
   } catch (err) { alert(err.message); }
   finally { btn.disabled = false; btn.textContent = 'Save Stripe Keys'; }
+});
+
+/* Contact Info */
+async function loadContactInfo() {
+  try {
+    const d = await api('/api/settings/contact');
+    document.getElementById('ciPhone').value = d.phone || '';
+    document.getElementById('ciEmail').value = d.email || '';
+    document.getElementById('ciAddress').value = d.address || '';
+    document.getElementById('ciWhatsapp').value = d.whatsapp || '';
+    document.getElementById('ciWhatsappMsg').value = d.whatsapp_message || '';
+    document.getElementById('ciFacebook').value = d.facebook_url || '';
+    document.getElementById('ciInstagram').value = d.instagram_url || '';
+    document.getElementById('ciLinkedin').value = d.linkedin_url || '';
+    document.getElementById('ciFormsubmit').value = d.formsubmit_email || '';
+  } catch {}
+}
+
+document.getElementById('contactInfoForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('ciSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    await api('/api/settings/contact', {
+      method: 'PUT',
+      body: JSON.stringify({
+        phone: document.getElementById('ciPhone').value,
+        email: document.getElementById('ciEmail').value,
+        address: document.getElementById('ciAddress').value,
+        whatsapp: document.getElementById('ciWhatsapp').value,
+        whatsapp_message: document.getElementById('ciWhatsappMsg').value,
+        facebook_url: document.getElementById('ciFacebook').value,
+        instagram_url: document.getElementById('ciInstagram').value,
+        linkedin_url: document.getElementById('ciLinkedin').value,
+        formsubmit_email: document.getElementById('ciFormsubmit').value,
+      })
+    });
+    alert('Contact info saved! Refresh your website to see changes.');
+  } catch (err) { alert(err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save Contact Info'; }
 });
 
 /* Bank Info */
