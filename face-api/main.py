@@ -1,3 +1,4 @@
+import gc
 import io
 import os
 import base64
@@ -9,6 +10,7 @@ from pydantic import BaseModel
 from PIL import Image
 
 import cv2
+import onnxruntime as ort
 import insightface
 from insightface.app import FaceAnalysis
 
@@ -30,7 +32,11 @@ face_app = None
 def get_face_app():
     global face_app
     if face_app is None:
-        logger.info("Initializing InsightFace (buffalo_l)...")
+        logger.info("Initializing InsightFace (buffalo_s)...")
+        opts = ort.SessionOptions()
+        opts.intra_op_num_threads = 1
+        opts.inter_op_num_threads = 1
+        opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         face_app = FaceAnalysis(
             name="buffalo_s",
             providers=["CPUExecutionProvider"],
@@ -49,7 +55,9 @@ def decode_image(data: str) -> np.ndarray:
         data = data.split(",", 1)[1]
     raw = base64.b64decode(data)
     img = Image.open(io.BytesIO(raw)).convert("RGB")
-    return np.array(img)[:, :, ::-1].copy()
+    arr = np.array(img)[:, :, ::-1].copy()
+    img.close()
+    return arr
 
 
 class ProcessRequest(BaseModel):
@@ -61,11 +69,6 @@ class VerifyRequest(BaseModel):
     stored_embeddings: list[list[float]]
 
 
-@app.on_event("startup")
-async def startup():
-    get_face_app()
-
-
 @app.post("/api/face/process")
 async def process_face(req: ProcessRequest):
     try:
@@ -75,6 +78,8 @@ async def process_face(req: ProcessRequest):
 
     app_face = get_face_app()
     faces = app_face.get(img)
+    del img
+    gc.collect()
 
     if len(faces) == 0:
         raise HTTPException(status_code=400, detail="No face detected in the image")
@@ -110,6 +115,8 @@ async def verify_face(req: VerifyRequest):
 
     app_face = get_face_app()
     faces = app_face.get(img)
+    del img
+    gc.collect()
 
     if len(faces) == 0:
         raise HTTPException(status_code=400, detail="No face detected")
@@ -140,6 +147,8 @@ async def verify_face(req: VerifyRequest):
             best_index = i
 
     matched = best_distance < SIMILARITY_THRESHOLD
+
+    gc.collect()
 
     return {
         "match": matched,
