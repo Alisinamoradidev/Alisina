@@ -718,21 +718,6 @@ tryInitMap();
 loadBlogPosts();
 
 /* Open property modal if loaded from /property/:id page */
-/* Newsletter subscription */
-document.getElementById('subscribeForm')?.addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = document.getElementById('subscribeEmail').value.trim();
-  const btn = document.getElementById('subscribeBtn');
-  const msg = document.getElementById('subscribeMsg');
-  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-  try {
-    const r = await fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
-    const d = await r.json();
-    msg.textContent = d.message || d.error || 'Subscribed!';
-    if (r.ok) document.getElementById('subscribeEmail').value = '';
-  } catch { msg.textContent = 'Failed to subscribe. Try again.'; }
-  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i>'; }
-});
 if (window.__propertyId) {
   const checkProp = setInterval(() => {
     const p = properties.find(x => x.id === window.__propertyId);
