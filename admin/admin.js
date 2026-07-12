@@ -41,13 +41,13 @@ function buildFullL10n(store, prefix, suffix, fields) {
 }
 
 function api(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  return fetch(`${API}${path}`, { ...options, headers }).then(async r => {
+  return fetch(`${API}${path}${path.includes('?') ? '&' : '?'}_t=${Date.now()}`, { ...options, headers, cache: 'no-store' }).then(async r => {
     if (r.status === 401 && !path.includes('/auth/login')) { localStorage.removeItem('admin_token'); token = null; showLogin(); throw new Error('Session expired'); }
     const text = await r.text();
     let data;
-    try { data = JSON.parse(text); } catch { throw new Error(`Server error (${r.status}) — try again`); }
+    try { data = JSON.parse(text); } catch { throw new Error(`Server error (${r.status}). Please try again.`); }
     if (!r.ok) throw new Error(data.error || 'Request failed');
     return data;
   });
