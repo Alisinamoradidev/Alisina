@@ -1,3 +1,5 @@
+const tfCore = require('@tensorflow/tfjs-core');
+require('@tensorflow/tfjs-backend-cpu');
 const faceapi = require('@vladmandic/face-api/dist/face-api.node-wasm.js');
 const { Jimp } = require('jimp');
 const path = require('path');
@@ -7,8 +9,8 @@ let modelsLoaded = false;
 async function loadModels() {
   if (modelsLoaded) return;
   const modelPath = path.join(__dirname, 'models');
-  await faceapi.tf.setBackend('wasm');
-  await faceapi.tf.ready();
+  await tfCore.setBackend('cpu');
+  await tfCore.ready();
   await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
   await faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
   await faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath);
@@ -28,7 +30,7 @@ async function decodeBase64Image(data) {
     rgb[j + 1] = raw[i + 1];
     rgb[j + 2] = raw[i + 2];
   }
-  return faceapi.tf.tensor4d(rgb, [1, h, w, 3]);
+  return tfCore.tensor4d(rgb, [1, h, w, 3]);
 }
 
 async function processImage(base64) {
