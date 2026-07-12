@@ -370,6 +370,35 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       if (!allowed) return res.status(429).json({ error: 'Too many messages. Try again later.' });
       const { data, error } = await supabase.from('contacts').insert(body).select().single();
       if (error) throw error;
+      /* Send email notification via Gmail SMTP */
+      try {
+        const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
+        const { data: contactInfo } = await supabase.from('settings').select('value').eq('key', 'contact_info').maybeSingle();
+        const gmailUser = gmailConfig?.value?.email;
+        const gmailPass = gmailConfig?.value?.appPassword;
+        const toEmail = contactInfo?.value?.email || gmailUser;
+        if (gmailUser && gmailPass && toEmail) {
+          const nodemailer = require('nodemailer');
+          const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
+          await t.sendMail({
+            from: `"Alisina Realty" <${gmailUser}>`,
+            to: toEmail,
+            subject: `New inquiry from ${body.name || 'Visitor'}`,
+            html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
+              <h2 style="color:#2563eb;margin-bottom:16px">New Contact Inquiry</h2>
+              <table style="width:100%;border-collapse:collapse">
+                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Name</td><td style="padding:8px 0;border-bottom:1px solid #eee;font-weight:600">${body.name || ''}</td></tr>
+                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Email</td><td style="padding:8px 0;border-bottom:1px solid #eee"><a href="mailto:${body.email || ''}">${body.email || ''}</a></td></tr>
+                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Phone</td><td style="padding:8px 0;border-bottom:1px solid #eee">${body.phone || 'N/A'}</td></tr>
+                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Inquiry</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-transform:capitalize">${body.inquiry_type || ''}</td></tr>
+                ${body.property ? `<tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Property</td><td style="padding:8px 0;border-bottom:1px solid #eee">${body.property}</td></tr>` : ''}
+                <tr><td style="padding:8px 0;color:#666">Message</td><td style="padding:8px 0">${body.message || ''}</td></tr>
+              </table>
+              <p style="margin-top:20px;color:#999;font-size:12px">Reply directly to ${body.email || 'this visitor'} to respond.</p>
+            </div>`
+          });
+        }
+      } catch (e) { console.error('Contact email error:', e.message); }
       return res.status(200).json({ success: true, message: 'Message received' });
     }
 

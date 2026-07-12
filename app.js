@@ -84,7 +84,7 @@ async function loadContactInfo() {
 
     /* Contact form action */
     const contactForm = document.getElementById('contactForm');
-    if (contactForm) contactForm.action = `https://formsubmit.co/${email}`;
+    if (contactForm) contactForm.removeAttribute('action');
 
     /* Footer social links */
     const socialLinks = document.querySelectorAll('.footer-social .social-icons a');
@@ -387,19 +387,21 @@ contactForm.addEventListener('submit', async (e) => {
   btn.textContent = 'Sending...';
   btn.disabled = true;
   const fd = new FormData(contactForm);
-  if (fd.get('_honey')) return;
   const payload = { name: fd.get('name'), email: fd.get('email'), phone: fd.get('phone'), inquiry_type: fd.get('inquiry_type'), property: fd.get('property'), message: fd.get('message') };
   try {
     const res = await fetch(`${API_URL}/api/contact`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    if (!res.ok) throw new Error('Failed to save');
-    contactForm.submit();
-  } catch {
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    contactForm.reset();
     btn.textContent = 'Send Message';
     btn.disabled = false;
-    showToast('Could not send. Try again.');
+    showToast('Message sent! I\'ll get back to you soon.');
+  } catch (err) {
+    btn.textContent = 'Send Message';
+    btn.disabled = false;
+    showToast(err.message || 'Could not send. Try again.');
   }
 });
-if (window.location.search.includes('sent=true')) { showToast('Message sent! I\'ll get back to you soon.'); window.history.replaceState({}, '', window.location.pathname + '#contact'); }
 if (window.location.search.includes('payment=success')) { showToast('Payment successful! Thank you.'); window.history.replaceState({}, '', window.location.pathname); }
 if (window.location.search.includes('payment=canceled')) { showToast('Payment canceled.'); window.history.replaceState({}, '', window.location.pathname); }
 
