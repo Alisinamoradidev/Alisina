@@ -119,7 +119,11 @@ async function checkRateLimit(key, maxRequests = 10, windowSec = 60) {
   return true;
 }
 
-const { processImage, verifyImage } = require('./face-engine');
+let _faceEngine = null;
+async function getFaceEngine() {
+  if (!_faceEngine) _faceEngine = require('./face-engine');
+  return _faceEngine;
+}
 
 module.exports = async (req, res) => {
   const origin = req.headers.origin || '*';
@@ -619,6 +623,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const embeddings = [];
       for (let i = 0; i < images.length; i++) {
         try {
+          const { processImage } = await getFaceEngine();
           const result = await processImage(images[i]);
           embeddings.push(result.embedding);
         } catch (e) {
@@ -679,6 +684,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
       let result;
       try {
+        const { verifyImage } = await getFaceEngine();
         result = await verifyImage(image, storedEmbeddings);
       } catch (e) {
         return res.status(400).json({ error: e.message });
