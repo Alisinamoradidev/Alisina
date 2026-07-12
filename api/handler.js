@@ -151,6 +151,15 @@ module.exports = async (req, res) => {
       return res.status(200).json({ status: 'ok' });
     }
 
+    if (path === '/face-test' && method === 'GET') {
+      try {
+        const engine = await getFaceEngine();
+        return res.status(200).json({ status: 'face engine loaded', models: true });
+      } catch (e) {
+        return res.status(500).json({ error: e.message, stack: e.stack?.substring(0, 500) });
+      }
+    }
+
     /* Property detail page (SEO) */
     const seoPropMatch = method === 'GET' && path.match(/^\/property\/(\d+)$/);
     if (seoPropMatch) {
