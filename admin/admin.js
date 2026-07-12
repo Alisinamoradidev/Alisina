@@ -1143,18 +1143,7 @@ async function checkPasskeyStatus() {
   } catch {}
 }
 
-/* ─── Face Login ─── */
-
-let faceModelsLoaded = false;
-
-async function loadFaceModels() {
-  if (faceModelsLoaded) return;
-  const modelUrl = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model';
-  await faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl);
-  await faceapi.nets.faceLandmark68Net.loadFromUri(modelUrl);
-  await faceapi.nets.faceRecognitionNet.loadFromUri(modelUrl);
-  faceModelsLoaded = true;
-}
+/* ─── Face Login (InsightFace) ─── */
 
 function getFaceVideo() { return document.getElementById('faceVideo'); }
 
@@ -1164,8 +1153,8 @@ async function startFaceCamera() {
   video.style.position = 'fixed';
   video.style.bottom = '20px';
   video.style.right = '20px';
-  video.style.width = '200px';
-  video.style.height = '150px';
+  video.style.width = '240px';
+  video.style.height = '180px';
   video.style.borderRadius = '12px';
   video.style.border = '2px solid var(--primary)';
   video.style.zIndex = '9999';
@@ -1193,74 +1182,29 @@ function timeoutPromise(promise, ms) {
   ]).finally(() => clearTimeout(timer));
 }
 
-async function captureFaceDescriptor(input) {
-  let waited = 0;
+function captureFrameAsBase64(input) {
+  const canvas = document.createElement('canvas');
   if (input instanceof HTMLVideoElement) {
-    while (!input.videoWidth && waited < 3000) {
-      await new Promise(r => setTimeout(r, 100));
-      waited += 100;
-    }
+    canvas.width = input.videoWidth || 640;
+    canvas.height = input.videoHeight || 480;
+  } else {
+    canvas.width = input.naturalWidth || input.width;
+    canvas.height = input.naturalHeight || input.height;
   }
-
-  const isVideo = input instanceof HTMLVideoElement;
-
-  if (isVideo) {
-    const canvas = document.getElementById('faceCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 160;
-    canvas.height = 120;
-    ctx.drawImage(input, 0, 0, 160, 120);
-    const data1 = ctx.getImageData(0, 0, 160, 120).data;
-
-    await new Promise(r => setTimeout(r, 300));
-
-    ctx.drawImage(input, 0, 0, 160, 120);
-    const data2 = ctx.getImageData(0, 0, 160, 120).data;
-
-    let diff = 0;
-    for (let i = 0; i < data1.length; i += 4) {
-      diff += Math.abs(data1[i] - data2[i]) + Math.abs(data1[i + 1] - data2[i + 1]) + Math.abs(data1[i + 2] - data2[i + 2]);
-    }
-    diff /= 160 * 120 * 3;
-    if (diff < 2) throw new Error('No face detected. Hold your face in front of the camera.');
-  }
-
-  const desc = await timeoutPromise(
-    faceapi.computeFaceDescriptor(input),
-    10000
-  );
-  if (!desc || desc.length !== 128) throw new Error('Failed to compute face descriptor.');
-
-  const arr = Array.from(desc);
-  const norm = Math.sqrt(arr.reduce((s, v) => s + v * v, 0));
-  if (norm < 0.5) throw new Error('No face detected. Make sure your face is visible and well-lit.');
-  return arr;
-}
-
-async function saveDescriptor(descriptor) {
-  await api('/api/auth/face/descriptor', {
-    method: 'POST',
-    body: JSON.stringify({ descriptor }),
-  });
-  document.getElementById('settingsFaceStatus').textContent = 'Face login set up successfully!';
-  document.getElementById('settingsSetupFaceBtn').style.display = 'none';
-  document.getElementById('settingsWebcamFaceBtn').style.display = 'none';
-  document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(input, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.92);
 }
 
 async function enrollFaceFromPhoto(input) {
-  if (typeof faceapi === 'undefined') { alert('Face API not loaded. Check internet connection.'); return; }
-
   const file = input.files[0];
   if (!file) return;
 
   const btn = document.getElementById('settingsSetupFaceBtn');
-  btn.disabled = true; btn.textContent = 'Loading face models...';
+  btn.disabled = true; btn.textContent = 'Processing photo...';
+  const status = document.getElementById('settingsFaceStatus');
 
   try {
-    await loadFaceModels();
-    btn.textContent = 'Processing photo...';
-
     const img = await new Promise((resolve, reject) => {
       const el = new Image();
       el.onload = () => resolve(el);
@@ -1268,19 +1212,23 @@ async function enrollFaceFromPhoto(input) {
       el.src = URL.createObjectURL(file);
     });
 
-    btn.textContent = 'Computing...';
-
-    const canvas = document.getElementById('faceCanvas');
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-
-    const descriptor = await captureFaceDescriptor(canvas);
-
-    await saveDescriptor(descriptor);
+    const b64 = captureFrameAsBase64(img);
     URL.revokeObjectURL(img.src);
+
+    btn.textContent = 'Verifying face...';
+    const res = await api('/api/auth/face/descriptor', {
+      method: 'POST',
+      body: JSON.stringify({ images: [b64] }),
+    });
+
+    if (res.success) {
+      status.textContent = 'Face login set up successfully!';
+      document.getElementById('settingsSetupFaceBtn').style.display = 'none';
+      document.getElementById('settingsWebcamFaceBtn').style.display = 'none';
+      document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
+    }
   } catch (e) {
+    status.textContent = '';
     alert(e.message);
   } finally {
     btn.disabled = false; btn.textContent = 'Upload a photo';
@@ -1288,30 +1236,58 @@ async function enrollFaceFromPhoto(input) {
   }
 }
 
-async function enrollFaceFromWebcam() {
-  if (typeof faceapi === 'undefined') { alert('Face API not loaded. Check internet connection.'); return; }
-
+async function enrollFaceMulti() {
   const btn = document.getElementById('settingsWebcamFaceBtn');
-  btn.disabled = true; btn.textContent = 'Loading face models...';
+  btn.disabled = true;
+  const status = document.getElementById('settingsFaceStatus');
+  const overlay = document.getElementById('faceOverlay');
+  const counter = document.getElementById('faceCounter');
+  const hint = document.getElementById('faceHint');
 
   let stream;
+  const images = [];
+  const TOTAL_PHOTOS = 5;
+  const POSES = ['Look straight', 'Turn slightly left', 'Turn slightly right', 'Look slightly up', 'Look slightly down'];
+
   try {
-    await loadFaceModels();
     btn.textContent = 'Opening camera...';
     stream = await timeoutPromise(startFaceCamera(), 15000);
-
     await new Promise(r => setTimeout(r, 800));
-    btn.textContent = 'Capturing...';
 
-    const descriptor = await captureFaceDescriptor(document.getElementById('faceVideo'));
+    overlay.style.display = 'flex';
+    const video = document.getElementById('faceVideo');
+
+    for (let i = 0; i < TOTAL_PHOTOS; i++) {
+      counter.textContent = `${i + 1} / ${TOTAL_PHOTOS}`;
+      hint.textContent = POSES[i] || 'Hold still';
+      await new Promise(r => setTimeout(r, 1200));
+      images.push(captureFrameAsBase64(video));
+      hint.textContent = 'Captured!';
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    overlay.style.display = 'none';
     stopFaceCamera(stream); stream = null;
 
-    await saveDescriptor(descriptor);
+    btn.textContent = 'Uploading...';
+    const res = await api('/api/auth/face/descriptor', {
+      method: 'POST',
+      body: JSON.stringify({ images }),
+    });
+
+    if (res.success) {
+      status.textContent = `Face login set up with ${res.enrolled} photos!`;
+      document.getElementById('settingsSetupFaceBtn').style.display = 'none';
+      document.getElementById('settingsWebcamFaceBtn').style.display = 'none';
+      document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
+    }
   } catch (e) {
-    alert(e.message === 'Timed out' ? 'Face detection timed out. Make sure your face is visible and the room is well-lit.' : e.message);
+    overlay.style.display = 'none';
+    alert(e.message === 'Timed out' ? 'Camera timed out. Make sure your face is visible.' : e.message);
   } finally {
     if (stream) stopFaceCamera(stream);
-    btn.disabled = false; btn.textContent = 'Use webcam';
+    overlay.style.display = 'none';
+    btn.disabled = false; btn.textContent = 'Enroll with webcam (5 photos)';
   }
 }
 
@@ -1327,27 +1303,23 @@ async function removeFace() {
 }
 
 async function loginWithFace() {
-  if (typeof faceapi === 'undefined') { document.getElementById('loginError').textContent = 'Face API not loaded. Check internet connection.'; return; }
-
   const err = document.getElementById('loginError');
   const btn = document.getElementById('faceLoginBtn');
-  btn.disabled = true; btn.textContent = 'Loading face models...'; err.textContent = '';
+  btn.disabled = true; btn.textContent = 'Opening camera...'; err.textContent = '';
 
   let stream;
   try {
-    await loadFaceModels();
-    btn.textContent = 'Opening camera...';
     stream = await timeoutPromise(startFaceCamera(), 15000);
-
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 1000));
     btn.textContent = 'Scanning...';
 
-    const descriptor = await captureFaceDescriptor(document.getElementById('faceVideo'));
+    const b64 = captureFrameAsBase64(document.getElementById('faceVideo'));
     stopFaceCamera(stream); stream = null;
 
+    btn.textContent = 'Verifying...';
     const res = await fetch(`${API}/api/auth/face/compare`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ descriptor }),
+      body: JSON.stringify({ image: b64 }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);

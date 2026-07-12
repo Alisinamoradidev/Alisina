@@ -10,7 +10,6 @@
   "dependencies": {
     "@simplewebauthn/server": "^13.3.2",
     "@supabase/supabase-js": "^2.110.1",
-    "@vladmandic/face-api": "^1.7.15",
     "bcryptjs": "^3.0.3",
     "nodemailer": "^9.0.3",
     "stripe": "^22.3.0"

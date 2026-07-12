@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js"></script>
+
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
@@ -204,11 +204,11 @@
             <p id="settingsPasskeyStatus" style="font-size:13px;color:var(--text-muted)"></p>
 
             <h3 style="margin-bottom:12px;color:var(--text);margin-top:32px">Face Login</h3>
-            <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px">Upload a photo of yourself or use your webcam. The image is processed in your browser — only a mathematical representation is stored on the server.</p>
+            <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px">Enroll your face for passwordless login. The server uses InsightFace (ArcFace + RetinaFace) with anti-spoofing to verify your identity.</p>
             <div class="form-actions" style="justify-content:flex-start;margin-bottom:8px">
               <input type="file" id="faceUploadInput" accept="image/*" style="display:none" onchange="enrollFaceFromPhoto(this)">
               <button type="button" class="btn-primary" id="settingsSetupFaceBtn" onclick="document.getElementById('faceUploadInput').click()"><i class="fas fa-upload"></i> Upload a photo</button>
-              <button type="button" class="btn-outline" id="settingsWebcamFaceBtn" onclick="enrollFaceFromWebcam()"><i class="fas fa-camera"></i> Use webcam</button>
+              <button type="button" class="btn-outline" id="settingsWebcamFaceBtn" onclick="enrollFaceMulti()"><i class="fas fa-camera"></i> Enroll with webcam (5 photos)</button>
               <button type="button" class="btn-outline" id="settingsRemoveFaceBtn" onclick="removeFace()" style="display:none"><i class="fas fa-trash"></i> Remove face</button>
             </div>
             <p id="settingsFaceStatus" style="font-size:13px;color:var(--text-muted)"></p>
@@ -312,7 +312,13 @@
 
   <!-- Hidden video for face capture -->
   <video id="faceVideo" style="display:none" playsinline></video>
-  <canvas id="faceCanvas" style="display:none"></canvas>
+  <div id="faceOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:center;justify-content:center;flex-direction:column;color:white;font-family:Inter,sans-serif">
+    <div style="text-align:center">
+      <p id="faceHint" style="font-size:20px;font-weight:600;margin-bottom:8px"></p>
+      <p id="faceCounter" style="font-size:48px;font-weight:800;margin:0;opacity:0.8"></p>
+      <p style="font-size:14px;margin-top:16px;opacity:0.6">Keep your face centered in the camera</p>
+    </div>
+  </div>
 
   <script src="admin.js"></script>
 </body>

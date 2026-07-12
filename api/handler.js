@@ -119,6 +119,19 @@ async function checkRateLimit(key, maxRequests = 10, windowSec = 60) {
   return true;
 }
 
+const FACE_API_URL = process.env.FACE_API_URL || 'http://localhost:8000';
+
+async function callFaceApi(endpoint, payload) {
+  const resp = await fetch(`${FACE_API_URL}${endpoint}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.detail || 'Face API error');
+  return data;
+}
+
 module.exports = async (req, res) => {
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
@@ -602,25 +615,35 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       return res.json({ message: 'Passkeys removed' });
     }
 
-    /* ─── Face Login ─── */
+    /* ─── Face Login (InsightFace) ─── */
 
     if (path === '/auth/face/descriptor' && method === 'POST') {
       const auth = req.headers.authorization;
       const user = getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-      const { descriptor } = body;
-      if (!descriptor || !Array.isArray(descriptor) || descriptor.length !== 128) {
-        return res.status(400).json({ error: 'Invalid face descriptor' });
+      const { images } = body;
+      if (!Array.isArray(images) || images.length < 3 || images.length > 10) {
+        return res.status(400).json({ error: 'Provide 3-10 face images' });
+      }
+
+      const embeddings = [];
+      for (let i = 0; i < images.length; i++) {
+        try {
+          const result = await callFaceApi('/api/face/process', { image: images[i] });
+          embeddings.push(result.embedding);
+        } catch (e) {
+          return res.status(400).json({ error: `Image ${i + 1}: ${e.message}` });
+        }
       }
 
       const { data: existing } = await supabase.from('face_data').select('user_id').eq('user_id', user.id).maybeSingle();
       if (existing) {
-        await supabase.from('face_data').update({ face_descriptor: JSON.stringify(descriptor) }).eq('user_id', user.id);
+        await supabase.from('face_data').update({ face_descriptor: JSON.stringify(embeddings) }).eq('user_id', user.id);
       } else {
-        await supabase.from('face_data').insert({ user_id: user.id, face_descriptor: JSON.stringify(descriptor) });
+        await supabase.from('face_data').insert({ user_id: user.id, face_descriptor: JSON.stringify(embeddings) });
       }
-      return res.json({ success: true });
+      return res.json({ success: true, enrolled: embeddings.length });
     }
 
     if (path === '/auth/face/descriptor' && method === 'DELETE') {
@@ -632,30 +655,53 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (path === '/auth/face/compare' && method === 'POST') {
-      const { descriptor } = body;
-      if (!descriptor || !Array.isArray(descriptor) || descriptor.length !== 128) {
-        return res.status(400).json({ error: 'Invalid face descriptor' });
+      const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+      const allowed = await checkRateLimit('face_login_' + ip, 10, 300);
+      if (!allowed) return res.status(429).json({ error: 'Too many face login attempts. Try again later.' });
+
+      const { image } = body;
+      if (!image || typeof image !== 'string') {
+        return res.status(400).json({ error: 'Image data required' });
       }
 
-      const { data } = await supabase.from('face_data').select('*').maybeSingle();
-      if (!data) return res.status(404).json({ error: 'No face enrolled' });
+      const { data: allFaces } = await supabase.from('face_data').select('*');
+      if (!allFaces || allFaces.length === 0) return res.status(404).json({ error: 'No face enrolled' });
 
-      const stored = JSON.parse(data.face_descriptor);
-
-      let dot = 0, normA = 0, normB = 0;
-      for (let i = 0; i < 128; i++) {
-        dot += descriptor[i] * stored[i];
-        normA += descriptor[i] * descriptor[i];
-        normB += stored[i] * stored[i];
+      const storedEmbeddings = [];
+      const userMap = [];
+      for (const row of allFaces) {
+        let parsed;
+        try { parsed = JSON.parse(row.face_descriptor); }
+        catch { continue; }
+        if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+          for (const emb of parsed) {
+            storedEmbeddings.push(emb);
+            userMap.push(row.user_id);
+          }
+        } else if (Array.isArray(parsed) && parsed.length === 512) {
+          storedEmbeddings.push(parsed);
+          userMap.push(row.user_id);
+        }
       }
-      const similarity = dot / (Math.sqrt(normA) * Math.sqrt(normB));
 
-      if (similarity < 0.6) {
-        return res.status(401).json({ error: 'Face does not match', similarity: Math.round(similarity * 10000) / 10000 });
+      if (storedEmbeddings.length === 0) {
+        return res.status(404).json({ error: 'No valid face data found' });
       }
 
-      const token = Buffer.from(JSON.stringify({ id: data.user_id, role: 'admin', exp: Date.now() + 86400000 })).toString('base64');
-      return res.json({ token: `simple_${token}`, similarity: Math.round(similarity * 10000) / 10000, verified: true });
+      let result;
+      try {
+        result = await callFaceApi('/api/face/verify', { image, stored_embeddings: storedEmbeddings });
+      } catch (e) {
+        return res.status(400).json({ error: e.message });
+      }
+
+      if (!result.match) {
+        return res.status(401).json({ error: 'Face does not match', distance: result.distance });
+      }
+
+      const matchedUserId = userMap[result.best_index];
+      const token = Buffer.from(JSON.stringify({ id: matchedUserId, role: 'admin', exp: Date.now() + 86400000 })).toString('base64');
+      return res.json({ token: `simple_${token}`, distance: result.distance, verified: true });
     }
 
     if (path === '/auth/face/status' && method === 'GET') {
