@@ -29,12 +29,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
+ENV WEB_CONCURRENCY=1
 
 COPY --from=builder /root/.insightface /root/.insightface
 
 WORKDIR /app
 COPY face-api/main.py .
 
-ENV WEB_CONCURRENCY=1
 EXPOSE 8000
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout-keep-alive 30"]
+CMD uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
