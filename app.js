@@ -240,9 +240,6 @@ listingsGrid.addEventListener('click', e => {
     localStorage.setItem('favs', JSON.stringify([...favorites]));
     setFavIcon(favBtn, id);
     showToast(wasFav ? 'Removed from favorites' : 'Added to favorites');
-    if (userToken) {
-      fetch(`${API_URL}/api/users/favorites/${id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${userToken}`, 'Content-Type': 'application/json' } }).catch(() => {});
-    }
     return;
   }
   const card = e.target.closest('.property-card');
@@ -687,141 +684,6 @@ function tryInitMap() {
   setTimeout(() => clearInterval(interval), 10000);
 }
 
-/* User Auth */
-let userToken = localStorage.getItem('user_token');
-let currentUser = JSON.parse(localStorage.getItem('user_data') || 'null');
-
-function updateUserUI() {
-  const loggedOut = document.getElementById('userMenuLoggedOut');
-  const loggedIn = document.getElementById('userMenuLoggedIn');
-  const userBtn = document.getElementById('userBtn');
-  if (currentUser) {
-    loggedOut.style.display = 'none';
-    loggedIn.style.display = 'block';
-    document.getElementById('userMenuName').textContent = currentUser.name;
-    document.getElementById('userMenuEmail').textContent = currentUser.email;
-    userBtn.innerHTML = '<i class="fas fa-user-check"></i>';
-  } else {
-    loggedOut.style.display = 'block';
-    loggedIn.style.display = 'none';
-    userBtn.innerHTML = '<i class="far fa-user"></i>';
-  }
-}
-
-function toggleUserMenu() {
-  const menu = document.getElementById('userMenu');
-  menu.classList.toggle('open');
-}
-
-document.addEventListener('click', e => {
-  const menu = document.getElementById('userMenu');
-  if (!e.target.closest('#userBtn') && !e.target.closest('#userMenu')) {
-    menu.classList.remove('open');
-  }
-});
-
-let authMode = 'login';
-function showAuthModal(mode) {
-  authMode = mode;
-  document.getElementById('authModal').classList.add('active');
-  document.getElementById('authError').textContent = '';
-  if (mode === 'login') {
-    document.getElementById('authModalTitle').textContent = 'Sign In';
-    document.getElementById('authModalSub').textContent = 'Welcome back!';
-    document.getElementById('authBtn').textContent = 'Sign In';
-    document.getElementById('authToggleText').textContent = "Don't have an account?";
-    document.getElementById('authToggleLink').textContent = 'Register';
-    document.getElementById('authNameField').style.display = 'none';
-    const ci = document.getElementById('cardIcon');
-    if (ci) ci.innerHTML = '<i class="fas fa-user-lock"></i>';
-  } else {
-    document.getElementById('authModalTitle').textContent = 'Create Account';
-    document.getElementById('authModalSub').textContent = 'Join to save favorites!';
-    document.getElementById('authBtn').textContent = 'Create Account';
-    document.getElementById('authToggleText').textContent = 'Already have an account?';
-    document.getElementById('authToggleLink').textContent = 'Sign In';
-    document.getElementById('authNameField').style.display = 'block';
-    const ci = document.getElementById('cardIcon');
-    if (ci) ci.innerHTML = '<i class="fas fa-user-plus"></i>';
-  }
-}
-
-function closeAuthModal() { document.getElementById('authModal').classList.remove('active'); }
-document.getElementById('authModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAuthModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAuthModal(); });
-
-function toggleAuthMode() {
-  showAuthModal(authMode === 'login' ? 'register' : 'login');
-}
-
-document.getElementById('authForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = document.getElementById('authEmail').value;
-  const password = document.getElementById('authPassword').value;
-  const err = document.getElementById('authError');
-  const btn = document.getElementById('authBtn');
-
-  if (authMode === 'register') {
-    const name = document.getElementById('authName').value;
-    if (!name) { err.textContent = 'Name is required'; return; }
-    btn.disabled = true; btn.textContent = 'Creating...';
-    try {
-      const res = await fetch(`${API_URL}/api/users/register`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      userToken = data.token; currentUser = data.user;
-      localStorage.setItem('user_token', userToken);
-      localStorage.setItem('user_data', JSON.stringify(currentUser));
-      updateUserUI(); closeAuthModal(); showToast('Account created! Welcome ' + data.user.name);
-    } catch (e) { err.textContent = e.message; }
-    finally { btn.disabled = false; btn.textContent = 'Create Account'; }
-  } else {
-    btn.disabled = true; btn.textContent = 'Signing in...';
-    try {
-      const res = await fetch(`${API_URL}/api/users/login`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      userToken = data.token; currentUser = data.user;
-      localStorage.setItem('user_token', userToken);
-      localStorage.setItem('user_data', JSON.stringify(currentUser));
-      updateUserUI(); closeAuthModal(); showToast('Welcome back, ' + data.user.name + '!');
-      syncFavoritesFromServer();
-    } catch (e) { err.textContent = e.message; }
-    finally { btn.disabled = false; btn.textContent = 'Sign In'; }
-  }
-});
-
-function logoutUser() {
-  userToken = null; currentUser = null;
-  localStorage.removeItem('user_token');
-  localStorage.removeItem('user_data');
-  document.getElementById('userMenu').classList.remove('open');
-  updateUserUI();
-  favorites.clear();
-  localStorage.setItem('favs', '[]');
-  updateListings();
-  showToast('Signed out');
-}
-
-async function syncFavoritesFromServer() {
-  if (!userToken) return;
-  try {
-      const res = await fetch(`${API_URL}/api/users/favorites`, {
-        headers: { 'Authorization': `Bearer ${userToken}` }
-      });
-    const ids = await res.json();
-    favorites = new Set(ids);
-    localStorage.setItem('favs', JSON.stringify([...favorites]));
-    updateListings();
-  } catch {}
-}
-
 /* Gallery Carousel */
 function initCarousel(modalImageEl, images) {
   if (!images || images.length === 0) return;
@@ -886,18 +748,6 @@ openModal = function(p) {
   initCarousel($('modalImage'), images);
 };
 
-/* Override setFavIcon to sync with server */
-const _origSetFavIcon = setFavIcon;
-setFavIcon = function(btn, id) {
-  _origSetFavIcon(btn, id);
-  if (userToken && currentUser) {
-    fetch(`${API_URL}/api/users/favorites/${id}`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${userToken}`, 'Content-Type': 'application/json' }
-    }).catch(() => {});
-  }
-};
-
 /* Blog */
 async function loadBlogPosts() {
   try {
@@ -959,8 +809,6 @@ if (window.__propertyId) {
   }, 100);
   setTimeout(() => clearInterval(checkProp), 10000);
 }
-updateUserUI();
-if (userToken) syncFavoritesFromServer();
 
 /* ═══════════════════════════════════════════════
    ANIMATIONS — delete this block to remove

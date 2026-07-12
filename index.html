@@ -101,23 +101,10 @@
           <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
             <i class="fas fa-moon"></i>
           </button>
-          <button class="btn-user" id="userBtn" aria-label="Account" onclick="toggleUserMenu()">
-            <i class="far fa-user"></i>
-          </button>
           <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">
             <i class="fas fa-bars"></i>
           </button>
         </div>
-        <div class="user-menu" id="userMenu">
-          <div id="userMenuLoggedOut">
-            <button class="btn-search" style="width:100%" onclick="showAuthModal('login')">Sign In</button>
-            <button class="btn-submit btn-secondary" style="width:100%;margin-top:8px" onclick="showAuthModal('register')">Create Account</button>
-          </div>
-          <div id="userMenuLoggedIn" style="display:none">
-            <p style="font-weight:600;margin-bottom:8px" id="userMenuName"></p>
-            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px" id="userMenuEmail"></p>
-            <button class="btn-submit" style="width:100%" onclick="logoutUser()">Sign Out</button>
-          </div>
         </div>
       </div>
     </div>
@@ -619,51 +606,6 @@
     <div class="modal modal-lg">
       <div class="modal-header"><h3>Compare Properties</h3><button class="modal-close" onclick="closeCompare()">&times;</button></div>
       <div class="modal-body" id="compareModalBody" style="overflow-x:auto"></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="authModal">
-
-    <!-- Wave background -->
-    <div class="auth-waves" id="authWaves">
-      <svg viewBox="0 0 1440 600" preserveAspectRatio="none">
-        <path class="wv-1" d="M0,300 C360,180 720,400 1080,260 C1260,200 1350,280 1440,240 L1440,600 L0,600 Z"/>
-        <path class="wv-2" d="M0,380 C240,280 480,460 720,340 C960,220 1200,420 1440,320 L1440,600 L0,600 Z"/>
-        <path class="wv-3" d="M0,440 C400,340 640,500 960,400 C1200,320 1320,440 1440,380 L1440,600 L0,600 Z"/>
-      </svg>
-    </div>
-    <div class="auth-card" id="authCard">
-      <button class="auth-card-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
-      <div class="auth-card-icon" id="cardIcon">
-        <i class="fas fa-user-lock"></i>
-      </div>
-      <div class="auth-card-header">
-        <h3 id="authModalTitle">Sign In</h3>
-        <p id="authModalSub">Welcome back! Sign in to save your favorites.</p>
-      </div>
-
-      <form id="authForm">
-        <div class="auth-field-group auth-field-hidden" id="authNameField">
-          <i class="fas fa-user auth-field-icon"></i>
-          <input type="text" id="authName" placeholder="Full Name">
-        </div>
-        <div class="auth-field-group">
-          <i class="fas fa-envelope auth-field-icon"></i>
-          <input type="email" id="authEmail" placeholder="Email Address" required>
-        </div>
-        <div class="auth-field-group">
-          <i class="fas fa-lock auth-field-icon"></i>
-          <input type="password" id="authPassword" placeholder="Password" required minlength="6">
-        </div>
-
-        <p class="auth-error" id="authError"></p>
-
-        <button type="submit" class="btn-auth" id="authBtn">Sign In</button>
-      </form>
-
-      <div class="auth-toggle-text">
-        <span id="authToggleText">Don't have an account?</span>
-        <a href="#" onclick="toggleAuthMode()" id="authToggleLink">Register</a>
-      </div>
     </div>
   </div>
 
