@@ -242,8 +242,109 @@ td .actions { display: flex; gap: 6px; }
 
 @media (max-width: 768px) {
   .form-grid { grid-template-columns: 1fr; }
-  .admin-nav { padding: 8px 12px; }
-  .admin-content { padding: 16px; }
-  .admin-header { padding: 12px 16px; }
-  .search-input { min-width: 150px; }
+  .admin-nav { padding: 8px 12px; gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .admin-nav::-webkit-scrollbar { display: none; }
+  .nav-btn { padding: 8px 12px; font-size: 12px; }
+  .nav-btn i { margin-right: 4px; }
+  .admin-content { padding: 12px; }
+  .admin-header { padding: 10px 12px; }
+  .admin-header-inner { flex-wrap: wrap; gap: 8px; }
+  .admin-header h1 { font-size: 16px; }
+  .admin-header-right { gap: 6px; }
+  .admin-header-right span { font-size: 12px; }
+  .btn-outline { padding: 6px 10px; font-size: 12px; }
+  .btn-primary { padding: 8px 14px; font-size: 13px; }
+  .btn-danger { padding: 6px 10px; font-size: 12px; }
+  .search-input { min-width: 120px; font-size: 13px; padding: 6px 10px; }
+  .view-header { flex-direction: column; align-items: flex-start; }
+  .view-actions { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+  .view-actions .btn-danger,
+  .view-actions .btn-outline,
+  .view-actions .btn-primary { white-space: nowrap; flex-shrink: 0; }
+
+  /* Stats grid */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 16px 12px; }
+  .stat-value { font-size: 24px; }
+  .stat-label { font-size: 12px; }
+
+  /* Dashboard charts */
+  #viewDashboard > div:nth-child(3) { grid-template-columns: 1fr !important; }
+
+  /* Tables — card-style on mobile */
+  .table-wrap { border-radius: 12px; overflow: hidden; }
+  table { font-size: 13px; }
+  th { padding: 10px 10px; font-size: 11px; letter-spacing: 0; text-transform: none; }
+  td { padding: 10px; font-size: 13px; }
+
+  /* Properties table */
+  #propertiesTable th:nth-child(5),
+  #propertiesTable td:nth-child(5),
+  #propertiesTable th:nth-child(6),
+  #propertiesTable td:nth-child(6) { display: none; }
+
+  /* Payments table — hide less important cols */
+  #paymentsTable th:nth-child(2),
+  #paymentsTable td:nth-child(2) { display: none; }
+  #paymentsTable th:nth-child(4),
+  #paymentsTable td:nth-child(4) { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #paymentsTable th:nth-child(8),
+  #paymentsTable td:nth-child(8) { display: none; }
+
+  /* Blog table */
+  #postsTable th:nth-child(3),
+  #postsTable td:nth-child(3) { display: none; }
+
+  /* Actions column */
+  td .actions { flex-wrap: wrap; gap: 4px; }
+
+  /* Modals */
+  .modal-overlay { padding: 10px; align-items: flex-end; }
+  .modal { max-height: 85vh; border-radius: 16px 16px 0 0; }
+  .modal-header { padding: 14px 16px; }
+  .modal-header h3 { font-size: 16px; }
+  .modal-body { padding: 16px; }
+
+  /* Forms */
+  .form-grid { gap: 10px; }
+  .form-actions { flex-wrap: wrap; }
+  .field label { font-size: 12px; }
+  .field input, .field select, .field textarea { padding: 10px; font-size: 13px; }
+
+  /* Bank / Contact Info forms */
+  #viewBank .modal-body,
+  #viewContactinfo .modal-body { max-width: 100%; padding: 0; }
+
+  /* Messages & Schedules cards */
+  .msg-card, .sched-card { padding: 14px; }
+  .msg-card .meta, .sched-card .meta { flex-direction: column; gap: 4px; }
+
+  /* Pagination */
+  .pagination-bar { flex-direction: column; gap: 8px; align-items: center; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-card { padding: 12px 8px; }
+  .stat-value { font-size: 20px; }
+  .admin-header h1 { font-size: 14px; }
+  .admin-header h1 i { display: none; }
+  .nav-btn { padding: 7px 10px; font-size: 11px; }
+  .btn-sm { padding: 5px 8px; font-size: 11px; }
+
+  /* Properties table — more columns hidden */
+  #propertiesTable th:nth-child(3),
+  #propertiesTable td:nth-child(3) { display: none; }
+  #propertiesTable th:nth-child(7),
+  #propertiesTable td:nth-child(7) { display: none; }
+
+  /* Payments table — hide receipt and status */
+  #paymentsTable th:nth-child(7),
+  #paymentsTable td:nth-child(7) { display: none; }
+  #paymentsTable th:nth-child(9),
+  #paymentsTable td:nth-child(9) { display: none; }
+
+  /* Blog table — hide date */
+  #postsTable th:nth-child(5),
+  #postsTable td:nth-child(5) { display: none; }
 }
