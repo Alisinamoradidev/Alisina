@@ -59,7 +59,7 @@ async function loadContactInfo() {
     const r = await fetch(`${API_URL}/api/settings/contact`);
     if (!r.ok) return;
     const c = await r.json();
-    if (!c || !c.phone && !c.email) return;
+    if (!c || typeof c !== 'object') return;
 
     const phone = c.phone || '+93778747337';
     const email = c.email || 'alisinamoradi2718281@gmail.com';
