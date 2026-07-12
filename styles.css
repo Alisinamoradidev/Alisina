@@ -1002,6 +1002,18 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .calculator-result {
+    padding: 20px;
+  }
+
+  .calc-amount {
+    font-size: 28px;
+  }
+
+  .calc-monthly {
+    padding-bottom: 14px;
+  }
+
   .whatsapp-btn {
     bottom: 76px;
     right: 16px;
