@@ -928,6 +928,8 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     /* Contact Info Settings */
     if (path === '/settings/contact' && method === 'GET') {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
       try {
         const { data } = await supabase.from('settings').select('value').eq('key', 'contact_info').maybeSingle();
         return res.status(200).json(data?.value || {

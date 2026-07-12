@@ -56,7 +56,7 @@ const $ = id => document.getElementById(id);
 /* Load contact info from backend and update all hardcoded values */
 async function loadContactInfo() {
   try {
-    const r = await fetch(`${API_URL}/api/settings/contact`);
+    const r = await fetch(`${API_URL}/api/settings/contact?_t=${Date.now()}`);
     if (!r.ok) return;
     const c = await r.json();
     if (!c || typeof c !== 'object') return;
