@@ -1,7 +1,7 @@
 services:
   - type: web
     name: face-api
-    runtime: image
+    runtime: docker
     repo: https://github.com/AliSinamoradidev/Alisina
     region: frankfurt
     plan: free
