@@ -119,18 +119,7 @@ async function checkRateLimit(key, maxRequests = 10, windowSec = 60) {
   return true;
 }
 
-const FACE_API_URL = process.env.FACE_API_URL || 'http://localhost:8000';
-
-async function callFaceApi(endpoint, payload) {
-  const resp = await fetch(`${FACE_API_URL}${endpoint}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  const data = await resp.json();
-  if (!resp.ok) throw new Error(data.detail || 'Face API error');
-  return data;
-}
+const { processImage, verifyImage } = require('./face-engine');
 
 module.exports = async (req, res) => {
   const origin = req.headers.origin || '*';
@@ -615,7 +604,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       return res.json({ message: 'Passkeys removed' });
     }
 
-    /* ─── Face Login (InsightFace) ─── */
+    /* ─── Face Login (face-api.js) ─── */
 
     if (path === '/auth/face/descriptor' && method === 'POST') {
       const auth = req.headers.authorization;
@@ -630,7 +619,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const embeddings = [];
       for (let i = 0; i < images.length; i++) {
         try {
-          const result = await callFaceApi('/api/face/process', { image: images[i] });
+          const result = await processImage(images[i]);
           embeddings.push(result.embedding);
         } catch (e) {
           return res.status(400).json({ error: `Image ${i + 1}: ${e.message}` });
@@ -678,7 +667,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
             storedEmbeddings.push(emb);
             userMap.push(row.user_id);
           }
-        } else if (Array.isArray(parsed) && parsed.length === 512) {
+        } else if (Array.isArray(parsed) && parsed.length === 128) {
           storedEmbeddings.push(parsed);
           userMap.push(row.user_id);
         }
@@ -690,7 +679,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
       let result;
       try {
-        result = await callFaceApi('/api/face/verify', { image, stored_embeddings: storedEmbeddings });
+        result = await verifyImage(image, storedEmbeddings);
       } catch (e) {
         return res.status(400).json({ error: e.message });
       }

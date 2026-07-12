@@ -10,7 +10,11 @@
   "dependencies": {
     "@simplewebauthn/server": "^13.3.2",
     "@supabase/supabase-js": "^2.110.1",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-backend-wasm": "^4.22.0",
+    "@vladmandic/face-api": "^1.7.15",
     "bcryptjs": "^3.0.3",
+    "jimp": "^1.6.1",
     "nodemailer": "^9.0.3",
     "stripe": "^22.3.0"
   }
