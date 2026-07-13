@@ -463,7 +463,7 @@ function toggleChat() {
   $('chatBody').classList.toggle('open');
   const msgs = $('chatMsgs');
   if ($('chatBody').classList.contains('open') && msgs.children.length <= 1) {
-    addBotMsg("Hi! I'm Alisina's virtual assistant. Ask me anything about buying, renting, or selling properties!");
+    addBotMsg("Hi! I'm Primenest Reality's virtual assistant. Ask me anything about buying, renting, or selling properties!");
     showFaqOptions();
   }
 }

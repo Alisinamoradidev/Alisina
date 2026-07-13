@@ -1,8 +1,8 @@
 {
-  "name": "alisina-real-estate",
+  "name": "primenest-reality",
   "version": "1.0.0",
   "private": true,
-  "description": "Alisina Moradi - Real Estate Agent Website",
+  "description": "Primenest Reality - Real Estate Website",
   "scripts": {
     "dev": "vercel dev",
     "start": "vercel dev"

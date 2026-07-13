@@ -9,7 +9,7 @@ const {
   verifyAuthenticationResponse,
 } = require('@simplewebauthn/server');
 
-const rpName = 'Alisina Admin';
+const rpName = 'Primenest Admin';
 const CHALLENGE_SECRET = process.env.JWT_SECRET || process.env.ADMIN_PASSWORD || 'opencode-fallback-key';
 
 function signChallenge(challenge) {
@@ -51,7 +51,7 @@ function emailLayout(title, bodyContent, color) {
           ${bodyContent}
         </td></tr>
         <tr><td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;color:#94a3b8;font-size:13px">
-          Alisina Realty &bull; All rights reserved
+          Primenest Reality &bull; All rights reserved
         </td></tr>
       </table>
     </td></tr>
@@ -158,11 +158,11 @@ module.exports = async (req, res) => {
     if (seoPropMatch) {
       const id = parseInt(seoPropMatch[1]);
       const { data: p } = await supabase.from('properties').select('*').eq('id', id).maybeSingle();
-      if (!p) return res.status(404).setHeader('Content-Type', 'text/html').end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Property Not Found | Alisina Realty</title><link rel="stylesheet" href="/styles.css"><style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#1e293b;background:#f8fafc;text-align:center;padding:24px}h1{font-size:72px;margin:0;background:linear-gradient(135deg,#1e3a5f,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#64748b;margin:8px 0 24px}a{color:#2563eb}</style></head><body><div><h1>404</h1><p>Property not found</p><a href="/">Back to Home</a></div></body></html>');
+      if (!p) return res.status(404).setHeader('Content-Type', 'text/html').end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Property Not Found | Primenest Reality</title><link rel="stylesheet" href="/styles.css"><style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#1e293b;background:#f8fafc;text-align:center;padding:24px}h1{font-size:72px;margin:0;background:linear-gradient(135deg,#1e3a5f,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#64748b;margin:8px 0 24px}a{color:#2563eb}</style></head><body><div><h1>404</h1><p>Property not found</p><a href="/">Back to Home</a></div></body></html>');
       const price = p.badge === 'rent' ? `$${p.price.toLocaleString()}/mo` : `$${p.price.toLocaleString()}`;
       const desc = `${p.title} — ${p.beds} bed, ${p.baths} bath ${p.type} in ${p.location}. ${price}. Browse property details, photos, and more.`;
       const img = p.image || 'https://alisina-nu.vercel.app/images/alisina.jpg';
-      const title = `${p.title} | Alisina Realty`;
+      const title = `${p.title} | Primenest Reality`;
       return res.status(200).setHeader('Content-Type', 'text/html').end(`<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
@@ -185,9 +185,9 @@ module.exports = async (req, res) => {
     if (blogSlugMatch) {
       const slug = decodeURIComponent(blogSlugMatch[1]);
       const { data: post } = await supabase.from('posts').select('*').eq('slug', slug).maybeSingle();
-      if (!post) return res.status(404).setHeader('Content-Type', 'text/html').end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Post Not Found | Alisina Realty</title><link rel="stylesheet" href="/styles.css"><style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#1e293b;background:#f8fafc;text-align:center;padding:24px}h1{font-size:72px;margin:0;background:linear-gradient(135deg,#1e3a5f,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#64748b;margin:8px 0 24px}a{color:#2563eb}</style></head><body><div><h1>404</h1><p>Post not found</p><a href="/">Back to Home</a></div></body></html>');
+      if (!post) return res.status(404).setHeader('Content-Type', 'text/html').end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Post Not Found | Primenest Reality</title><link rel="stylesheet" href="/styles.css"><style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#1e293b;background:#f8fafc;text-align:center;padding:24px}h1{font-size:72px;margin:0;background:linear-gradient(135deg,#1e3a5f,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#64748b;margin:8px 0 24px}a{color:#2563eb}</style></head><body><div><h1>404</h1><p>Post not found</p><a href="/">Back to Home</a></div></body></html>');
       const img = post.image || 'https://alisina-nu.vercel.app/images/alisina.jpg';
-      const postTitle = `${post.title} | Alisina Realty Blog`;
+      const postTitle = `${post.title} | Primenest Reality Blog`;
       const postDesc = (post.excerpt || post.content || '').replace(/<[^>]*>/g,'').substring(0,200).replace(/"/g,'&quot;');
       return res.status(200).setHeader('Content-Type', 'text/html').end(`<!DOCTYPE html>
 <html lang="en">
@@ -203,7 +203,7 @@ module.exports = async (req, res) => {
 <a href="/" style="color:#2563eb;text-decoration:none;margin-bottom:24px;display:inline-block">&larr; Back to Home</a>
 ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;border-radius:12px;margin:16px 0 24px;max-height:400px;object-fit:cover">` : ''}
 <h1 style="font-size:32px;margin-bottom:8px">${post.title}</h1>
-<p style="color:#94a3b8;font-size:14px;margin-bottom:24px">${post.created_at?.split(' ')[0] || ''} &bull; By ${post.author || 'Alisina Moradi'}</p>
+<p style="color:#94a3b8;font-size:14px;margin-bottom:24px">${post.created_at?.split(' ')[0] || ''} &bull; By ${post.author || 'Primenest Reality'}</p>
 <div style="font-size:16px;line-height:1.8;color:#334155">${post.content || ''}</div>
 </div>
 <script src="/app.js"></script>
@@ -381,7 +381,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
           const nodemailer = require('nodemailer');
           const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
           await t.sendMail({
-            from: `"Alisina Realty" <${gmailUser}>`,
+            from: `"Primenest Reality" <${gmailUser}>`,
             to: toEmail,
             subject: `New inquiry from ${body.name || 'Visitor'}`,
             html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
@@ -847,7 +847,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
             const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
             try {
               await t.sendMail({
-                from: `"Alisina Realty" <${gmailUser}>`, to: toEmail,
+                from: `"Primenest Reality" <${gmailUser}>`, to: toEmail,
                 subject: `New payment received — ${propName}`,
                 html: emailLayout('New Payment Received', `
                   <p style="margin:0 0 6px;color:#64748b;font-size:14px">A new payment has come through.</p>
@@ -928,7 +928,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         const nodemailer = require('nodemailer');
         const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
         await t.sendMail({
-          from: `"Alisina Realty" <${gmailUser}>`, to: toEmail,
+          from: `"Primenest Reality" <${gmailUser}>`, to: toEmail,
           subject: `Payment notification — ${propName}`,
           html: emailLayout('Payment Notification', `
             <p style="margin:0 0 6px;color:#64748b;font-size:14px">Payment details from your records.</p>
@@ -1113,7 +1113,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
           auth: { user: gmailUser, pass: gmailPass },
         });
         const info = await transporter.sendMail({
-          from: `"Alisina Realty" <${gmailUser}>`,
+          from: `"Primenest Reality" <${gmailUser}>`,
           to: testEmail || gmailUser,
           subject: 'Test email from Vercel',
           html: '<p>This is a test — your Gmail SMTP is working!</p>',

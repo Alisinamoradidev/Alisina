@@ -1,4 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="16" fill="#1a73e8"/>
-  <text x="50" y="62" font-family="Arial,sans-serif" font-size="44" font-weight="700" fill="#fff" text-anchor="middle">AM</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">
+  <defs>
+    <linearGradient id="blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a73e8"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d4a574"/>
+      <stop offset="100%" stop-color="#b48c64"/>
+    </linearGradient>
+  </defs>
+  <path d="M70,8 L120,30 L120,75 Q120,110 70,132 Q20,110 20,75 L20,30 Z" fill="url(#blue)"/>
+  <path d="M70,16 L112,35 L112,74 Q112,104 70,124 Q28,104 28,74 L28,35 Z" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity="0.6"/>
+  <path d="M52,42 L52,98 L62,98 L62,72 L72,72 Q90,72 90,57 Q90,42 72,42 Z M62,52 L70,52 Q80,52 80,57 Q80,62 70,62 L62,62 Z" fill="#ffffff"/>
+  <path d="M40,38 L70,22 L100,38" fill="none" stroke="url(#gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <polygon points="70,26 74,30 70,34 66,30" fill="url(#gold)" opacity="0.8"/>
 </svg>

@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS posts (
   excerpt TEXT DEFAULT '',
   content TEXT NOT NULL,
   image TEXT DEFAULT '',
-  author TEXT DEFAULT 'Alisina Moradi',
+  author TEXT DEFAULT 'Primenest Reality',
   published BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -209,5 +209,5 @@ INSERT INTO posts (title, slug, excerpt, content, image, author, published) VALU
 ('2026 Real Estate Market Trends', '2026-real-estate-market-trends',
 'Discover the key trends shaping the real estate market in 2026.',
 '<p>The real estate market in 2026 continues to evolve with several key trends:</p><ul><li><strong>Interest Rates:</strong> Rates are stabilizing, creating opportunities.</li><li><strong>Suburban Growth:</strong> Families moving to suburban areas.</li><li><strong>Smart Homes:</strong> Properties with smart tech command premium prices.</li></ul><p>Contact me for a personalized market analysis!</p>',
-'https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?w=800&q=80', 'Alisina Moradi', TRUE)
+'https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?w=800&q=80', 'Primenest Reality', TRUE)
 ON CONFLICT (slug) DO NOTHING;

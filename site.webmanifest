@@ -1,8 +1,8 @@
 {
-  "name": "Alisina Moradi Real Estate",
-  "short_name": "Alisina Realty",
-  "description": "Professional real estate services by Alisina Moradi",
-  "start_url": "/Alisina/",
+  "name": "Primenest Reality",
+  "short_name": "Primenest",
+  "description": "Professional real estate services by Primenest Reality",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1a73e8",

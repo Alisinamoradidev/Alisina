@@ -392,7 +392,7 @@ function openPostForm(post) {
   if (quillEditor) { if (post && post.content) quillEditor.root.innerHTML = post.content; else quillEditor.root.innerHTML = ''; }
   document.getElementById('pfPostContent').value = '';
   document.getElementById('pfPostImage').value = post ? post.image || '' : '';
-  document.getElementById('pfPostAuthor').value = post ? post.author || 'Alisina Moradi' : 'Alisina Moradi';
+  document.getElementById('pfPostAuthor').value = post ? post.author || 'Primenest Reality' : 'Primenest Reality';
   document.getElementById('pfPostPublished').value = post ? (post.published ? 1 : 0) : 1;
   document.getElementById('postModal').style.display = 'flex';
 }
