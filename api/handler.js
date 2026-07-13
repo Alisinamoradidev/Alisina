@@ -171,7 +171,7 @@ module.exports = async (req, res) => {
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${p.title}"><meta name="twitter:description" content="${desc.replace(/"/g,'&quot;')}"><meta name="twitter:image" content="${img}">
 <link rel="canonical" href="https://alisina-nu.vercel.app/property/${id}">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"${p.title}","description":"${desc.replace(/"/g,'&quot;')}","image":"${img}","offers":{"@type":"Offer","priceCurrency":"USD","price":${p.price},"availability":"https://schema.org/InStock"}}</script>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="icon" type="image/jpeg" href="/images/logo.jpeg"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WGYY6MVM5P"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-WGYY6MVM5P')</script>
 </head><body>
 <script>window.__propertyId=${id};</script>
@@ -196,7 +196,7 @@ module.exports = async (req, res) => {
 <meta property="og:title" content="${post.title}"><meta property="og:description" content="${postDesc}"><meta property="og:image" content="${img}"><meta property="og:url" content="https://alisina-nu.vercel.app/blog/${slug}"><meta property="og:type" content="article">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${post.title}"><meta name="twitter:description" content="${postDesc}"><meta name="twitter:image" content="${img}">
 <link rel="canonical" href="https://alisina-nu.vercel.app/blog/${slug}">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="icon" type="image/jpeg" href="/images/logo.jpeg"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WGYY6MVM5P"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-WGYY6MVM5P')</script>
 </head><body>
 <div class="container" style="max-width:720px;margin:40px auto;padding:0 24px">
