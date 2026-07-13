@@ -530,7 +530,8 @@
     /* PWA Install Banner */
     (function() {
       var isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-      if (isStandalone || localStorage.getItem('pwa_dismissed')) return;
+      var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isStandalone || !isMobile || localStorage.getItem('pwa_dismissed')) return;
 
       var banner = document.getElementById('installBanner');
       var deferredPrompt = null;
