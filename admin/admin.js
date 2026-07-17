@@ -152,7 +152,6 @@ async function loadDashboard() {
     document.getElementById('statPosts').textContent = posts.length;
     document.getElementById('statMessages').textContent = msgs.total;
     document.getElementById('statTestimonials').textContent = testis.length;
-    document.getElementById('statUsers').textContent = '—';
 
     /* Payments chart */
     const byMonth = {};

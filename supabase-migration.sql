@@ -46,28 +46,10 @@ CREATE TABLE IF NOT EXISTS posts (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS site_users (
-  id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS favorites (
-  id BIGSERIAL PRIMARY KEY,
-  user_id BIGINT NOT NULL REFERENCES site_users(id) ON DELETE CASCADE,
-  property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, property_id)
-);
-
 -- 2. Enable Row Level Security
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE site_users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
 
 -- 3. Create policies (public read, authenticated write where needed)
 DROP POLICY IF EXISTS "properties_read" ON properties;
@@ -84,14 +66,6 @@ DROP POLICY IF EXISTS "posts_read" ON posts;
 DROP POLICY IF EXISTS "posts_all" ON posts;
 CREATE POLICY "posts_read" ON posts FOR SELECT USING (true);
 CREATE POLICY "posts_all" ON posts FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "site_users_insert" ON site_users;
-DROP POLICY IF EXISTS "site_users_read" ON site_users;
-CREATE POLICY "site_users_insert" ON site_users FOR INSERT WITH CHECK (true);
-CREATE POLICY "site_users_read" ON site_users FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "favorites_all" ON favorites;
-CREATE POLICY "favorites_all" ON favorites FOR ALL USING (true);
 
 CREATE TABLE IF NOT EXISTS payments (
   id BIGSERIAL PRIMARY KEY,
