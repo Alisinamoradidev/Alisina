@@ -68,7 +68,7 @@
         <button class="nav-btn" data-view="blog"><i class="fas fa-newspaper"></i> Blog</button>
         <button class="nav-btn" data-view="messages"><i class="fas fa-envelope"></i> Messages</button>
         <button class="nav-btn" data-view="testimonials"><i class="fas fa-star"></i> Testimonials</button>
-        <button class="nav-btn" data-view="schedules"><i class="fas fa-calendar"></i> Schedules</button>
+
         <button class="nav-btn" data-view="payments"><i class="fas fa-credit-card"></i> Payments</button>
         <button class="nav-btn" data-view="bank"><i class="fas fa-university"></i> Bank Info</button>
         <button class="nav-btn" data-view="contactinfo"><i class="fas fa-address-card"></i> Contact Info</button>
@@ -83,7 +83,7 @@
             <div class="stat-card"><div class="stat-value" id="statFeatured">—</div><div class="stat-label">Featured</div></div>
             <div class="stat-card"><div class="stat-value" id="statPosts">—</div><div class="stat-label">Blog Posts</div></div>
             <div class="stat-card"><div class="stat-value" id="statMessages">—</div><div class="stat-label">Messages</div></div>
-            <div class="stat-card"><div class="stat-value" id="statSchedules">—</div><div class="stat-label">Schedules</div></div>
+
             <div class="stat-card"><div class="stat-value" id="statTestimonials">—</div><div class="stat-label">Testimonials</div></div>
             <div class="stat-card"><div class="stat-value" id="statUsers">—</div><div class="stat-label">Site Users</div></div>
           </div>
@@ -139,12 +139,6 @@
           <div class="view-header"><h2>Contact Messages</h2><div class="view-actions"><button class="btn-outline" onclick="exportCSV('messages')"><i class="fas fa-download"></i> CSV</button><button class="btn-danger" onclick="deleteAllMessages()"><i class="fas fa-trash"></i> Delete All</button></div></div>
           <div id="messagesList"></div>
           <p class="empty-state" id="messagesEmpty">No messages yet.</p>
-        </div>
-
-        <div id="viewSchedules" class="view">
-          <div class="view-header"><h2>Viewing Schedules</h2><div class="view-actions"><button class="btn-outline" onclick="exportCSV('schedules')"><i class="fas fa-download"></i> CSV</button><button class="btn-danger" onclick="deleteAllSchedules()"><i class="fas fa-trash"></i> Delete All</button></div></div>
-          <div id="schedulesList"></div>
-          <p class="empty-state" id="schedulesEmpty">No schedules yet.</p>
         </div>
 
         <div id="viewPayments" class="view">

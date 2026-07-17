@@ -33,18 +33,6 @@ CREATE TABLE IF NOT EXISTS contacts (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS schedules (
-  id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT NOT NULL,
-  property TEXT DEFAULT '',
-  date TEXT NOT NULL,
-  time TEXT NOT NULL,
-  notes TEXT DEFAULT '',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 CREATE TABLE IF NOT EXISTS posts (
   id BIGSERIAL PRIMARY KEY,
   title TEXT NOT NULL,
@@ -77,7 +65,6 @@ CREATE TABLE IF NOT EXISTS favorites (
 -- 2. Enable Row Level Security
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
@@ -92,11 +79,6 @@ DROP POLICY IF EXISTS "contacts_insert" ON contacts;
 DROP POLICY IF EXISTS "contacts_read" ON contacts;
 CREATE POLICY "contacts_insert" ON contacts FOR INSERT WITH CHECK (true);
 CREATE POLICY "contacts_read" ON contacts FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "schedules_insert" ON schedules;
-DROP POLICY IF EXISTS "schedules_read" ON schedules;
-CREATE POLICY "schedules_insert" ON schedules FOR INSERT WITH CHECK (true);
-CREATE POLICY "schedules_read" ON schedules FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "posts_read" ON posts;
 DROP POLICY IF EXISTS "posts_all" ON posts;

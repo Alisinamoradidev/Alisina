@@ -115,7 +115,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (v === 'properties') loadProperties();
     if (v === 'blog') loadPosts();
     if (v === 'messages') loadMessages();
-    if (v === 'schedules') loadSchedules();
+
     if (v === 'dashboard') loadDashboard();
     if (v === 'payments') loadPayments();
     if (v === 'testimonials') loadTestimonials();
@@ -140,11 +140,10 @@ let chartPropsInstance = null;
 
 async function loadDashboard() {
   try {
-    const [props, posts, msgs, scheds, testis, payments] = await Promise.all([
+    const [props, posts, msgs, testis, payments] = await Promise.all([
       api('/api/properties'),
       api('/api/blog?published=0'),
       api('/api/contact/messages?limit=1'),
-      api('/api/contact/schedules?limit=1'),
       api('/api/testimonials'),
       api('/api/payments'),
     ]);
@@ -152,7 +151,6 @@ async function loadDashboard() {
     document.getElementById('statFeatured').textContent = props.filter(p => p.featured).length;
     document.getElementById('statPosts').textContent = posts.length;
     document.getElementById('statMessages').textContent = msgs.total;
-    document.getElementById('statSchedules').textContent = scheds.total;
     document.getElementById('statTestimonials').textContent = testis.length;
     document.getElementById('statUsers').textContent = '—';
 
@@ -260,13 +258,14 @@ function renderProperties(props) {
       const renterInfo = status === 'rented' && p.renter_email
         ? `<br><small style="color:var(--text-muted);font-size:11px">Renter: ${p.renter_name || p.renter_email}</small>`
         : '';
+      const statusBlock = `<span style="color:${statusColor};font-weight:600;font-size:12px">${statusLabel}</span>${countdownHtml}${renterInfo}${cancelBtn || renewalBtn ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">' + renewalBtn + ' ' + cancelBtn + '</div>' : ''}`;
       tr.innerHTML = `
         <td>${p.id}</td>
-        <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small></td>
+        <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small><div style="margin-top:4px">${statusBlock}</div></td>
         <td>${formatPrice(p)}</td>
         <td>${p.type}</td>
         <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${p.badge}</span></td>
-        <td><span style="color:${statusColor};font-weight:600">${statusLabel}</span>${countdownHtml}${renterInfo}${cancelBtn || renewalBtn ? '<br>' + renewalBtn + ' ' + cancelBtn : ''}</td>
+        <td></td>
         <td>${payStr}</td>
         <td>${p.featured ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '—'}</td>
         <td><div class="actions">
@@ -291,13 +290,14 @@ function renderProperties(props) {
       const renterInfo = status === 'rented' && p.renter_email
         ? `<br><small style="color:var(--text-muted);font-size:11px">Renter: ${p.renter_name || p.renter_email}</small>`
         : '';
+      const statusBlock = `<span style="color:${statusColor};font-weight:600;font-size:12px">${statusLabel}</span>${renterInfo}${cancelBtn || renewalBtn ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">' + renewalBtn + ' ' + cancelBtn + '</div>' : ''}`;
       tr.innerHTML = `
         <td>${p.id}</td>
-        <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small></td>
+        <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small><div style="margin-top:4px">${statusBlock}</div></td>
         <td>${formatPrice(p)}</td>
         <td>${p.type}</td>
         <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${p.badge}</span></td>
-        <td><span style="color:${statusColor};font-weight:600">${statusLabel}</span>${renterInfo}${cancelBtn || renewalBtn ? '<br>' + renewalBtn + ' ' + cancelBtn : ''}</td>
+        <td></td>
         <td>—</td>
         <td>${p.featured ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '—'}</td>
         <td><div class="actions">
@@ -678,31 +678,6 @@ async function loadMessages() {
   } catch {}
 }
 
-/* Schedules */
-async function loadSchedules() {
-  try {
-    const data = await api('/api/contact/schedules?limit=100');
-    const list = document.getElementById('schedulesList');
-    const empty = document.getElementById('schedulesEmpty');
-    list.innerHTML = '';
-    if (data.schedules.length === 0) { empty.style.display = 'block'; return; }
-    empty.style.display = 'none';
-    data.schedules.forEach(s => {
-      const div = document.createElement('div'); div.className = 'sched-card';
-      div.innerHTML = `
-        <button class="btn-danger btn-sm" onclick="deleteSchedule(${s.id})" style="float:right"><i class="fas fa-trash"></i></button>
-        <h4>${s.name} <small style="color:var(--text-muted);font-weight:400">(${s.email})</small></h4>
-        <div class="meta">
-          <span><i class="far fa-calendar"></i> ${s.date} at ${s.time}</span>
-          <span>Phone: ${s.phone}</span>
-        </div>
-        ${s.property ? `<p><strong>Property:</strong> ${s.property}</p>` : ''}
-        ${s.notes ? `<p><strong>Notes:</strong> ${s.notes}</p>` : ''}`;
-      list.appendChild(div);
-    });
-  } catch {}
-}
-
 async function deleteMessage(id) {
   if (!confirm('Delete this message?')) return;
   try { await api(`/api/contact/messages/${id}`, { method: 'DELETE' }); loadMessages(); loadDashboard(); }
@@ -712,18 +687,6 @@ async function deleteMessage(id) {
 async function deleteAllMessages() {
   if (!confirm('Delete ALL messages? This cannot be undone.')) return;
   try { await api('/api/contact/messages', { method: 'DELETE' }); loadMessages(); loadDashboard(); }
-  catch (err) { alert(err.message); }
-}
-
-async function deleteSchedule(id) {
-  if (!confirm('Delete this schedule?')) return;
-  try { await api(`/api/contact/schedules/${id}`, { method: 'DELETE' }); loadSchedules(); loadDashboard(); }
-  catch (err) { alert(err.message); }
-}
-
-async function deleteAllSchedules() {
-  if (!confirm('Delete ALL schedules? This cannot be undone.')) return;
-  try { await api('/api/contact/schedules', { method: 'DELETE' }); loadSchedules(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
 
@@ -739,10 +702,6 @@ async function exportCSV(type) {
       const data = await api('/api/contact/messages?limit=1000');
       headers = ['ID', 'Name', 'Email', 'Phone', 'Type', 'Property', 'Message', 'Date'];
       rows = data.messages.map(m => [m.id, m.name, m.email, m.phone, m.inquiry_type, m.property, m.message, m.created_at]);
-    } else if (type === 'schedules') {
-      const data = await api('/api/contact/schedules?limit=1000');
-      headers = ['ID', 'Name', 'Email', 'Phone', 'Property', 'Date', 'Time', 'Notes'];
-      rows = data.schedules.map(s => [s.id, s.name, s.email, s.phone, s.property, s.date, s.time, s.notes]);
     }
 
     let csv = headers.join(',') + '\n';

@@ -540,12 +540,6 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       return res.status(200).json({ success: true, message: 'Message received' });
     }
 
-    if (path === '/contact/schedule' && method === 'POST') {
-      const { data, error } = await supabase.from('schedules').insert(body).select().single();
-      if (error) throw error;
-      return res.status(200).json({ success: true, message: 'Schedule saved' });
-    }
-
     if (path === '/contact/messages' && method === 'DELETE') {
       const { error } = await supabase.from('contacts').delete().neq('id', 0);
       if (error) throw error;
@@ -564,28 +558,6 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     const msgDelMatch = path.match(/^\/contact\/messages\/(\d+)$/);
     if (msgDelMatch && method === 'DELETE') {
       const { error } = await supabase.from('contacts').delete().eq('id', msgDelMatch[1]);
-      if (error) throw error;
-      return res.status(200).json({ message: 'Deleted' });
-    }
-
-    if (path === '/contact/schedules' && method === 'DELETE') {
-      const { error } = await supabase.from('schedules').delete().neq('id', 0);
-      if (error) throw error;
-      return res.status(200).json({ message: 'All schedules deleted' });
-    }
-
-    if (path === '/contact/schedules' && method === 'GET') {
-      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
-      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20')));
-      const from = (page - 1) * limit;
-      const { data, error, count } = await supabase.from('schedules').select('*', { count: 'exact' }).order('date', { ascending: false }).range(from, from + limit - 1);
-      if (error) throw error;
-      return res.status(200).json({ schedules: data || [], total: count, page, pages: Math.ceil(count / limit) });
-    }
-
-    const schedDelMatch = path.match(/^\/contact\/schedules\/(\d+)$/);
-    if (schedDelMatch && method === 'DELETE') {
-      const { error } = await supabase.from('schedules').delete().eq('id', schedDelMatch[1]);
       if (error) throw error;
       return res.status(200).json({ message: 'Deleted' });
     }
@@ -1290,17 +1262,6 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       } catch (e) {
         return res.status(500).json({ error: e.message, code: e.code });
       }
-    }
-
-    /* Newsletter subscription */
-    if (path === '/subscribe' && method === 'POST') {
-      const allowed = await checkRateLimit('subscribe_' + (body.email || 'unknown'), 3, 300);
-      if (!allowed) return res.status(429).json({ error: 'Too many attempts. Try again later.' });
-      const { email } = body;
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Valid email required' });
-      const { error } = await supabase.from('subscribers').upsert({ email }, { onConflict: 'email' });
-      if (error) throw error;
-      return res.status(201).json({ message: 'Subscribed successfully' });
     }
 
     /* CSV import (admin only) */

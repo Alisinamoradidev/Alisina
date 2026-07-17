@@ -232,10 +232,10 @@ td .actions { display: flex; gap: 6px; }
 .modal-close:hover { color: var(--text); }
 .modal-body { padding: 24px; }
 
-.msg-card, .sched-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px) saturate(1.3); -webkit-backdrop-filter: blur(12px) saturate(1.3); border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid rgba(255,255,255,0.6); padding: 20px; margin-bottom: 12px; }
-.msg-card h4, .sched-card h4 { font-size: 16px; margin-bottom: 6px; }
-.msg-card .meta, .sched-card .meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: flex; gap: 16px; flex-wrap: wrap; }
-.msg-card p, .sched-card p { font-size: 14px; color: var(--text); }
+.msg-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px) saturate(1.3); -webkit-backdrop-filter: blur(12px) saturate(1.3); border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid rgba(255,255,255,0.6); padding: 20px; margin-bottom: 12px; }
+.msg-card h4 { font-size: 16px; margin-bottom: 6px; }
+.msg-card .meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: flex; gap: 16px; flex-wrap: wrap; }
+.msg-card p { font-size: 14px; color: var(--text); }
 
 .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); font-size: 15px; }
 
@@ -272,16 +272,67 @@ td .actions { display: flex; gap: 6px; }
   #viewDashboard > div:nth-child(3) { grid-template-columns: 1fr !important; }
 
   /* Tables — card-style on mobile */
-  .table-wrap { border-radius: 12px; overflow: hidden; }
+  .table-wrap { border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { font-size: 13px; }
   th { padding: 10px 10px; font-size: 11px; letter-spacing: 0; text-transform: none; }
   td { padding: 10px; font-size: 13px; }
 
-  /* Properties table */
-  #propertiesTable th:nth-child(5),
-  #propertiesTable td:nth-child(5),
-  #propertiesTable th:nth-child(6),
-  #propertiesTable td:nth-child(6) { display: none; }
+  /* Properties table — card layout on mobile */
+  #propertiesTable thead { display: none; }
+  #propertiesTable tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+  }
+  #propertiesTable tbody tr td {
+    border: none;
+    padding: 0;
+    font-size: 13px;
+  }
+  #propertiesTable tbody tr td:nth-child(1) { display: none; } /* ID */
+  #propertiesTable tbody tr td:nth-child(2) { /* Title */
+    grid-column: 1 / -1;
+    font-size: 14px;
+  }
+  #propertiesTable tbody tr td:nth-child(3) { /* Price */
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--primary);
+  }
+  #propertiesTable tbody tr td:nth-child(4) { /* Type */
+    text-align: right;
+  }
+  #propertiesTable tbody tr td:nth-child(5) { /* Badge */
+    display: none;
+  }
+  #propertiesTable tbody tr td:nth-child(6) { /* Status + timer + cancel */
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-top: 4px;
+  }
+  #propertiesTable tbody tr td:nth-child(7) { /* Payments */
+    grid-column: 1 / -1;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  #propertiesTable tbody tr td:nth-child(8) { display: none; } /* Featured */
+  #propertiesTable tbody tr td:nth-child(9) { /* Actions */
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  #propertiesTable tbody tr td:nth-child(9) .actions {
+    gap: 6px;
+  }
 
   /* Payments table — card layout on mobile */
   #paymentsTable thead { display: none; }
@@ -378,9 +429,9 @@ td .actions { display: flex; gap: 6px; }
   #viewBank .modal-body,
   #viewContactinfo .modal-body { max-width: 100%; padding: 0; }
 
-  /* Messages & Schedules cards */
-  .msg-card, .sched-card { padding: 14px; }
-  .msg-card .meta, .sched-card .meta { flex-direction: column; gap: 4px; }
+  /* Messages cards */
+  .msg-card { padding: 14px; }
+  .msg-card .meta { flex-direction: column; gap: 4px; }
 
   /* Pagination */
   .pagination-bar { flex-direction: column; gap: 8px; align-items: center; }
@@ -395,11 +446,8 @@ td .actions { display: flex; gap: 6px; }
   .nav-btn { padding: 7px 10px; font-size: 11px; }
   .btn-sm { padding: 5px 8px; font-size: 11px; }
 
-  /* Properties table — more columns hidden */
-  #propertiesTable th:nth-child(3),
-  #propertiesTable td:nth-child(3) { display: none; }
-  #propertiesTable th:nth-child(7),
-  #propertiesTable td:nth-child(7) { display: none; }
+  /* Properties table at 480px — already card layout from 768px, just tighten spacing */
+  #propertiesTable tbody tr td:nth-child(3) { font-size: 13px; }
 
   /* Blog table — hide date */
   #postsTable th:nth-child(5),
