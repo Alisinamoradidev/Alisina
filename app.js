@@ -1,14 +1,12 @@
-let properties = [
-  { id: 1, title: "Modern Downtown Apartment", location: "123 Main St, New York, NY", price: 450000, type: "apartment", beds: 2, baths: 2, sqft: 1200, image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80", badge: "sale", featured: true, year: 2021, lat: 40.7128, lng: -74.006 },
-  { id: 2, title: "Luxury Villa with Pool", location: "456 Ocean Dr, Miami, FL", price: 1200000, type: "villa", beds: 5, baths: 4, sqft: 4200, image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80", badge: "sale", featured: true, year: 2023, lat: 25.7617, lng: -80.1918 },
-  { id: 3, title: "Cozy Suburban House", location: "789 Oak Ln, Austin, TX", price: 320000, type: "house", beds: 3, baths: 2, sqft: 1800, image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80", badge: "sale", featured: true, year: 2019, lat: 30.2672, lng: -97.7431 },
-  { id: 4, title: "Downtown Studio Apartment", location: "321 Pine St, Seattle, WA", price: 1800, type: "apartment", beds: 1, baths: 1, sqft: 600, image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80", badge: "rent", featured: false, year: 2020, lat: 47.6062, lng: -122.3321 },
-  { id: 5, title: "Beachfront Condo", location: "555 Shore Dr, Los Angeles, CA", price: 680000, type: "condo", beds: 3, baths: 2, sqft: 1500, image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80", badge: "sale", featured: true, year: 2022, lat: 34.0522, lng: -118.2437 },
-  { id: 6, title: "Mountain View House", location: "777 Summit Rd, Denver, CO", price: 2500, type: "house", beds: 4, baths: 3, sqft: 2400, image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80", badge: "rent", featured: false, year: 2018, lat: 39.7392, lng: -104.9903 },
-  { id: 7, title: "Penthouse Suite", location: "999 Skyline Blvd, Chicago, IL", price: 2100000, type: "condo", beds: 4, baths: 3, sqft: 3200, image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80", badge: "sale", featured: true, year: 2024, lat: 41.8781, lng: -87.6298 },
-  { id: 8, title: "Garden Apartment", location: "222 Green St, Portland, OR", price: 1400, type: "apartment", beds: 2, baths: 1, sqft: 850, image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80", badge: "rent", featured: false, year: 2017, lat: 45.5152, lng: -122.6784 },
-  { id: 9, title: "Colonial Family Home", location: "444 Maple Ave, Boston, MA", price: 575000, type: "house", beds: 4, baths: 3, sqft: 2600, image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80", badge: "sale", featured: true, year: 2016, lat: 42.3601, lng: -71.0589 }
-];
+const DEPOSIT_AMOUNT = (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.depositAmount) || 1000;
+let properties = [];
+
+function sanitizeHTML(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
 
 async function loadPropertiesFromApi() {
   try {
@@ -33,13 +31,13 @@ function renderSoldProperties() {
   grid.innerHTML = sold.map((p, i) => `
     <div class="property-card" style="--i:${i}" data-id="${p.id}">
       <div class="property-image">
-        <img src="${p.image}" alt="${p.title}" loading="lazy">
+        <img src="${p.image}" alt="${sanitizeHTML(p.title)}" loading="lazy">
         <span class="property-badge badge-sold">Sold</span>
       </div>
       <div class="property-body">
         <div class="property-price" style="color:var(--text-muted);text-decoration:line-through">${formatPrice(p.price, 'sale')}</div>
-        <div class="property-title">${p.title}</div>
-        <div class="property-location"><i class="fas fa-map-marker-alt"></i> ${p.location}</div>
+        <div class="property-title">${sanitizeHTML(p.title)}</div>
+        <div class="property-location"><i class="fas fa-map-marker-alt"></i> ${sanitizeHTML(p.location)}</div>
         <div class="property-details">
           <span><i class="fas fa-bed"></i> ${p.beds} Beds</span>
           <span><i class="fas fa-bath"></i> ${p.baths} Baths</span>
@@ -61,9 +59,9 @@ async function loadContactInfo() {
     const c = await r.json();
     if (!c || typeof c !== 'object') return;
 
-    const phone = c.phone || '+93778747337';
-    const email = c.email || 'alisinamoradi2718281@gmail.com';
-    const address = c.address || 'Dasht-e-Barchi';
+    const phone = c.phone || SITE_CONFIG.phone;
+    const email = c.email || SITE_CONFIG.email;
+    const address = c.address || SITE_CONFIG.address;
     const whatsapp = c.whatsapp || phone;
     const waMsg = encodeURIComponent(c.whatsapp_message || 'Hi, I\'m interested in your properties');
     const fb = c.facebook_url || '#';
@@ -139,15 +137,15 @@ function createPropertyCard(p, idx = 0) {
   card.style.setProperty('--i', idx);
   card.innerHTML = `
     <div class="property-image">
-      <img src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22><rect fill=%22%23d1d5db%22 width=%22600%22 height=%22400%22/><text fill=%22%236b7280%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>No Image</text></svg>'">
+      <img src="${p.image}" alt="${sanitizeHTML(p.title)}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22><rect fill=%22%23d1d5db%22 width=%22600%22 height=%22400%22/><text fill=%22%236b7280%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>No Image</text></svg>'">
       <span class="property-badge ${p.badge === 'sold' ? 'badge-sold' : p.badge === 'sale' ? 'badge-sale' : 'badge-rent'}">${p.badge === 'sold' ? 'Sold' : p.badge === 'sale' ? 'For Sale' : 'For Rent'}</span>
       <span class="photo-count"><i class="fas fa-camera"></i> ${p.gallery && p.gallery.length > 0 ? p.gallery.length + 1 : 1}</span>
       <button class="property-fav" data-id="${p.id}"><i class="far fa-heart"></i></button>
     </div>
-    <div class="property-body">
+      <div class="property-body">
       <div class="property-price">${formatPrice(p.price, p.badge)}</div>
-      <div class="property-title">${p.title}</div>
-      <div class="property-location"><i class="fas fa-map-marker-alt"></i> ${p.location}</div>
+      <div class="property-title">${sanitizeHTML(p.title)}</div>
+      <div class="property-location"><i class="fas fa-map-marker-alt"></i> ${sanitizeHTML(p.location)}</div>
       <div class="property-details">
         <span><i class="fas fa-bed"></i> ${p.beds} Beds</span>
         <span><i class="fas fa-bath"></i> ${p.baths} Baths</span>
@@ -173,7 +171,7 @@ function renderCompareBar() {
   const inner = bar.querySelector('.compare-bar-inner');
   const items = compareItems.map(id => properties.find(p => p.id === id)).filter(Boolean);
   inner.innerHTML = items.map(p => `
-    <div class="compare-chip"><span>${p.title}</span><i class="fas fa-times" onclick="toggleCompare(${p.id})"></i></div>
+    <div class="compare-chip"><span>${sanitizeHTML(p.title)}</span><i class="fas fa-times" onclick="toggleCompare(${p.id})"></i></div>
   `).join('');
   const btn = bar.querySelector('.compare-btn');
   btn.style.display = items.length >= 2 ? 'inline-flex' : 'none';
@@ -183,8 +181,8 @@ function openCompare() {
   const items = compareItems.map(id => properties.find(p => p.id === id)).filter(Boolean);
   if (items.length < 2) return;
   const labels = ['Price','Type','Beds','Baths','Sqft','Year Built','Location'];
-  const keys = [p => formatPrice(p.price, p.badge), p => p.type, p => p.beds, p => p.baths, p => p.sqft.toLocaleString(), p => p.year || '—', p => p.location];
-  let html = '<table class="compare-table"><thead><tr><th></th>' + items.map(p => `<th><img src="${p.image}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px"><br>${p.title}</th>`).join('') + '</tr></thead><tbody>';
+  const keys = [p => formatPrice(p.price, p.badge), p => sanitizeHTML(p.type), p => p.beds, p => p.baths, p => p.sqft.toLocaleString(), p => p.year || '—', p => sanitizeHTML(p.location)];
+  let html = '<table class="compare-table"><thead><tr><th></th>' + items.map(p => `<th><img src="${p.image}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px"><br>${sanitizeHTML(p.title)}</th>`).join('') + '</tr></thead><tbody>';
   labels.forEach((label, i) => {
     html += `<tr><td><strong>${label}</strong></td>` + items.map(p => `<td>${keys[i](p)}</td>`).join('') + '</tr>';
   });
@@ -292,7 +290,7 @@ listingsGrid.addEventListener('click', e => {
 });
 
 function openModal(p) {
-  $('modalImage').innerHTML = `<img src="${p.image.replace('w=600', 'w=800')}" alt="${p.title}">`;
+  $('modalImage').innerHTML = `<img src="${p.image.replace('w=600', 'w=800')}" alt="${sanitizeHTML(p.title)}">`;
   $('modalTitle').textContent = p.title;
   $('modalPrice').textContent = formatPrice(p.price, p.badge);
   $('modalLocation').querySelector('span').textContent = p.location;
@@ -319,7 +317,7 @@ function openModal(p) {
   const durationOpts = $('durationOptions');
   rentalDiv.style.display = 'none';
   if (p.badge === 'sale') {
-    payBtn.innerHTML = '<i class="fas fa-credit-card"></i> Pay $1,000 Deposit';
+    payBtn.innerHTML = `<i class="fas fa-credit-card"></i> Pay $${DEPOSIT_AMOUNT.toLocaleString()} Deposit`;
     payBtn.style.display = '';
     payBtn._payType = 'deposit';
     payBtn._propId = p.id;
@@ -363,12 +361,12 @@ function openModal(p) {
   fetch(`${API_URL}/api/payments/settings`).then(r => r.json()).then(d => {
     if (d && d.bank_name) {
       bankDetails.innerHTML = `
-        <div><strong>Bank:</strong> ${d.bank_name || ''}</div>
-        <div><strong>Account Name:</strong> ${d.account_name || ''}</div>
-        <div><strong>Account Number:</strong> ${d.account_number || ''}</div>
-        ${d.routing ? `<div><strong>Routing:</strong> ${d.routing}</div>` : ''}
-        ${d.iban ? `<div><strong>IBAN:</strong> ${d.iban}</div>` : ''}
-        ${d.swift ? `<div><strong>SWIFT:</strong> ${d.swift}</div>` : ''}`;
+        <div><strong>Bank:</strong> ${sanitizeHTML(d.bank_name) || ''}</div>
+        <div><strong>Account Name:</strong> ${sanitizeHTML(d.account_name) || ''}</div>
+        <div><strong>Account Number:</strong> ${sanitizeHTML(d.account_number) || ''}</div>
+        ${d.routing ? `<div><strong>Routing:</strong> ${sanitizeHTML(d.routing)}</div>` : ''}
+        ${d.iban ? `<div><strong>IBAN:</strong> ${sanitizeHTML(d.iban)}</div>` : ''}
+        ${d.swift ? `<div><strong>SWIFT:</strong> ${sanitizeHTML(d.swift)}</div>` : ''}`;
       bankInfoDiv.style.display = '';
     } else {
       bankInfoDiv.style.display = 'none';
@@ -408,7 +406,7 @@ $('modalPay').addEventListener('click', async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Payment failed');
     window.location.href = data.url;
-  } catch (err) { showToast(err.message); btn.disabled = false; btn.textContent = btn._payType === 'deposit' ? 'Pay $1,000 Deposit' : 'Select Duration'; }
+  } catch (err) { showToast(err.message); btn.disabled = false; btn.textContent = btn._payType === 'deposit' ? `Pay $${DEPOSIT_AMOUNT.toLocaleString()} Deposit` : 'Select Duration'; }
 });
 
 $('mobileToggle').addEventListener('click', () => nav.classList.toggle('active'));
@@ -470,10 +468,10 @@ function renderTestimonials() {
     g.innerHTML = testimonials.map((t, i) => `
       <div class="testimonial-card" style="--i:${i}">
         <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(Math.min(5, Math.max(1, t.rating || 5)))}</div>
-        <p class="testimonial-text">"${t.content}"</p>
+        <p class="testimonial-text">"${sanitizeHTML(t.content)}"</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar">${t.image ? `<img src="${t.image}" alt="${t.name}" style="width:48px;height:48px;border-radius:50%;object-fit:cover">` : (t.name ? t.name.charAt(0).toUpperCase() : '?')}</div>
-          <div><div class="testimonial-name">${t.name}</div><div class="testimonial-role">${t.role || ''}</div></div>
+          <div class="testimonial-avatar">${t.image ? `<img src="${t.image}" alt="${sanitizeHTML(t.name)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover">` : (t.name ? t.name.charAt(0).toUpperCase() : '?')}</div>
+          <div><div class="testimonial-name">${sanitizeHTML(t.name)}</div><div class="testimonial-role">${sanitizeHTML(t.role) || ''}</div></div>
         </div>
       </div>
     `).join('');
@@ -546,9 +544,9 @@ let quizStep = 0;
 function showQuestion(idx) {
   quizStep = idx;
   const q = quizQuestions[idx];
-  let html = `<p class="quiz-question">${q.q}</p><div class="quiz-options">`;
+  let html = `<p class="quiz-question">${sanitizeHTML(q.q)}</p><div class="quiz-options">`;
   q.options.forEach((opt, i) => {
-    html += `<button class="quiz-opt" onclick="answerQuiz(${i})">${opt}</button>`;
+    html += `<button class="quiz-opt" onclick="answerQuiz(${i})">${sanitizeHTML(opt)}</button>`;
   });
   html += '</div>';
   $('quizQuestions').innerHTML = html;
@@ -575,7 +573,7 @@ function showQuizResult() {
   else html += `<p class="quiz-result-text">Found ${matched.length} matching propert${matched.length > 1 ? 'ies' : 'y'}!</p><div class="quiz-matches">`;
   matched.slice(0, 3).forEach(p => {
     html += `<div class="quiz-match" onclick="openModal(properties.find(x => x.id === ${p.id}))">
-      <img src="${p.image}" alt="${p.title}"><div><strong>${p.title}</strong><br>${formatPrice(p.price, p.badge)} | ${p.beds} bed | ${p.location}</div>
+      <img src="${p.image}" alt="${sanitizeHTML(p.title)}"><div><strong>${sanitizeHTML(p.title)}</strong><br>${formatPrice(p.price, p.badge)} | ${p.beds} bed | ${sanitizeHTML(p.location)}</div>
     </div>`;
   });
   html += '</div><button class="btn-search" onclick="resetQuiz()">Try Again</button>';
@@ -605,11 +603,11 @@ function createPopupContent(p) {
   const popup = document.createElement('div');
   popup.className = 'map-popup';
   popup.innerHTML = `
-    <div class="map-popup-img"><img src="${p.image}" alt="${p.title}" loading="lazy"></div>
+    <div class="map-popup-img"><img src="${p.image}" alt="${sanitizeHTML(p.title)}" loading="lazy"></div>
     <div class="map-popup-body">
       <div class="map-popup-price">${formatPrice(p.price, p.badge)}</div>
-      <div class="map-popup-title">${p.title}</div>
-      <div class="map-popup-location"><i class="fas fa-map-marker-alt"></i> ${p.location}</div>
+      <div class="map-popup-title">${sanitizeHTML(p.title)}</div>
+      <div class="map-popup-location"><i class="fas fa-map-marker-alt"></i> ${sanitizeHTML(p.location)}</div>
       <div class="map-popup-features">
         <span><i class="fas fa-bed"></i> ${p.beds}</span>
         <span><i class="fas fa-bath"></i> ${p.baths}</span>
@@ -771,11 +769,11 @@ async function loadBlogPosts() {
     if (!posts.length) { grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">No posts yet. Check back soon!</p>'; return; }
     grid.innerHTML = posts.slice(0, 3).map(p => `
       <a href="/blog/${p.slug || p.id}" class="blog-card" style="text-decoration:none;color:inherit;display:block">
-        ${p.image ? `<div class="blog-image"><img src="${p.image}" alt="${p.title}" loading="lazy"></div>` : ''}
+        ${p.image ? `<div class="blog-image"><img src="${p.image}" alt="${sanitizeHTML(p.title)}" loading="lazy"></div>` : ''}
         <div class="blog-body">
-          <div class="blog-date">${p.created_at?.split(' ')[0] || ''}</div>
-          <h3 class="blog-title">${p.title}</h3>
-          <p class="blog-excerpt">${p.excerpt || ''}</p>
+          <div class="blog-date">${sanitizeHTML(p.created_at?.split(' ')[0]) || ''}</div>
+          <h3 class="blog-title">${sanitizeHTML(p.title)}</h3>
+          <p class="blog-excerpt">${sanitizeHTML(p.excerpt) || ''}</p>
           <span class="blog-read-more">Read More <i class="fas fa-arrow-right"></i></span>
         </div>
       </a>
@@ -785,12 +783,7 @@ async function loadBlogPosts() {
 }
 function hideBlogSkeletons() { document.querySelectorAll('#blogGrid .skeleton-card').forEach(e => e.remove()); }
 
-/* Update favorites toggle — save to server if logged in */
-const _origFavToggle = function(id) {
-  favorites.has(id) ? favorites.delete(id) : favorites.add(id);
-  localStorage.setItem('favs', JSON.stringify([...favorites]));
-};
-/* Patch the fav click in listingsGrid handler */
+
 renderTestimonials();
 resetQuiz();
 updateListings();
@@ -801,11 +794,8 @@ loadContactInfo();
 
 /* Open property modal if loaded from /property/:id page */
 if (window.__propertyId) {
-  const checkProp = setInterval(() => {
-    const p = properties.find(x => x.id === window.__propertyId);
-    if (p) { clearInterval(checkProp); openModal(p); }
-  }, 100);
-  setTimeout(() => clearInterval(checkProp), 10000);
+  const p = properties.find(x => x.id === window.__propertyId);
+  if (p) openModal(p);
 }
 
 /* Handle rental renewal links from email */
@@ -817,15 +807,11 @@ if (window.__propertyId) {
   window.history.replaceState({}, '', window.location.pathname);
 
   if (renew === 'yes') {
-    const check = setInterval(() => {
-      const p = properties.find(x => x.id === propId);
-      if (p) {
-        clearInterval(check);
-        openModal(p);
-        showToast('Select a rental duration and complete payment to re-rent.');
-      }
-    }, 100);
-    setTimeout(() => clearInterval(check), 10000);
+    const p = properties.find(x => x.id === propId);
+    if (p) {
+      openModal(p);
+      showToast('Select a rental duration and complete payment to re-rent.');
+    }
   } else if (renew === 'no') {
     showToast('Thank you! This property will be available for rent after the current lease expires.');
   }

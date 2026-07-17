@@ -146,13 +146,22 @@ function getBody(req) {
   });
 }
 
-function getAuthUser(auth) {
+async function getAuthUser(auth) {
   if (!auth) return null;
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : auth;
-  if (!token.startsWith('simple_')) return null;
+  if (!token.startsWith('signed_')) return null;
   try {
-    const payload = JSON.parse(Buffer.from(token.replace('simple_', ''), 'base64').toString());
+    const rest = token.slice(7);
+    const dotIdx = rest.lastIndexOf('.');
+    if (dotIdx === -1) return null;
+    const encoded = rest.slice(0, dotIdx);
+    const signature = rest.slice(dotIdx + 1);
+    const payloadStr = Buffer.from(encoded, 'base64').toString();
+    const payload = JSON.parse(payloadStr);
     if (payload.exp && Date.now() > payload.exp) return null;
+    const secret = await getTokenSecret();
+    const expectedSig = crypto.createHmac('sha256', secret).update(payloadStr).digest('hex');
+    if (!crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSig, 'hex'))) return null;
     return payload;
   } catch { return null; }
 }
@@ -175,9 +184,31 @@ async function getFaceEngine() {
   return _faceEngine;
 }
 
+let _tokenSecret = null;
+async function getTokenSecret() {
+  if (_tokenSecret) return _tokenSecret;
+  try {
+    const { data } = await supabase.from('settings').select('value').eq('key', 'token_secret').maybeSingle();
+    if (data?.value?.secret) { _tokenSecret = data.value.secret; return _tokenSecret; }
+  } catch {}
+  if (process.env.JWT_SECRET) { _tokenSecret = process.env.JWT_SECRET; return _tokenSecret; }
+  _tokenSecret = crypto.randomBytes(32).toString('hex');
+  await supabase.from('settings').upsert({ key: 'token_secret', value: { secret: _tokenSecret }, updated_at: new Date().toISOString() }).catch(() => {});
+  return _tokenSecret;
+}
+
+async function createSignedToken(payload) {
+  const secret = await getTokenSecret();
+  const encoded = Buffer.from(JSON.stringify(payload)).toString('base64');
+  const signature = crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
+  return `signed_${encoded}.${signature}`;
+}
+
 module.exports = async (req, res) => {
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin);
+  const allowedOrigins = [process.env.SITE_URL || 'https://alisina-nu.vercel.app'];
+  const requestOrigin = req.headers.origin;
+  const corsOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
+  res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -280,7 +311,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
             await supabase.from('properties').update({ status: 'available', updated_at: new Date().toISOString(), rented_at: null, rental_duration: '', renewal_email_sent: false, renter_email: '', renter_name: '' }).in('id', expiredIds);
           }
         }
-      } catch {}
+      } catch (e) { console.error('Error:', e.message); }
 
       let query = supabase.from('properties').select('*');
       const type = url.searchParams.get('type');
@@ -312,6 +343,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (path === '/properties' && method === 'DELETE') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { error } = await supabase.from('properties').delete().neq('id', 0);
       if (error) throw error;
       return res.status(200).json({ message: 'All properties deleted' });
@@ -325,6 +359,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (propMatch && method === 'PUT') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const upd = { ...body, updated_at: new Date().toISOString() };
       for (const f of ['title_l10n','location_l10n','description_l10n']) {
         if (body[f] !== undefined) upd[f] = body[f];
@@ -336,6 +373,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (propMatch && method === 'DELETE') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { error } = await supabase.from('properties').delete().eq('id', propMatch[1]);
       if (error) throw error;
       return res.status(200).json({ message: 'Deleted' });
@@ -345,7 +385,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     const cancelStatusMatch = path.match(/^\/properties\/(\d+)\/cancel-status$/);
     if (cancelStatusMatch && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const propId = parseInt(cancelStatusMatch[1]);
       const { error } = await supabase.from('properties').update({ status: 'available', updated_at: new Date().toISOString(), rented_at: null, rental_duration: '', renewal_email_sent: false, renter_email: '', renter_name: '' }).eq('id', propId);
@@ -358,7 +398,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     const sendRenewalMatch = path.match(/^\/properties\/(\d+)\/send-renewal$/);
     if (sendRenewalMatch && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const propId = parseInt(sendRenewalMatch[1]);
       const { data: prop } = await supabase.from('properties').select('*').eq('id', propId).single();
@@ -411,6 +451,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (path === '/properties' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { data, error } = await supabase.from('properties').insert({ ...body, gallery: body.gallery || [] }).select().single();
       if (error) throw error;
       return res.status(201).json(data);
@@ -427,6 +470,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (path === '/blog' && method === 'DELETE') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { error } = await supabase.from('posts').delete().neq('id', 0);
       if (error) throw error;
       return res.status(200).json({ message: 'All posts deleted' });
@@ -440,12 +486,18 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (path === '/blog' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { data, error } = await supabase.from('posts').insert(body).select().single();
       if (error) throw error;
       return res.status(201).json(data);
     }
 
     if (blogMatch && method === 'PUT') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const upd = { ...body, updated_at: new Date().toISOString() };
       for (const f of ['title_l10n','excerpt_l10n','content_l10n']) {
         if (body[f] !== undefined) upd[f] = body[f];
@@ -457,6 +509,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (blogMatch && method === 'DELETE') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { error } = await supabase.from('posts').delete().eq('id', blogMatch[1]);
       if (error) throw error;
       return res.status(200).json({ message: 'Deleted' });
@@ -480,6 +535,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (testimonialMatch && method === 'PUT') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const upd = { ...body, updated_at: new Date().toISOString() };
       for (const f of ['name_l10n','role_l10n','content_l10n']) {
         if (body[f] !== undefined) upd[f] = body[f];
@@ -491,12 +549,18 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (testimonialMatch && method === 'DELETE') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { error } = await supabase.from('testimonials').delete().eq('id', testimonialMatch[1]);
       if (error) throw error;
       return res.status(200).json({ message: 'Deleted' });
     }
 
     if (path === '/testimonials' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { data, error } = await supabase.from('testimonials').insert(body).select().single();
       if (error) throw error;
       return res.status(201).json(data);
@@ -541,6 +605,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (path === '/contact/messages' && method === 'DELETE') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { error } = await supabase.from('contacts').delete().neq('id', 0);
       if (error) throw error;
       return res.status(200).json({ message: 'All messages deleted' });
@@ -557,6 +624,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     const msgDelMatch = path.match(/^\/contact\/messages\/(\d+)$/);
     if (msgDelMatch && method === 'DELETE') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { error } = await supabase.from('contacts').delete().eq('id', msgDelMatch[1]);
       if (error) throw error;
       return res.status(200).json({ message: 'Deleted' });
@@ -566,11 +636,11 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     if (path === '/auth/login' && method === 'POST') {
       const { username, password } = body;
       if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+      if (!process.env.ADMIN_PASSWORD) return res.status(500).json({ error: 'Admin password not configured' });
       if (username === process.env.ADMIN_USERNAME || username === 'admin') {
-        const pw = process.env.ADMIN_PASSWORD || 'admin123';
-        if (password !== pw) return res.status(401).json({ error: 'Invalid credentials' });
-        const token = Buffer.from(JSON.stringify({ id: 1, username, role: 'admin', exp: Date.now() + 86400000 })).toString('base64');
-        return res.status(200).json({ token: `simple_${token}` });
+        if (password !== process.env.ADMIN_PASSWORD) return res.status(401).json({ error: 'Invalid credentials' });
+        const token = await createSignedToken({ id: 1, username, role: 'admin', exp: Date.now() + 86400000 });
+        return res.status(200).json({ token });
       }
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -592,7 +662,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/auth/webauthn/register/begin' && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
       const rpId = getRpId(req);
@@ -620,7 +690,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/auth/webauthn/register/complete' && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
       if (!body.challengeToken || signChallenge(body.challenge) !== body.challengeToken) {
@@ -729,13 +799,13 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
       await supabase.from('webauthn_passkeys').update({ counter: verification.authenticationInfo.newCounter }).eq('id', stored.id);
 
-      const token = Buffer.from(JSON.stringify({ id: stored.user_id, username: stored.username, role: 'admin', exp: Date.now() + 86400000 })).toString('base64');
-      return res.json({ token: `simple_${token}`, verified: true });
+      const token = await createSignedToken({ id: stored.user_id, username: stored.username, role: 'admin', exp: Date.now() + 86400000 });
+      return res.json({ token, verified: true });
     }
 
     if (path === '/auth/webauthn/status' && method === 'GET') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { data: passkeys } = await supabase.from('webauthn_passkeys').select('id, created_at').eq('user_id', user.id);
       return res.json({ passkeys: (passkeys || []).length, list: passkeys || [] });
@@ -743,7 +813,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/auth/webauthn/passkeys' && method === 'DELETE') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       await supabase.from('webauthn_passkeys').delete().eq('user_id', user.id);
       return res.json({ message: 'Passkeys removed' });
@@ -753,7 +823,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/auth/face/descriptor' && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
       const { images } = body;
@@ -783,7 +853,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/auth/face/descriptor' && method === 'DELETE') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       await supabase.from('face_data').delete().eq('user_id', user.id);
       return res.json({ success: true });
@@ -836,13 +906,13 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       }
 
       const matchedUserId = userMap[result.best_index];
-      const token = Buffer.from(JSON.stringify({ id: matchedUserId, role: 'admin', exp: Date.now() + 86400000 })).toString('base64');
-      return res.json({ token: `simple_${token}`, distance: result.distance, verified: true });
+      const token = await createSignedToken({ id: matchedUserId, role: 'admin', exp: Date.now() + 86400000 });
+      return res.json({ token, distance: result.distance, verified: true });
     }
 
     if (path === '/auth/face/status' && method === 'GET') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { data } = await supabase.from('face_data').select('user_id').eq('user_id', user.id).maybeSingle();
       return res.json({ enrolled: !!data });
@@ -875,7 +945,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/stripe/save' && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { publishable_key, secret_key, webhook_secret } = body;
       const now = new Date().toISOString();
@@ -938,7 +1008,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         try {
           const pi = await stripe.paymentIntents.retrieve(session.payment_intent);
           receiptUrl = pi.charges?.data[0]?.receipt_url || `https://dashboard.stripe.com/payments/${session.payment_intent}`;
-        } catch {}
+        } catch (e) { console.error('Error:', e.message); }
         try {
           let insertData = {
             property_id: parseInt(property_id) || null,
@@ -1000,7 +1070,6 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
                   <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>
                 `, 'admin'),
               });
-              console.log('admin email sent');
             } catch (e) { console.error('admin email error:', e.message); }
           } else {
             console.error('admin email skipped — missing config:', { gmailUser: !!gmailUser, gmailPass: !!gmailPass, toEmail: !!toEmail });
@@ -1014,7 +1083,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/payments' && method === 'DELETE') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       try {
         const { error } = await supabase.from('payments').delete().neq('id', 0);
@@ -1028,7 +1097,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/payments' && method === 'GET') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       try {
         const { data: payments, error } = await supabase.from('payments').select('*').order('created_at', { ascending: false });
@@ -1050,7 +1119,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     const notifyMatch = path.match(/^\/payments\/(\d+)\/notify$/);
     if (notifyMatch && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const payId = parseInt(notifyMatch[1]);
       try {
@@ -1091,7 +1160,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/payments/delete' && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { id, ids } = body;
       if (ids && Array.isArray(ids)) {
@@ -1121,7 +1190,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/payments/settings' && method === 'PUT') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       try {
         const { key, value, bank_name, account_name, account_number, routing, iban, swift } = body;
@@ -1155,7 +1224,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     if (path === '/settings/contact' && method === 'PUT') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       try {
         const { error } = await supabase.from('settings').upsert({ key: 'contact_info', value: body, updated_at: new Date().toISOString() });
@@ -1170,7 +1239,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     /* Refund Payment */
     if (path === '/payments/refund' && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { payment_id } = body;
       if (!payment_id) return res.status(400).json({ error: 'payment_id required' });
@@ -1179,7 +1248,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         if (fetchErr || !payment) return res.status(404).json({ error: 'Payment not found' });
         if (payment.status !== 'completed') return res.status(400).json({ error: 'Payment not completed' });
         if (!payment.stripe_payment_intent) return res.status(400).json({ error: 'No Stripe payment intent' });
-        const stripe = getStripe();
+        const stripe = await getStripe();
         const refund = await stripe.refunds.create({ payment_intent: payment.stripe_payment_intent });
         await supabase.from('payments').update({ status: 'refunded', updated_at: new Date().toISOString() }).eq('id', payment_id);
         return res.status(200).json({ success: true, refund_id: refund.id });
@@ -1216,19 +1285,19 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     /* Refund all completed payments (admin only — test mode cleanup) */
     if (path === '/payments/refund-all' && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       try {
         const { data: payments } = await supabase.from('payments').select('*').eq('status', 'completed').not('stripe_payment_intent', 'is', null);
         if (!payments?.length) return res.status(200).json({ message: 'No completed payments to refund' });
-        const stripe = getStripe();
+        const stripe = await getStripe();
         let refunded = 0;
         for (const p of payments) {
           try {
             await stripe.refunds.create({ payment_intent: p.stripe_payment_intent });
             await supabase.from('payments').update({ status: 'refunded', updated_at: new Date().toISOString() }).eq('id', p.id);
             refunded++;
-          } catch {}
+          } catch (e) { console.error('Error:', e.message); }
         }
         return res.status(200).json({ message: `Refunded ${refunded} of ${payments.length} payments` });
       } catch (e) {
@@ -1239,7 +1308,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     /* Email test endpoint (admin only) */
     if (path === '/payments/test-email' && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { testEmail } = body;
       try {
@@ -1267,7 +1336,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     /* CSV import (admin only) */
     if (path === '/properties/import' && method === 'POST') {
       const auth = req.headers.authorization;
-      const user = getAuthUser(auth);
+      const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { csv } = body;
       if (!csv) return res.status(400).json({ error: 'CSV data required' });

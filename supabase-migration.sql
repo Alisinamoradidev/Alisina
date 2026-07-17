@@ -46,26 +46,7 @@ CREATE TABLE IF NOT EXISTS posts (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Enable Row Level Security
-ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
-ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-
--- 3. Create policies (public read, authenticated write where needed)
-DROP POLICY IF EXISTS "properties_read" ON properties;
-DROP POLICY IF EXISTS "properties_all" ON properties;
-CREATE POLICY "properties_read" ON properties FOR SELECT USING (true);
-CREATE POLICY "properties_all" ON properties FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "contacts_insert" ON contacts;
-DROP POLICY IF EXISTS "contacts_read" ON contacts;
-CREATE POLICY "contacts_insert" ON contacts FOR INSERT WITH CHECK (true);
-CREATE POLICY "contacts_read" ON contacts FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "posts_read" ON posts;
-DROP POLICY IF EXISTS "posts_all" ON posts;
-CREATE POLICY "posts_read" ON posts FOR SELECT USING (true);
-CREATE POLICY "posts_all" ON posts FOR ALL USING (true);
+-- 2. RLS policies (secure defaults)
 
 CREATE TABLE IF NOT EXISTS payments (
   id BIGSERIAL PRIMARY KEY,
@@ -81,13 +62,7 @@ CREATE TABLE IF NOT EXISTS payments (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "payments_read" ON payments;
-DROP POLICY IF EXISTS "payments_insert" ON payments;
-DROP POLICY IF EXISTS "payments_update" ON payments;
-CREATE POLICY "payments_read" ON payments FOR SELECT USING (true);
-CREATE POLICY "payments_insert" ON payments FOR INSERT WITH CHECK (true);
-CREATE POLICY "payments_update" ON payments FOR UPDATE USING (true);
+-- Payments RLS handled below
 
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS receipt_url TEXT DEFAULT '';
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS customer_name TEXT DEFAULT '';
@@ -98,11 +73,7 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "settings_read" ON settings;
-DROP POLICY IF EXISTS "settings_write" ON settings;
-CREATE POLICY "settings_read" ON settings FOR SELECT USING (true);
-CREATE POLICY "settings_write" ON settings FOR ALL USING (true);
+-- Settings RLS handled below
 
 INSERT INTO settings (key, value) VALUES ('bank_info', '{}') ON CONFLICT (key) DO NOTHING;
 
@@ -133,11 +104,7 @@ CREATE TABLE IF NOT EXISTS testimonials (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "testimonials_read" ON testimonials;
-DROP POLICY IF EXISTS "testimonials_all" ON testimonials;
-CREATE POLICY "testimonials_read" ON testimonials FOR SELECT USING (true);
-CREATE POLICY "testimonials_all" ON testimonials FOR ALL USING (true);
+-- Testimonials RLS handled below
 
 -- 7. Newsletter subscribers
 CREATE TABLE IF NOT EXISTS subscribers (
@@ -145,11 +112,7 @@ CREATE TABLE IF NOT EXISTS subscribers (
   email TEXT UNIQUE NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "subscribers_insert" ON subscribers;
-DROP POLICY IF EXISTS "subscribers_read" ON subscribers;
-CREATE POLICY "subscribers_insert" ON subscribers FOR INSERT WITH CHECK (true);
-CREATE POLICY "subscribers_read" ON subscribers FOR SELECT USING (true);
+-- Subscribers RLS: anyone can insert, only service role can read
 
 -- 8. Rate limiting
 CREATE TABLE IF NOT EXISTS rate_limits (
@@ -157,9 +120,40 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   count INTEGER DEFAULT 1,
   expires_at TIMESTAMPTZ NOT NULL
 );
+-- Rate limits RLS handled below
+
+-- Secure RLS policies (service role bypasses RLS, anon key gets limited read access)
+ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "properties_all" ON properties;
+CREATE POLICY "properties_select" ON properties FOR SELECT USING (true);
+
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "posts_all" ON posts;
+CREATE POLICY "posts_select" ON posts FOR SELECT USING (published = true);
+
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "payments_all" ON payments;
+CREATE POLICY "payments_none" ON payments FOR ALL USING (false);
+
+ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "settings_all" ON settings;
+CREATE POLICY "settings_none" ON settings FOR ALL USING (false);
+
+ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "testimonials_all" ON testimonials;
+CREATE POLICY "testimonials_select" ON testimonials FOR SELECT USING (published = true);
+
+ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "contacts_all" ON contacts;
+CREATE POLICY "contacts_insert" ON contacts FOR INSERT WITH CHECK (true);
+
+ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "subscribers_all" ON subscribers;
+CREATE POLICY "subscribers_insert" ON subscribers FOR INSERT WITH CHECK (true);
+
 ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "rate_limits_all" ON rate_limits;
-CREATE POLICY "rate_limits_all" ON rate_limits FOR ALL USING (true);
+CREATE POLICY "rate_limits_none" ON rate_limits FOR ALL USING (false);
 
 INSERT INTO posts (title, slug, excerpt, content, image, author, published) VALUES
 ('2026 Real Estate Market Trends', '2026-real-estate-market-trends',

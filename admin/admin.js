@@ -188,7 +188,7 @@ async function loadDashboard() {
         options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
       });
     }
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 /* Properties */
@@ -204,7 +204,7 @@ async function loadProperties() {
   try {
     allProperties = await api('/api/properties');
     renderProperties(allProperties);
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 function renderProperties(props) {
@@ -379,7 +379,7 @@ document.getElementById('propertyForm').addEventListener('submit', async e => {
 });
 
 async function editProperty(id) {
-  try { const p = await api(`/api/properties/${id}`); openPropertyForm(p); } catch {}
+  try { const p = await api(`/api/properties/${id}`); openPropertyForm(p); } catch (e) { console.error('Admin error:', e.message); }
 }
 
 async function deleteProperty(id) {
@@ -442,7 +442,7 @@ async function checkExpiredRentals() {
       loadProperties();
       loadDashboard();
     }
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 /* Check for expired rentals on load and every 60s */
@@ -485,7 +485,7 @@ async function loadPosts() {
         </div></td>`;
       tbody.appendChild(tr);
     });
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 let quillEditor = null;
@@ -545,7 +545,7 @@ async function editPost(id) {
     const posts = await api('/api/blog?published=0');
     const p = posts.find(x => x.id === id);
     if (p) openPostForm(p);
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 async function deletePost(id) {
@@ -588,7 +588,7 @@ async function loadTestimonials() {
         </div></td>`;
       tbody.appendChild(tr);
     });
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 function openTestimonialForm(t) {
@@ -642,7 +642,7 @@ async function editTestimonial(id) {
     const data = await api('/api/testimonials');
     const t = data.find(x => x.id === id);
     if (t) openTestimonialForm(t);
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 async function deleteTestimonial(id) {
@@ -674,7 +674,7 @@ async function loadMessages() {
         <p>${m.message}</p>`;
       list.appendChild(div);
     });
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 async function deleteMessage(id) {
@@ -712,7 +712,7 @@ async function exportCSV(type) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `${type}-export.csv`;
     a.click(); URL.revokeObjectURL(url);
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 async function importCSV(input) {
@@ -766,7 +766,7 @@ async function loadPayments() {
       tbody.appendChild(tr);
     });
     document.getElementById('selectAllPayments').checked = false;
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 async function refundPayment(id) {
@@ -824,11 +824,11 @@ async function loadStripeSettings() {
   try {
     const d = await api('/api/stripe/config');
     document.getElementById('sfPubKey').value = d.publishable_key || '';
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
   try {
     const notif = await api('/api/payments/settings?key=notification_email');
     document.getElementById('sfNotifEmail').value = (notif && notif.email) ? notif.email : '';
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
   try {
     const smtp = await api('/api/payments/settings?key=gmail_smtp');
     document.getElementById('sfGmailEmail').value = (smtp && smtp.email) ? smtp.email : '';
@@ -838,11 +838,11 @@ async function loadStripeSettings() {
     } else {
       if (passStatus) { passStatus.textContent = '✗ No app password saved'; passStatus.style.color = '#dc2626'; passStatus.style.display = 'block'; }
     }
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
   try {
     const deepl = await api('/api/payments/settings?key=deepl_api_key');
     document.getElementById('sfDeeplKey').value = (deepl && deepl.key) ? deepl.key : '';
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 document.getElementById('deeplForm')?.addEventListener('submit', async e => {
@@ -909,7 +909,7 @@ async function loadContactInfo() {
     document.getElementById('ciFacebook').value = d.facebook_url || '';
     document.getElementById('ciInstagram').value = d.instagram_url || '';
     document.getElementById('ciLinkedin').value = d.linkedin_url || '';
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 document.getElementById('contactInfoForm')?.addEventListener('submit', async e => {
@@ -945,7 +945,7 @@ async function loadBankInfo() {
     document.getElementById('bfRouting').value = d.routing || '';
     document.getElementById('bfIban').value = d.iban || '';
     document.getElementById('bfSwift').value = d.swift || '';
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 document.getElementById('bankForm')?.addEventListener('submit', async e => {
@@ -1254,7 +1254,7 @@ async function removePasskey() {
     document.getElementById('settingsPasskeyStatus').textContent = 'Passkey removed.';
     document.getElementById('settingsSetupPasskeyBtn').style.display = 'inline-flex';
     document.getElementById('settingsRemovePasskeyBtn').style.display = 'none';
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 async function checkPasskeyStatus() {
@@ -1270,7 +1270,7 @@ async function checkPasskeyStatus() {
     } else {
       document.getElementById('settingsPasskeyStatus').textContent = 'No passkey set up yet';
     }
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 /* ─── Face Login (InsightFace) ─── */
@@ -1447,7 +1447,7 @@ async function removeFace() {
     document.getElementById('settingsSetupFaceBtn').style.display = 'inline-flex';
     document.getElementById('settingsWebcamFaceBtn').style.display = 'inline-flex';
     document.getElementById('settingsRemoveFaceBtn').style.display = 'none';
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 async function loginWithFace() {
@@ -1500,7 +1500,7 @@ async function checkFaceStatus() {
     } else {
       document.getElementById('settingsFaceStatus').textContent = 'No face set up yet';
     }
-  } catch {}
+  } catch (e) { console.error('Admin error:', e.message); }
 }
 
 // Settings password form
