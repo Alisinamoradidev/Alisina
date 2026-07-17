@@ -5,6 +5,12 @@
       "includeFiles": "node_modules/@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm-threaded-simd.wasm"
     }
   },
+  "crons": [
+    {
+      "path": "/api/properties/check-expired",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "routes": [
     { "source": "/api/(.*)", "destination": "/api/handler" },
     { "source": "/property/(.*)", "destination": "/api/handler" },

@@ -261,6 +261,7 @@ function getFilteredAndSorted() {
   const bv = parseInt(document.getElementById('bedsFilter')?.value) || 0;
   const baw = parseInt(document.getElementById('bathsFilter')?.value) || 0;
   let filtered = properties.filter(p => {
+    if (p.status === 'deposited' || p.status === 'rented') return false;
     const ms = !q || p.title.toLowerCase().includes(q) || p.location.toLowerCase().includes(q) || p.type.toLowerCase().includes(q);
     return ms && matchesPrice(p.price, pv) && (!tv || p.type === tv) && p.beds >= bv && p.baths >= baw;
   });
@@ -314,17 +315,47 @@ function openModal(p) {
   const payBtn = $('modalPay');
   const bankInfoDiv = $('bankInfo');
   const bankDetails = $('bankInfoDetails');
+  const rentalDiv = $('rentalDuration');
+  const durationOpts = $('durationOptions');
+  rentalDiv.style.display = 'none';
   if (p.badge === 'sale') {
     payBtn.innerHTML = '<i class="fas fa-credit-card"></i> Pay $1,000 Deposit';
     payBtn.style.display = '';
     payBtn._payType = 'deposit';
     payBtn._propId = p.id;
+    payBtn._payDuration = '';
   } else if (p.badge === 'rent') {
-    const pVal = formatPrice(p.price, 'rent');
-    payBtn.innerHTML = `<i class="fas fa-credit-card"></i> Pay First Month (${pVal})`;
-    payBtn.style.display = '';
-    payBtn._payType = 'rent';
-    payBtn._propId = p.id;
+    payBtn.style.display = 'none';
+    rentalDiv.style.display = 'block';
+    const durations = [
+      { key: '1month', label: '1 Month', months: 1 },
+      { key: '6months', label: '6 Months', months: 6 },
+      { key: '1year', label: '1 Year', months: 12 },
+    ];
+    durationOpts.innerHTML = durations.map(d => {
+      const total = p.price * d.months;
+      const monthly = d.months > 1 ? `($${p.price.toLocaleString()}/mo)` : '';
+      return `<button class="duration-opt" data-duration="${d.key}" data-months="${d.months}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border:2px solid var(--border);border-radius:var(--radius);background:var(--bg-card);cursor:pointer;transition:all 0.2s;text-align:center">
+        <span style="font-weight:600;font-size:14px;color:var(--text)">${d.label}</span>
+        ${monthly ? `<span style="font-size:11px;color:var(--text-secondary)">${monthly}</span>` : ''}
+        <span style="font-weight:700;font-size:18px;color:var(--primary);margin-top:4px">$${total.toLocaleString()}</span>
+      </button>`;
+    }).join('');
+    durationOpts.querySelectorAll('.duration-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        durationOpts.querySelectorAll('.duration-opt').forEach(b => { b.style.borderColor = 'var(--border)'; b.style.background = 'var(--bg-card)'; });
+        btn.style.borderColor = 'var(--primary)';
+        btn.style.background = 'color-mix(in srgb, var(--primary) 8%, var(--bg-card))';
+        const dur = btn.dataset.duration;
+        const months = parseInt(btn.dataset.months);
+        const total = p.price * months;
+        payBtn.innerHTML = `<i class="fas fa-credit-card"></i> Pay $${total.toLocaleString()} (${months > 1 ? months + ' months' : '1 month'})`;
+        payBtn.style.display = '';
+        payBtn._payType = 'rent';
+        payBtn._propId = p.id;
+        payBtn._payDuration = dur;
+      });
+    });
   } else {
     payBtn.style.display = 'none';
   }
@@ -362,19 +393,22 @@ $('modalInquire').addEventListener('click', () => {
 $('modalPay').addEventListener('click', async () => {
   const btn = $('modalPay');
   if (!btn._propId || !btn._payType) return;
+  if (btn._payType === 'rent' && !btn._payDuration) { showToast('Please select a rental duration first'); return; }
   const cfgRes = await fetch(`${API_URL}/api/stripe/config`);
   const cfg = await cfgRes.json();
   if (!cfg.configured) { showToast('Payment not configured yet'); return; }
   btn.disabled = true; btn.textContent = 'Redirecting...';
   try {
+    const payload = { property_id: btn._propId, type: btn._payType };
+    if (btn._payDuration) payload.duration = btn._payDuration;
     const res = await fetch(`${API_URL}/api/payments/create-checkout`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ property_id: btn._propId, type: btn._payType })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Payment failed');
     window.location.href = data.url;
-  } catch (err) { showToast(err.message); btn.disabled = false; btn.textContent = btn._payType === 'deposit' ? 'Pay $1,000 Deposit' : 'Pay Rent'; }
+  } catch (err) { showToast(err.message); btn.disabled = false; btn.textContent = btn._payType === 'deposit' ? 'Pay $1,000 Deposit' : 'Select Duration'; }
 });
 
 $('mobileToggle').addEventListener('click', () => nav.classList.toggle('active'));
@@ -535,7 +569,7 @@ function showQuizResult() {
   const type = typeMap[quizAnswers[0]?.answer] || '';
   const price = priceMap[quizAnswers[1]?.answer] || '';
   const bedsNeeded = parseInt(quizAnswers[2]?.answer) || 0;
-  const matched = properties.filter(p => (!type || p.type === type) && (!price || matchesPrice(p.price, price)) && p.beds >= bedsNeeded);
+  const matched = properties.filter(p => (p.status !== 'deposited' && p.status !== 'rented') && (!type || p.type === type) && (!price || matchesPrice(p.price, price)) && p.beds >= bedsNeeded);
   let html = '<p class="quiz-result-title">Based on your answers:</p>';
   if (matched.length === 0) html += '<p class="quiz-result-text">No exact matches found. Let me help you find something close — contact me directly!</p>';
   else html += `<p class="quiz-result-text">Found ${matched.length} matching propert${matched.length > 1 ? 'ies' : 'y'}!</p><div class="quiz-matches">`;
@@ -606,6 +640,7 @@ function initMap() {
   const bounds = [];
 
   properties.forEach(p => {
+    if (p.status === 'deposited' || p.status === 'rented') return;
     const marker = L.marker([p.lat, p.lng], { icon: createMapIcon(p) }).addTo(map);
     const popupEl = createPopupContent(p);
     marker.bindPopup(popupEl, { maxWidth: 320, className: 'map-popup-wrapper', closeButton: true });
@@ -772,6 +807,29 @@ if (window.__propertyId) {
   }, 100);
   setTimeout(() => clearInterval(checkProp), 10000);
 }
+
+/* Handle rental renewal links from email */
+(function handleRenewal() {
+  const params = new URLSearchParams(window.location.search);
+  const renew = params.get('renew');
+  const propId = parseInt(params.get('property_id'));
+  if (!renew || !propId) return;
+  window.history.replaceState({}, '', window.location.pathname);
+
+  if (renew === 'yes') {
+    const check = setInterval(() => {
+      const p = properties.find(x => x.id === propId);
+      if (p) {
+        clearInterval(check);
+        openModal(p);
+        showToast('Select a rental duration and complete payment to re-rent.');
+      }
+    }, 100);
+    setTimeout(() => clearInterval(check), 10000);
+  } else if (renew === 'no') {
+    showToast('Thank you! This property will be available for rent after the current lease expires.');
+  }
+})();
 
 /* ═══════════════════════════════════════════════
    ANIMATIONS — delete this block to remove

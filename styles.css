@@ -761,6 +761,18 @@ body {
   background: var(--primary-dark);
 }
 
+.duration-opt:hover {
+  border-color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary) 8%, var(--bg-card)) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.duration-opt.selected {
+  border-color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary) 12%, var(--bg-card)) !important;
+}
+
 .btn-secondary {
   background: transparent;
   border: 2px solid var(--primary);

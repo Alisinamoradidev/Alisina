@@ -405,3 +405,36 @@ td .actions { display: flex; gap: 6px; }
   #postsTable th:nth-child(5),
   #postsTable td:nth-child(5) { display: none; }
 }
+
+/* ═══ Countdown Timer ═══ */
+.countdown-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 4px 10px;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #dc2626;
+  white-space: nowrap;
+}
+.countdown-timer i {
+  font-size: 11px;
+}
+.countdown-text {
+  font-variant-numeric: tabular-nums;
+}
+.countdown-expired {
+  color: #dc2626;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulseExpired 1.5s ease-in-out infinite;
+}
+@keyframes pulseExpired {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

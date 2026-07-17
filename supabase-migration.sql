@@ -211,3 +211,19 @@ INSERT INTO posts (title, slug, excerpt, content, image, author, published) VALU
 '<p>The real estate market in 2026 continues to evolve with several key trends:</p><ul><li><strong>Interest Rates:</strong> Rates are stabilizing, creating opportunities.</li><li><strong>Suburban Growth:</strong> Families moving to suburban areas.</li><li><strong>Smart Homes:</strong> Properties with smart tech command premium prices.</li></ul><p>Contact me for a personalized market analysis!</p>',
 'https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?w=800&q=80', 'Primenest Reality', TRUE)
 ON CONFLICT (slug) DO NOTHING;
+
+-- 9. Add property status column (available, deposited, rented)
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'available';
+UPDATE properties SET status = 'available' WHERE status IS NULL;
+
+-- 10. Add rental duration column to payments table
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS duration TEXT DEFAULT '';
+
+-- 11. Add rented_at and rental_duration columns to properties table
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS rented_at TIMESTAMPTZ;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS rental_duration TEXT DEFAULT '';
+
+-- 12. Add renter info and renewal tracking columns
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS renter_email TEXT DEFAULT '';
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS renter_name TEXT DEFAULT '';
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS renewal_email_sent BOOLEAN DEFAULT FALSE;

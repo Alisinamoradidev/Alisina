@@ -60,6 +60,56 @@ function emailLayout(title, bodyContent, color) {
 </html>`.trim();
 }
 
+async function sendRenewalEmail(prop) {
+  const { data: gmailConfig } = await supabase.from('settings').select('value').eq('key', 'gmail_smtp').maybeSingle();
+  const gmailUser = gmailConfig?.value?.email;
+  const gmailPass = gmailConfig?.value?.appPassword;
+  if (!gmailUser || !gmailPass) return false;
+
+  const nodemailer = require('nodemailer');
+  const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: gmailUser, pass: gmailPass } });
+
+  const durationMonths = { '1month': 1, '6months': 6, '1year': 12 };
+  const durationLabels = { '1month': '1 Month', '6months': '6 Months', '1year': '1 Year' };
+  const months = durationMonths[prop.rental_duration] || 1;
+  const rentedAt = new Date(prop.rented_at).getTime();
+  const expiresAt = rentedAt + months * 30 * 24 * 60 * 60 * 1000;
+  const expiresDate = new Date(expiresAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const monthlyPrice = `$${(prop.price || 0).toLocaleString()}/mo`;
+
+  const renewYesUrl = `${SITE_URL}/?renew=yes&property_id=${prop.id}`;
+  const renewNoUrl = `${SITE_URL}/?renew=no&property_id=${prop.id}`;
+
+  const toEmail = prop.renter_email;
+  if (!toEmail) return false;
+
+  const bodyContent = `
+    <p style="margin:0 0 6px;color:#64748b;font-size:14px">Hi ${prop.renter_name || 'there'},</p>
+    <p style="margin:0 0 16px;color:#334155;font-size:15px">Your rental for <strong>${prop.title}</strong> is expiring on <strong>${expiresDate}</strong>.</p>
+    <p style="margin:0 0 20px;color:#334155;font-size:15px">Would you like to re-rent this property? You can choose a new duration (1 Month, 6 Months, or 1 Year) and complete payment.</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${prop.title}</td></tr>
+      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Location</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${prop.location || ''}</td></tr>
+      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Current Plan</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${durationLabels[prop.rental_duration] || prop.rental_duration}</td></tr>
+      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Monthly Price</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;color:#2563eb;font-size:16px">${monthlyPrice}</td></tr>
+      <tr><td style="padding:12px 0;color:#64748b;font-size:14px">Expires</td><td style="padding:12px 0;font-weight:600;text-align:right;color:#dc2626">${expiresDate}</td></tr>
+    </table>
+    <div style="text-align:center;margin:28px 0 8px">
+      <a href="${renewYesUrl}" style="display:inline-block;padding:14px 32px;background-color:#059669;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:600;margin-right:12px">Yes, I want to re-rent</a>
+      <a href="${renewNoUrl}" style="display:inline-block;padding:14px 32px;background-color:#6b7280;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:600">No, thanks</a>
+    </div>
+    <p style="margin:20px 0 0;color:#94a3b8;font-size:13px;text-align:center">If you don't respond, your rental will expire on ${expiresDate} and the property will be listed for rent again.</p>
+  `;
+
+  await t.sendMail({
+    from: `"Primenest Reality" <${gmailUser}>`,
+    to: toEmail,
+    subject: `Your rental for ${prop.title} is expiring soon — Re-rent?`,
+    html: emailLayout('Rental Renewal', bodyContent, 'tenant'),
+  });
+  return true;
+}
+
 async function getStripe() {
   const { data } = await supabase.from('settings').select('value').eq('key', 'stripe_secret_key').maybeSingle();
   const secret = data?.value?.secret || process.env.STRIPE_SECRET_KEY || '';
@@ -213,6 +263,25 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     /* Properties */
     if (path === '/properties' && method === 'GET') {
+      /* Lightweight auto-expire check on every public request */
+      try {
+        const { data: rentedProps } = await supabase.from('properties').select('id, rented_at, rental_duration').eq('status', 'rented').not('rented_at', 'is', null);
+        if (rentedProps && rentedProps.length > 0) {
+          const durationMonths = { '1month': 1, '6months': 6, '1year': 12 };
+          const now = Date.now();
+          const expiredIds = [];
+          for (const p of rentedProps) {
+            const months = durationMonths[p.rental_duration];
+            if (!months || !p.rented_at) continue;
+            const expiresAt = new Date(p.rented_at).getTime() + months * 30 * 24 * 60 * 60 * 1000;
+            if (now >= expiresAt) expiredIds.push(p.id);
+          }
+          if (expiredIds.length > 0) {
+            await supabase.from('properties').update({ status: 'available', updated_at: new Date().toISOString(), rented_at: null, rental_duration: '', renewal_email_sent: false, renter_email: '', renter_name: '' }).in('id', expiredIds);
+          }
+        }
+      } catch {}
+
       let query = supabase.from('properties').select('*');
       const type = url.searchParams.get('type');
       const badge = url.searchParams.get('badge');
@@ -270,6 +339,75 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const { error } = await supabase.from('properties').delete().eq('id', propMatch[1]);
       if (error) throw error;
       return res.status(200).json({ message: 'Deleted' });
+    }
+
+    /* Cancel property status (admin: reset deposited/rented back to available) */
+    const cancelStatusMatch = path.match(/^\/properties\/(\d+)\/cancel-status$/);
+    if (cancelStatusMatch && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const propId = parseInt(cancelStatusMatch[1]);
+      const { error } = await supabase.from('properties').update({ status: 'available', updated_at: new Date().toISOString(), rented_at: null, rental_duration: '', renewal_email_sent: false, renter_email: '', renter_name: '' }).eq('id', propId);
+      if (error) throw error;
+      const { data } = await supabase.from('properties').select('*').eq('id', propId).single();
+      return res.status(200).json(data);
+    }
+
+    /* Send renewal email for a rented property (admin only) */
+    const sendRenewalMatch = path.match(/^\/properties\/(\d+)\/send-renewal$/);
+    if (sendRenewalMatch && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const propId = parseInt(sendRenewalMatch[1]);
+      const { data: prop } = await supabase.from('properties').select('*').eq('id', propId).single();
+      if (!prop) return res.status(404).json({ error: 'Property not found' });
+      if (prop.status !== 'rented') return res.status(400).json({ error: 'Property is not rented' });
+      if (!prop.renter_email) return res.status(400).json({ error: 'No renter email found for this property' });
+      try {
+        const sent = await sendRenewalEmail(prop);
+        if (!sent) return res.status(500).json({ error: 'Failed to send email — check SMTP config' });
+        await supabase.from('properties').update({ renewal_email_sent: true, updated_at: new Date().toISOString() }).eq('id', propId);
+        return res.status(200).json({ success: true, message: `Renewal email sent to ${prop.renter_email}` });
+      } catch (e) {
+        console.error('Send renewal email error:', e.message);
+        return res.status(500).json({ error: e.message });
+      }
+    }
+
+    /* Auto-expire rented properties whose duration has passed */
+    if (path === '/properties/check-expired' && method === 'GET') {
+      const { data: rented } = await supabase.from('properties').select('id, rented_at, rental_duration, renewal_email_sent, renter_email, renter_name, title, location, price').eq('status', 'rented').not('rented_at', 'is', null);
+      if (!rented || rented.length === 0) return res.status(200).json({ expired: [], checked: 0 });
+      const durationMonths = { '1month': 1, '6months': 6, '1year': 12 };
+      const now = Date.now();
+      const expired = [];
+      const renewalEmailsSent = [];
+      for (const p of rented) {
+        const months = durationMonths[p.rental_duration];
+        if (!months || !p.rented_at) continue;
+        const rentedAt = new Date(p.rented_at).getTime();
+        const expiresAt = rentedAt + months * 30 * 24 * 60 * 60 * 1000;
+        const hoursUntilExpiry = (expiresAt - now) / (1000 * 60 * 60);
+        if (now >= expiresAt) {
+          expired.push(p.id);
+        } else if (hoursUntilExpiry <= 24 && hoursUntilExpiry > 0 && !p.renewal_email_sent && p.renter_email) {
+          try {
+            const sent = await sendRenewalEmail(p);
+            if (sent) {
+              await supabase.from('properties').update({ renewal_email_sent: true }).eq('id', p.id);
+              renewalEmailsSent.push(p.id);
+            }
+          } catch (e) {
+            console.error(`Failed to send renewal email for property ${p.id}:`, e.message);
+          }
+        }
+      }
+      if (expired.length > 0) {
+        await supabase.from('properties').update({ status: 'available', updated_at: new Date().toISOString(), rented_at: null, rental_duration: '', renewal_email_sent: false, renter_email: '', renter_name: '' }).in('id', expired);
+      }
+      return res.status(200).json({ expired, renewalEmailsSent, checked: rented.length });
     }
 
     if (path === '/properties' && method === 'POST') {
@@ -781,19 +919,29 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     if (path === '/payments/create-checkout' && method === 'POST') {
       const stripe = await getStripe();
       if (!stripe) return res.status(503).json({ error: 'Payment not configured — admin must save Stripe keys in Settings' });
-      const { property_id, type, email } = body;
+      const { property_id, type, email, duration } = body;
       if (!property_id || !type) return res.status(400).json({ error: 'property_id and type required' });
       const { data: property } = await supabase.from('properties').select('*').eq('id', property_id).single();
       if (!property) return res.status(404).json({ error: 'Property not found' });
-      const amount = type === 'deposit' ? 1000 : (type === 'rent' ? property.price : null);
+      const durationMonths = { '1month': 1, '6months': 6, '1year': 12 };
+      let amount;
+      if (type === 'deposit') {
+        amount = 1000;
+      } else if (type === 'rent') {
+        const months = durationMonths[duration] || 1;
+        amount = property.price * months;
+      } else {
+        amount = null;
+      }
       if (!amount || amount <= 0) return res.status(400).json({ error: 'Invalid amount' });
+      const rentDesc = type === 'rent' ? ` — ${duration || '1month'}` : '';
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
-        line_items: [{ price_data: { currency: 'usd', product_data: { name: property.title, description: property.location }, unit_amount: Math.round(amount * 100) }, quantity: 1 }],
+        line_items: [{ price_data: { currency: 'usd', product_data: { name: property.title, description: property.location + rentDesc }, unit_amount: Math.round(amount * 100) }, quantity: 1 }],
         mode: 'payment',
         success_url: `${SITE_URL}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${SITE_URL}?payment=canceled`,
-        metadata: { property_id: String(property_id), type },
+        metadata: { property_id: String(property_id), type, duration: duration || '1month' },
         ...(email ? { customer_email: email } : {}),
       });
       return res.status(200).json({ url: session.url });
@@ -812,7 +960,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       }
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
-        const { property_id, type } = session.metadata || {};
+        const { property_id, type, duration } = session.metadata || {};
         const amount = session.amount_total ? session.amount_total / 100 : 0;
         let receiptUrl = '';
         try {
@@ -820,7 +968,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
           receiptUrl = pi.charges?.data[0]?.receipt_url || `https://dashboard.stripe.com/payments/${session.payment_intent}`;
         } catch {}
         try {
-          await supabase.from('payments').insert({
+          let insertData = {
             property_id: parseInt(property_id) || null,
             user_email: session.customer_details?.email || '',
             amount,
@@ -831,7 +979,27 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
             customer_name: session.customer_details?.name || '',
             status: 'completed',
             type: type || 'deposit',
-          }).select();
+          };
+          if (duration) insertData.duration = duration;
+          let insertRes = await supabase.from('payments').insert(insertData).select();
+          if (insertRes.error && insertRes.error.message?.includes('duration')) {
+            delete insertData.duration;
+            insertRes = await supabase.from('payments').insert(insertData).select();
+          }
+          if (insertRes.error) console.error('Webhook insert error:', insertRes.error?.code, insertRes.error?.message);
+          /* Update property status to deposited/rented */
+          if (property_id && type) {
+            const newStatus = type === 'rent' ? 'rented' : 'deposited';
+            const updateData = { status: newStatus, updated_at: new Date().toISOString() };
+            if (type === 'rent' && duration) {
+              updateData.rented_at = new Date().toISOString();
+              updateData.rental_duration = duration;
+              updateData.renter_email = session.customer_details?.email || '';
+              updateData.renter_name = session.customer_details?.name || '';
+              updateData.renewal_email_sent = false;
+            }
+            await supabase.from('properties').update(updateData).eq('id', parseInt(property_id));
+          }
           /* Send email notifications */
           const { data: notif } = await supabase.from('settings').select('value').eq('key', 'notification_email').maybeSingle();
           const toEmail = notif?.value?.email;
@@ -854,7 +1022,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
                     <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${propName}</td></tr>
                     <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Amount</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;font-size:18px;color:#2563eb">$${amount.toLocaleString()}</td></tr>
-                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}</td></tr>
+                    <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Type</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;text-transform:capitalize">${type || 'deposit'}${duration ? ' (' + ({'1month':'1 Month','6months':'6 Months','1year':'1 Year'}[duration] || duration) + ')' : ''}</td></tr>
                     <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Customer</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${customerEmail || 'No email'}</td></tr>
                   </table>
                   <div style="text-align:center;margin:24px 0 8px"><a href="${receiptUrl}" style="display:inline-block;padding:12px 28px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500">View Receipt</a></div>

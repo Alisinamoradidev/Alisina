@@ -105,7 +105,7 @@
               <button class="btn-primary" onclick="openPropertyForm()"><i class="fas fa-plus"></i> Add</button>
             </div>
           </div>
-          <div class="table-wrap"><table id="propertiesTable"><thead><tr><th>ID</th><th>Title</th><th>Price</th><th>Type</th><th>Badge</th><th>Payments</th><th>Featured</th><th>Actions</th></tr></thead><tbody id="propertiesBody"></tbody></table></div>
+          <div class="table-wrap"><table id="propertiesTable"><thead><tr><th>ID</th><th>Title</th><th>Price</th><th>Type</th><th>Badge</th><th>Status</th><th>Payments</th><th>Featured</th><th>Actions</th></tr></thead><tbody id="propertiesBody"></tbody></table></div>
           <div class="pagination-bar" id="pagination_Properties" style="display:none;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px"><span id="pageInfo_Properties"></span><div><button class="btn-outline btn-sm" id="prevPage_Properties"><i class="fas fa-chevron-left"></i> Prev</button><button class="btn-outline btn-sm" id="nextPage_Properties" style="margin-left:8px">Next <i class="fas fa-chevron-right"></i></button></div></div>
           <p class="empty-state" id="propertiesEmpty">No properties yet.</p>
         </div>
@@ -149,7 +149,7 @@
 
         <div id="viewPayments" class="view">
           <div class="view-header"><h2>Payments</h2><div class="view-actions"><button class="btn-outline btn-sm" onclick="refundAllPayments()" title="Refund all completed payments in Stripe test mode"><i class="fas fa-undo"></i> Refund All</button><button class="btn-outline btn-sm" id="deleteSelectedBtn" onclick="deleteSelectedPayments()" style="display:none"><i class="fas fa-trash"></i> Delete Selected (<span id="selectedCount">0</span>)</button><button class="btn-danger" onclick="deleteAllPayments()"><i class="fas fa-trash"></i> Delete All</button></div></div>
-          <div class="table-wrap"><table id="paymentsTable"><thead><tr><th style="width:40px"><input type="checkbox" id="selectAllPayments" onchange="toggleSelectAllPayments()"></th><th>ID</th><th>Property</th><th>Email</th><th>Amount</th><th>Type</th><th>Status</th><th>Receipt</th><th>Date</th><th>Actions</th></tr></thead><tbody id="paymentsBody"></tbody></table></div>
+          <div class="table-wrap"><table id="paymentsTable"><thead><tr><th style="width:40px"><input type="checkbox" id="selectAllPayments" onchange="toggleSelectAllPayments()"></th><th>ID</th><th>Property</th><th>Email</th><th>Amount</th><th>Type</th><th>Duration</th><th>Status</th><th>Receipt</th><th>Date</th><th>Actions</th></tr></thead><tbody id="paymentsBody"></tbody></table></div>
           <div class="pagination-bar" id="pagination_Payments" style="display:none;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px"><span id="pageInfo_Payments"></span><div><button class="btn-outline btn-sm" id="prevPage_Payments"><i class="fas fa-chevron-left"></i> Prev</button><button class="btn-outline btn-sm" id="nextPage_Payments" style="margin-left:8px">Next <i class="fas fa-chevron-right"></i></button></div></div>
           <p class="empty-state" id="paymentsEmpty">No payments yet.</p>
         </div>
@@ -164,7 +164,7 @@
             <div class="field"><label>Webhook Secret</label><input type="password" id="sfWhsec" placeholder="whsec_..."></div>
             <div class="field"><label>Notification Email</label><input type="email" id="sfNotifEmail" placeholder="admin@example.com"><small style="color:var(--text-muted);display:block;margin-top:4px">Get notified when a payment is received</small></div>
             <div class="field"><label>Gmail Email</label><input type="email" id="sfGmailEmail" placeholder="your.email@gmail.com"><small style="color:var(--text-muted);display:block;margin-top:4px">Used to send emails to you and customers.</small></div>
-            <div class="field"><label>Gmail Password</label><input type="password" id="sfGmailPass" placeholder="Password"><small style="color:var(--text-muted);display:block;margin-top:4px">Use an <a href="https://myaccount.google.com/apppasswords" target="_blank">App Password</a> if 2FA is on, or your regular password.</small></div>
+            <div class="field"><label>Gmail Password</label><input type="password" id="sfGmailPass" placeholder="Leave blank to keep current"><small id="sfGmailPassStatus" style="color:var(--text-muted);display:none;margin-top:4px;font-weight:500"></small><small style="color:var(--text-muted);display:block;margin-top:4px">Use an <a href="https://myaccount.google.com/apppasswords" target="_blank">App Password</a> if 2FA is on, or your regular password.</small></div>
             <div class="form-actions"><button type="submit" class="btn-primary" id="stripeSaveBtn">Save Stripe Keys</button></div>
           </form>
 

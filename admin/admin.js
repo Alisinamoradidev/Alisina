@@ -86,7 +86,7 @@ function checkAuth() {
 }
 
 function showLogin() { loginView.style.display = 'flex'; adminView.style.display = 'none'; startLogin3D(); }
-function showAdmin() { loginView.style.display = 'none'; adminView.style.display = 'block'; stopLogin3D(); loadDashboard(); }
+function showAdmin() { loginView.style.display = 'none'; adminView.style.display = 'block'; stopLogin3D(); loadDashboard(); startExpirationChecker(); }
 
 document.getElementById('loginForm').addEventListener('submit', e => {
   e.preventDefault();
@@ -219,19 +219,54 @@ function renderProperties(props) {
   empty.style.display = 'none';
   const pageItems = adminPaginate('Properties', props);
   pagEl.style.display = props.length > ADMIN_PAGE_SIZE ? 'flex' : 'none';
-  api('/api/payments/summary').then(summary => {
+  const durationLabels = { '1month': '1 Month', '6months': '6 Months', '1year': '1 Year' };
+  const durationMonths = { '1month': 1, '6months': 6, '1year': 12 };
+  Promise.all([api('/api/payments/summary').catch(() => []), api('/api/payments').catch(() => [])]).then(([summary, payments]) => {
     const smap = {};
     summary.forEach(s => { smap[s.id] = s; });
+    const rentDurations = {};
+    payments.forEach(p => {
+      if (p.type === 'rent' && p.duration && p.property_id) {
+        rentDurations[p.property_id] = p.duration;
+      }
+    });
     pageItems.forEach(p => {
       const tr = document.createElement('tr');
       const s = smap[p.id];
       const payStr = s ? `<span style="color:var(--primary)">$${s.total_collected.toLocaleString()}</span> / <span style="color:${s.balance > 0 ? '#d97706' : '#059669'}">$${s.balance.toLocaleString()}</span>` : '—';
+      const status = p.status || 'available';
+      const statusColor = status === 'deposited' ? '#d97706' : status === 'rented' ? '#dc2626' : '#059669';
+      let statusLabel = status === 'available' ? 'Available' : status === 'deposited' ? 'Deposited' : 'Rented';
+      let countdownHtml = '';
+      if (status === 'rented' && p.rented_at && p.rental_duration) {
+        const months = durationMonths[p.rental_duration];
+        const durLabel = durationLabels[p.rental_duration] || p.rental_duration;
+        statusLabel = `Rented (${durLabel})`;
+        if (months) {
+          const rentedAt = new Date(p.rented_at).getTime();
+          const expiresAt = rentedAt + months * 30 * 24 * 60 * 60 * 1000;
+          countdownHtml = `<div class="countdown-timer" data-expires="${expiresAt}" data-id="${p.id}"><i class="fas fa-clock"></i> <span class="countdown-text">calculating...</span></div>`;
+        }
+      } else if (status === 'rented') {
+        const rd = rentDurations[p.id];
+        if (rd) statusLabel = `Rented (${durationLabels[rd] || rd})`;
+      }
+      const cancelBtn = (status === 'deposited' || status === 'rented')
+        ? `<button class="btn-outline btn-sm" onclick="cancelPropertyStatus(${p.id})" title="Cancel ${statusLabel} — make available again"><i class="fas fa-undo"></i> Cancel</button>`
+        : '';
+      const renewalBtn = status === 'rented' && p.renter_email
+        ? `<button class="btn-outline btn-sm" onclick="sendRenewalEmail(${p.id})" title="Send renewal email to ${p.renter_email}" ${p.renewal_email_sent ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-envelope"></i> ${p.renewal_email_sent ? 'Email Sent' : 'Send Renewal'}</button>`
+        : '';
+      const renterInfo = status === 'rented' && p.renter_email
+        ? `<br><small style="color:var(--text-muted);font-size:11px">Renter: ${p.renter_name || p.renter_email}</small>`
+        : '';
       tr.innerHTML = `
         <td>${p.id}</td>
         <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small></td>
         <td>${formatPrice(p)}</td>
         <td>${p.type}</td>
         <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${p.badge}</span></td>
+        <td><span style="color:${statusColor};font-weight:600">${statusLabel}</span>${countdownHtml}${renterInfo}${cancelBtn || renewalBtn ? '<br>' + renewalBtn + ' ' + cancelBtn : ''}</td>
         <td>${payStr}</td>
         <td>${p.featured ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '—'}</td>
         <td><div class="actions">
@@ -240,15 +275,29 @@ function renderProperties(props) {
         </div></td>`;
       tbody.appendChild(tr);
     });
+    startCountdowns();
   }).catch(() => {
     pageItems.forEach(p => {
       const tr = document.createElement('tr');
+      const status = p.status || 'available';
+      const statusColor = status === 'deposited' ? '#d97706' : status === 'rented' ? '#dc2626' : '#059669';
+      const statusLabel = status === 'available' ? 'Available' : status === 'deposited' ? 'Deposited' : 'Rented';
+      const cancelBtn = (status === 'deposited' || status === 'rented')
+        ? `<button class="btn-outline btn-sm" onclick="cancelPropertyStatus(${p.id})" title="Cancel ${statusLabel} — make available again"><i class="fas fa-undo"></i> Cancel</button>`
+        : '';
+      const renewalBtn = status === 'rented' && p.renter_email
+        ? `<button class="btn-outline btn-sm" onclick="sendRenewalEmail(${p.id})" title="Send renewal email to ${p.renter_email}" ${p.renewal_email_sent ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-envelope"></i> ${p.renewal_email_sent ? 'Email Sent' : 'Send Renewal'}</button>`
+        : '';
+      const renterInfo = status === 'rented' && p.renter_email
+        ? `<br><small style="color:var(--text-muted);font-size:11px">Renter: ${p.renter_name || p.renter_email}</small>`
+        : '';
       tr.innerHTML = `
         <td>${p.id}</td>
         <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small></td>
         <td>${formatPrice(p)}</td>
         <td>${p.type}</td>
         <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${p.badge}</span></td>
+        <td><span style="color:${statusColor};font-weight:600">${statusLabel}</span>${renterInfo}${cancelBtn || renewalBtn ? '<br>' + renewalBtn + ' ' + cancelBtn : ''}</td>
         <td>—</td>
         <td>${p.featured ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '—'}</td>
         <td><div class="actions">
@@ -338,6 +387,69 @@ async function deleteProperty(id) {
   if (!confirm('Delete this property?')) return;
   try { await api(`/api/properties/${id}`, { method: 'DELETE' }); loadProperties(); loadDashboard(); }
   catch (err) { alert(err.message); }
+}
+
+async function cancelPropertyStatus(id) {
+  if (!confirm('Cancel the deposited/rented status? This will make the property visible on the website again.')) return;
+  try {
+    await api(`/api/properties/${id}/cancel-status`, { method: 'POST' });
+    loadProperties();
+  } catch (err) { alert(err.message); }
+}
+
+async function sendRenewalEmail(id) {
+  if (!confirm('Send a renewal email to the renter?')) return;
+  try {
+    const result = await api(`/api/properties/${id}/send-renewal`, { method: 'POST' });
+    alert(result.message || 'Renewal email sent');
+    loadProperties();
+  } catch (err) { alert(err.message); }
+}
+
+/* Countdown Timer */
+let countdownInterval = null;
+
+function startCountdowns() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  updateCountdowns();
+  countdownInterval = setInterval(updateCountdowns, 1000);
+}
+
+function updateCountdowns() {
+  document.querySelectorAll('.countdown-timer').forEach(el => {
+    const expiresAt = parseInt(el.dataset.expires);
+    const propId = el.dataset.id;
+    const now = Date.now();
+    const diff = expiresAt - now;
+    const textEl = el.querySelector('.countdown-text');
+    if (!textEl) return;
+    if (diff <= 0) {
+      textEl.innerHTML = '<span class="countdown-expired">Expired</span>';
+      checkExpiredRentals();
+      return;
+    }
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+    textEl.innerHTML = `${days}d ${hours}h ${mins}m ${secs}s remaining`;
+  });
+}
+
+async function checkExpiredRentals() {
+  try {
+    const result = await api('/api/properties/check-expired');
+    if (result.expired && result.expired.length > 0) {
+      loadProperties();
+      loadDashboard();
+    }
+  } catch {}
+}
+
+/* Check for expired rentals on load and every 60s */
+function startExpirationChecker() {
+  checkExpiredRentals();
+  setInterval(checkExpiredRentals, 60000);
 }
 
 async function deleteAllProperties() {
@@ -679,6 +791,8 @@ async function loadPayments() {
       const refundBtn = p.status === 'completed' && p.stripe_payment_intent
         ? `<button class="btn-outline btn-sm" onclick="refundPayment(${p.id})" title="Refund"><i class="fas fa-undo"></i></button>`
         : '';
+      const durationLabels = { '1month': '1 Month', '6months': '6 Months', '1year': '1 Year' };
+      const durationStr = p.duration && p.type === 'rent' ? (durationLabels[p.duration] || p.duration) : '—';
       tr.innerHTML = `
         <td><input type="checkbox" class="payment-checkbox" data-id="${p.id}" onchange="updateSelectedCount()"></td>
         <td>${p.id}</td>
@@ -686,6 +800,7 @@ async function loadPayments() {
         <td>${p.user_email}</td>
         <td>$${p.amount.toLocaleString()}</td>
         <td><span style="text-transform:capitalize">${p.type}</span></td>
+        <td><span style="font-weight:500">${durationStr}</span></td>
         <td><span style="color:${p.status === 'completed' ? 'var(--primary)' : p.status === 'refunded' ? '#d97706' : '#dc2626'}">${p.status}</span></td>
         <td>${receiptHtml}</td>
         <td>${p.created_at?.split('T')[0] || ''}</td>
@@ -759,6 +874,12 @@ async function loadStripeSettings() {
   try {
     const smtp = await api('/api/payments/settings?key=gmail_smtp');
     document.getElementById('sfGmailEmail').value = (smtp && smtp.email) ? smtp.email : '';
+    const passStatus = document.getElementById('sfGmailPassStatus');
+    if (smtp && smtp.appPassword) {
+      if (passStatus) { passStatus.textContent = '✓ App password saved'; passStatus.style.color = '#059669'; passStatus.style.display = 'block'; }
+    } else {
+      if (passStatus) { passStatus.textContent = '✗ No app password saved'; passStatus.style.color = '#dc2626'; passStatus.style.display = 'block'; }
+    }
   } catch {}
   try {
     const deepl = await api('/api/payments/settings?key=deepl_api_key');
@@ -807,6 +928,9 @@ document.getElementById('stripeForm')?.addEventListener('submit', async e => {
         method: 'PUT',
         body: JSON.stringify({ key: 'gmail_smtp', value: { email: gmailEmail, appPassword: gmailPass } })
       });
+      document.getElementById('sfGmailPass').value = '';
+      const passStatus = document.getElementById('sfGmailPassStatus');
+      if (passStatus) { passStatus.textContent = '✓ App password saved'; passStatus.style.color = '#059669'; passStatus.style.display = 'block'; }
     }
     alert('Settings saved');
     document.getElementById('sfSecKey').value = '';
