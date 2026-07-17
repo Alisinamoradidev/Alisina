@@ -1,4 +1,4 @@
-const CACHE_NAME = 'primenest-v1';
+const CACHE_NAME = 'primenest-v2';
 const ASSETS = [
   '/',
   '/index.html',
