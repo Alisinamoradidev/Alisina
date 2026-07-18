@@ -295,7 +295,8 @@ function openModal(p) {
   $('modalPrice').textContent = formatPrice(p.price, p.badge);
   $('modalLocation').querySelector('span').textContent = p.location;
   const mapLink = $('modalMapLink');
-  if (p.lat && p.lng) { mapLink.href = `https://www.google.com/maps?q=${p.lat},${p.lng}`; mapLink.style.display = ''; } else { mapLink.style.display = 'none'; }
+  const modalMapEl = $('modalMap');
+  if (p.lat && p.lng) { mapLink.href = `https://www.google.com/maps?q=${p.lat},${p.lng}`; mapLink.style.display = ''; modalMapEl.style.display = ''; setTimeout(() => { if (window._modalMap) { window._modalMap.remove(); } window._modalMap = L.map(modalMapEl, { zoomControl: false }).setView([p.lat, p.lng], 15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(window._modalMap); L.marker([p.lat, p.lng]).addTo(window._modalMap); setTimeout(() => window._modalMap.invalidateSize(), 100); }, 100); } else { mapLink.style.display = 'none'; modalMapEl.style.display = 'none'; }
   $('modalDetails').innerHTML = `<span><i class="fas fa-bed"></i> ${p.beds} Beds</span><span><i class="fas fa-bath"></i> ${p.baths} Baths</span><span><i class="fas fa-ruler-combined"></i> ${p.sqft.toLocaleString()} sqft</span><span><i class="fas fa-calendar"></i> Built ${p.year}</span>`;
   $('modalDescription').textContent = getDescription(p.type);
   const mf = $('modalFav'), icon = mf.querySelector('i');
@@ -376,7 +377,7 @@ function openModal(p) {
   }).catch(() => { bankInfoDiv.style.display = 'none'; });
 }
 
-function closeModal() { modalOverlay.classList.remove('active'); document.body.style.overflow = ''; }
+function closeModal() { modalOverlay.classList.remove('active'); document.body.style.overflow = ''; if (window._modalMap) { window._modalMap.remove(); window._modalMap = null; } }
 $('modalClose').addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
@@ -757,7 +758,7 @@ function goToImage(index) {
 const _origOpenModal = openModal;
 openModal = function(p) {
   _origOpenModal(p);
-  const images = p.gallery && p.gallery.length > 0 ? p.gallery : (p.image ? [p.image] : []);
+  const images = [p.image, ...(p.gallery || [])].filter(Boolean);
   initCarousel($('modalImage'), images);
 };
 
