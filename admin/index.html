@@ -206,20 +206,13 @@
           <div class="view-header"><h2>Account Settings</h2></div>
 
           <div style="max-width:500px">
-            <h3 style="margin-bottom:12px;color:var(--text)">Change Username</h3>
-            <form id="settingsUsernameForm" class="modal-body" style="padding:0;margin-bottom:32px">
-              <div class="field"><label>Current Password</label><input type="password" id="settingsUserCurrentPw" required></div>
-              <div class="field"><label>New Username</label><input type="text" id="settingsNewUsername" required></div>
-              <p class="form-error" id="settingsUsernameError"></p>
-              <div class="form-actions" style="justify-content:flex-start;padding:0"><button type="submit" class="btn-primary">Update Username</button></div>
-            </form>
-
-            <h3 style="margin-bottom:12px;color:var(--text)">Change Password</h3>
-            <form id="settingsPasswordForm" class="modal-body" style="padding:0;margin-bottom:32px">
-              <div class="field"><label>Current Password</label><input type="password" id="settingsPwCurrent" required></div>
-              <div class="field"><label>New Password</label><input type="password" id="settingsPwNew" required></div>
-              <p class="form-error" id="settingsPasswordError"></p>
-              <div class="form-actions" style="justify-content:flex-start;padding:0"><button type="submit" class="btn-primary">Update Password</button></div>
+            <h3 style="margin-bottom:12px;color:var(--text)">Account Settings</h3>
+            <form id="settingsForm" class="modal-body" style="padding:0;margin-bottom:32px">
+              <div class="field"><label>Current Password *</label><input type="password" id="settingsCurrentPw" required></div>
+              <div class="field"><label>New Username</label><input type="text" id="settingsNewUsername" placeholder="Leave blank to keep current"></div>
+              <div class="field"><label>New Password</label><input type="password" id="settingsNewPassword" placeholder="Leave blank to keep current"></div>
+              <p class="form-error" id="settingsError"></p>
+              <div class="form-actions" style="justify-content:flex-start;padding:0"><button type="submit" class="btn-primary">Save Changes</button></div>
             </form>
 
             <h3 style="margin-bottom:12px;color:var(--text)">Passkey (fingerprint / face)</h3>

@@ -1503,42 +1503,29 @@ async function checkFaceStatus() {
   } catch (e) { console.error('Admin error:', e.message); }
 }
 
-// Settings username form
-document.getElementById('settingsUsernameForm').addEventListener('submit', async function(e) {
+// Settings form (combined username + password)
+document.getElementById('settingsForm').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const current = document.getElementById('settingsUserCurrentPw').value;
-  const newUsername = document.getElementById('settingsNewUsername').value;
-  const err = document.getElementById('settingsUsernameError');
+  const current = document.getElementById('settingsCurrentPw').value;
+  const newUsername = document.getElementById('settingsNewUsername').value.trim();
+  const newPassword = document.getElementById('settingsNewPassword').value;
+  const err = document.getElementById('settingsError');
   const btn = this.querySelector('button[type="submit"]');
-  btn.disabled = true; btn.textContent = 'Updating...'; err.textContent = '';
+  if (!newUsername && !newPassword) { err.style.color = '#dc2626'; err.textContent = 'Enter a new username or password'; return; }
+  btn.disabled = true; btn.textContent = 'Saving...'; err.textContent = '';
   try {
-    await api('/api/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword: current, newUsername }) });
-    err.style.color = '#22c55e'; err.textContent = 'Username updated';
-    document.getElementById('settingsUserCurrentPw').value = '';
+    const body = { currentPassword: current };
+    if (newUsername) body.newUsername = newUsername;
+    if (newPassword) body.newPassword = newPassword;
+    await api('/api/auth/password', { method: 'PUT', body: JSON.stringify(body) });
+    err.style.color = '#22c55e'; err.textContent = 'Updated successfully';
+    document.getElementById('settingsCurrentPw').value = '';
     document.getElementById('settingsNewUsername').value = '';
+    document.getElementById('settingsNewPassword').value = '';
   } catch (e) {
     err.style.color = '#dc2626'; err.textContent = e.message;
   }
-  btn.disabled = false; btn.textContent = 'Update Username';
-});
-
-// Settings password form
-document.getElementById('settingsPasswordForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const current = document.getElementById('settingsPwCurrent').value;
-  const newPw = document.getElementById('settingsPwNew').value;
-  const err = document.getElementById('settingsPasswordError');
-  const btn = this.querySelector('button[type="submit"]');
-  btn.disabled = true; btn.textContent = 'Updating...'; err.textContent = '';
-  try {
-    await api('/api/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword: current, newPassword: newPw }) });
-    err.style.color = '#22c55e'; err.textContent = 'Password updated';
-    document.getElementById('settingsPwCurrent').value = '';
-    document.getElementById('settingsPwNew').value = '';
-  } catch (e) {
-    err.style.color = '#dc2626'; err.textContent = e.message;
-  }
-  btn.disabled = false; btn.textContent = 'Update Password';
+  btn.disabled = false; btn.textContent = 'Save Changes';
 });
 
 checkAuth();
