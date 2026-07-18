@@ -17,6 +17,7 @@ async function loadPropertiesFromApi() {
       properties = data;
       updateListings();
       renderSoldProperties();
+      if (typeof L !== 'undefined') initMap();
     }
     hideSkeletons();
   } catch { hideSkeletons(); }
@@ -625,7 +626,6 @@ function createPopupContent(p) {
 function initMap() {
   const el = document.getElementById('propertyMap');
   if (typeof L === 'undefined' || !el) return;
-  if (el._leaflet_id) return;
 
   const isDark = document.body.hasAttribute('data-theme');
   const tileUrl = isDark
@@ -633,9 +633,16 @@ function initMap() {
     : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
   const attr = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
-  const map = L.map(el, { zoomControl: false }).setView([39.8283, -98.5795], 4);
-  L.tileLayer(tileUrl, { attribution: attr, maxZoom: 20 }).addTo(map);
-  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  let map;
+  if (window._propMap) {
+    map = window._propMap;
+    map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+  } else {
+    map = L.map(el, { zoomControl: false }).setView([39.8283, -98.5795], 4);
+    L.tileLayer(tileUrl, { attribution: attr, maxZoom: 20 }).addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    window._propMap = map;
+  }
 
   const markers = [];
   const bounds = [];
