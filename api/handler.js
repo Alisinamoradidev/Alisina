@@ -649,7 +649,6 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
               const token = await createSignedToken({ id: 1, username, role: 'admin', exp: Date.now() + 86400000 });
               return res.status(200).json({ token });
             }
-            return res.status(401).json({ error: 'Invalid credentials' });
           }
         }
       } catch (e) { console.error('Login credentials exception:', e.message); }
