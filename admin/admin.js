@@ -388,14 +388,16 @@ document.getElementById('pfLng').addEventListener('input', function() {
 
 /* Paste DMS coordinates into Lat field to auto-convert */
 document.getElementById('pfLat').addEventListener('paste', function(e) {
-  setTimeout(() => {
-    const parsed = tryParseCoords(this.value);
-    if (parsed) {
-      this.value = parsed.lat;
-      document.getElementById('pfLng').value = parsed.lng;
-      reverseGeocode(parsed.lat, parsed.lng);
-    }
-  }, 50);
+  const clipData = e.clipboardData || window.clipboardData;
+  const text = clipData ? clipData.getData('text') : '';
+  if (!text) return;
+  const parsed = tryParseCoords(text);
+  if (parsed) {
+    e.preventDefault();
+    this.value = parsed.lat;
+    document.getElementById('pfLng').value = parsed.lng;
+    reverseGeocode(parsed.lat, parsed.lng);
+  }
 });
 
 function closePropertyForm() { document.getElementById('propertyModal').style.display = 'none'; }
