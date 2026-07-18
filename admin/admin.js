@@ -400,7 +400,6 @@ function handleDmsPaste(e) {
   }
 }
 document.getElementById('pfLat').addEventListener('paste', handleDmsPaste);
-document.getElementById('pfLng').addEventListener('paste', handleDmsPaste);
 
 function closePropertyForm() { document.getElementById('propertyModal').style.display = 'none'; }
 
