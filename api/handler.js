@@ -639,19 +639,20 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       let adminUser = process.env.ADMIN_USERNAME || 'admin';
       let adminPass = process.env.ADMIN_PASSWORD;
       try {
-        const { data: creds } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
+        const { data: creds, error: credErr } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
+        if (credErr) console.error('Login credentials read error:', credErr.message);
         if (creds?.value) {
           if (creds.value.username) adminUser = creds.value.username;
           if (creds.value.password_hash) {
-            const bcrypt = require('bcryptjs');
-            if (await bcrypt.compare(password, creds.value.password_hash)) {
+            const match = await bcrypt.compare(password, creds.value.password_hash);
+            if (match) {
               const token = await createSignedToken({ id: 1, username, role: 'admin', exp: Date.now() + 86400000 });
               return res.status(200).json({ token });
             }
             return res.status(401).json({ error: 'Invalid credentials' });
           }
         }
-      } catch {}
+      } catch (e) { console.error('Login credentials exception:', e.message); }
       if (!adminPass) return res.status(500).json({ error: 'Admin password not configured' });
       if (username === adminUser || username === 'admin') {
         if (password !== adminPass) return res.status(401).json({ error: 'Invalid credentials' });
@@ -678,12 +679,13 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       let adminPass = process.env.ADMIN_PASSWORD;
       let storedHash = null;
       try {
-        const { data: creds } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
+        const { data: creds, error: readErr } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
+        if (readErr) console.error('Settings read error:', readErr.message);
         if (creds?.value) {
           if (creds.value.username) adminUser = creds.value.username;
           if (creds.value.password_hash) storedHash = creds.value.password_hash;
         }
-      } catch {}
+      } catch (e) { console.error('Settings read exception:', e.message); }
       let valid = false;
       if (storedHash) {
         valid = await bcrypt.compare(currentPassword, storedHash);
@@ -701,9 +703,14 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       try {
         const { data: existing } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
         const merged = { ...(existing?.value || {}), ...updates };
-        await supabase.from('settings').upsert({ key: 'admin_credentials', value: merged, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        const { error: upsertErr } = await supabase.from('settings').upsert({ key: 'admin_credentials', value: merged, updated_at: new Date().toISOString() });
+        if (upsertErr) {
+          console.error('Settings upsert error:', upsertErr.message);
+          return res.status(500).json({ error: 'Failed to save: ' + upsertErr.message });
+        }
       } catch (e) {
-        return res.status(500).json({ error: 'Failed to save credentials' });
+        console.error('Settings upsert exception:', e.message);
+        return res.status(500).json({ error: 'Failed to save credentials: ' + e.message });
       }
       return res.status(200).json({ message: 'Credentials updated', username: updates.username || adminUser });
     }
