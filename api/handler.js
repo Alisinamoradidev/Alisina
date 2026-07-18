@@ -193,7 +193,7 @@ async function getTokenSecret() {
   } catch {}
   if (process.env.JWT_SECRET) { _tokenSecret = process.env.JWT_SECRET; return _tokenSecret; }
   _tokenSecret = crypto.randomBytes(32).toString('hex');
-  await supabase.from('settings').upsert({ key: 'token_secret', value: { secret: _tokenSecret }, updated_at: new Date().toISOString() }).catch(() => {});
+  try { await supabase.from('settings').upsert({ key: 'token_secret', value: { secret: _tokenSecret }, updated_at: new Date().toISOString() }); } catch {}
   return _tokenSecret;
 }
 
