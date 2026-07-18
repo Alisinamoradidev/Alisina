@@ -338,6 +338,67 @@ function openPropertyForm(property) {
   document.getElementById('propertyModal').style.display = 'flex';
 }
 
+/* DMS to decimal converter */
+function parseDMS(dmsStr) {
+  const m = dmsStr.match(/(\d+)[°]\s*(\d+)[′']\s*([\d.]+)[″"]\s*([NSEW])/i);
+  if (!m) return null;
+  let dec = parseInt(m[1]) + parseInt(m[2]) / 60 + parseFloat(m[3]) / 3600;
+  if (m[4].toUpperCase() === 'S' || m[4].toUpperCase() === 'W') dec = -dec;
+  return Math.round(dec * 100000) / 100000;
+}
+
+function tryParseCoords(input) {
+  const dmsPair = input.match(/(\d+[°]\s*\d+[′']\s*[\d.]+[″"][NSEW])\s+(\d+[°]\s*\d+[′']\s*[\d.]+[″"][NSEW])/i);
+  if (dmsPair) {
+    const lat = parseDMS(dmsPair[1]);
+    const lng = parseDMS(dmsPair[2]);
+    if (lat !== null && lng !== null) return { lat, lng };
+  }
+  const decPair = input.match(/([-]?\d+\.?\d*)\s*,\s*([-]?\d+\.?\d*)/);
+  if (decPair) {
+    const lat = parseFloat(decPair[1]);
+    const lng = parseFloat(decPair[2]);
+    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) return { lat, lng };
+  }
+  return null;
+}
+
+/* Reverse geocode: fill Location from Lat/Lng */
+let _geocodeTimer = null;
+function reverseGeocode(lat, lng) {
+  clearTimeout(_geocodeTimer);
+  _geocodeTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, { headers: { 'Accept-Language': 'en' } });
+      const data = await r.json();
+      if (data.display_name) document.getElementById('pfLocation').value = data.display_name;
+    } catch {}
+  }, 600);
+}
+
+/* Auto-fill Location when Lat/Lng change */
+document.getElementById('pfLat').addEventListener('input', function() {
+  const lng = parseFloat(document.getElementById('pfLng').value);
+  if (!isNaN(lng)) reverseGeocode(parseFloat(this.value), lng);
+});
+document.getElementById('pfLng').addEventListener('input', function() {
+  const lat = parseFloat(document.getElementById('pfLat').value);
+  if (!isNaN(lat)) reverseGeocode(lat, parseFloat(this.value));
+});
+
+/* Paste DMS coordinates into Lat field to auto-convert */
+document.getElementById('pfLat').addEventListener('paste', function(e) {
+  setTimeout(() => {
+    const parsed = tryParseCoords(this.value);
+    if (parsed) {
+      this.value = parsed.lat;
+      document.getElementById('pfLng').value = parsed.lng;
+      reverseGeocode(parsed.lat, parsed.lng);
+    }
+  }, 50);
+});
+}
+
 function closePropertyForm() { document.getElementById('propertyModal').style.display = 'none'; }
 
 document.getElementById('propertyForm').addEventListener('submit', async e => {
