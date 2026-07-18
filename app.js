@@ -294,6 +294,8 @@ function openModal(p) {
   $('modalTitle').textContent = p.title;
   $('modalPrice').textContent = formatPrice(p.price, p.badge);
   $('modalLocation').querySelector('span').textContent = p.location;
+  const mapLink = $('modalMapLink');
+  if (p.lat && p.lng) { mapLink.href = `https://www.google.com/maps?q=${p.lat},${p.lng}`; mapLink.style.display = ''; } else { mapLink.style.display = 'none'; }
   $('modalDetails').innerHTML = `<span><i class="fas fa-bed"></i> ${p.beds} Beds</span><span><i class="fas fa-bath"></i> ${p.baths} Baths</span><span><i class="fas fa-ruler-combined"></i> ${p.sqft.toLocaleString()} sqft</span><span><i class="fas fa-calendar"></i> Built ${p.year}</span>`;
   $('modalDescription').textContent = getDescription(p.type);
   const mf = $('modalFav'), icon = mf.querySelector('i');
