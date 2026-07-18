@@ -397,7 +397,6 @@ document.getElementById('pfLat').addEventListener('paste', function(e) {
     }
   }, 50);
 });
-}
 
 function closePropertyForm() { document.getElementById('propertyModal').style.display = 'none'; }
 
