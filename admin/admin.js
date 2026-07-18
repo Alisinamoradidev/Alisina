@@ -386,19 +386,31 @@ document.getElementById('pfLng').addEventListener('input', function() {
   if (!isNaN(lat)) reverseGeocode(lat, parseFloat(this.value));
 });
 
-/* Paste DMS coordinates into Lat field to auto-convert */
-document.getElementById('pfLat').addEventListener('paste', function(e) {
+/* Paste DMS coordinates to auto-convert */
+function handleDmsPaste(e) {
   const clipData = e.clipboardData || window.clipboardData;
   const text = clipData ? clipData.getData('text') : '';
   if (!text) return;
   const parsed = tryParseCoords(text);
   if (parsed) {
     e.preventDefault();
-    this.value = parsed.lat;
+    document.getElementById('pfLat').value = parsed.lat;
     document.getElementById('pfLng').value = parsed.lng;
     reverseGeocode(parsed.lat, parsed.lng);
+    return;
   }
-});
+  const single = parseDMS(text.trim());
+  if (single !== null) {
+    e.preventDefault();
+    this.value = single;
+    const other = this.id === 'pfLat' ? document.getElementById('pfLng') : document.getElementById('pfLat');
+    const otherVal = parseFloat(other.value);
+    if (this.id === 'pfLat' && !isNaN(otherVal)) reverseGeocode(single, otherVal);
+    else if (this.id === 'pfLng' && !isNaN(otherVal)) reverseGeocode(otherVal, single);
+  }
+}
+document.getElementById('pfLat').addEventListener('paste', handleDmsPaste);
+document.getElementById('pfLng').addEventListener('paste', handleDmsPaste);
 
 function closePropertyForm() { document.getElementById('propertyModal').style.display = 'none'; }
 
