@@ -82,7 +82,7 @@ const adminView = document.getElementById('adminView');
 
 function checkAuth() {
   if (!token) { showLogin(); return; }
-  api('/api/health').then(() => showAdmin()).catch(() => { token = null; localStorage.removeItem('admin_token'); showLogin(); });
+  api('/api/auth/me').then(() => showAdmin()).catch(() => { token = null; localStorage.removeItem('admin_token'); showLogin(); });
 }
 
 function showLogin() { loginView.style.display = 'flex'; adminView.style.display = 'none'; startLogin3D(); }
@@ -1502,6 +1502,25 @@ async function checkFaceStatus() {
     }
   } catch (e) { console.error('Admin error:', e.message); }
 }
+
+// Settings username form
+document.getElementById('settingsUsernameForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const current = document.getElementById('settingsUserCurrentPw').value;
+  const newUsername = document.getElementById('settingsNewUsername').value;
+  const err = document.getElementById('settingsUsernameError');
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = 'Updating...'; err.textContent = '';
+  try {
+    await api('/api/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword: current, newUsername }) });
+    err.style.color = '#22c55e'; err.textContent = 'Username updated';
+    document.getElementById('settingsUserCurrentPw').value = '';
+    document.getElementById('settingsNewUsername').value = '';
+  } catch (e) {
+    err.style.color = '#dc2626'; err.textContent = e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Update Username';
+});
 
 // Settings password form
 document.getElementById('settingsPasswordForm').addEventListener('submit', async function(e) {

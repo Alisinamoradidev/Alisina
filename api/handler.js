@@ -636,17 +636,76 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     if (path === '/auth/login' && method === 'POST') {
       const { username, password } = body;
       if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
-      if (!process.env.ADMIN_PASSWORD) return res.status(500).json({ error: 'Admin password not configured' });
-      if (username === process.env.ADMIN_USERNAME || username === 'admin') {
-        if (password !== process.env.ADMIN_PASSWORD) return res.status(401).json({ error: 'Invalid credentials' });
+      let adminUser = process.env.ADMIN_USERNAME || 'admin';
+      let adminPass = process.env.ADMIN_PASSWORD;
+      try {
+        const { data: creds } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
+        if (creds?.value) {
+          if (creds.value.username) adminUser = creds.value.username;
+          if (creds.value.password_hash) {
+            const bcrypt = require('bcryptjs');
+            if (await bcrypt.compare(password, creds.value.password_hash)) {
+              const token = await createSignedToken({ id: 1, username, role: 'admin', exp: Date.now() + 86400000 });
+              return res.status(200).json({ token });
+            }
+            return res.status(401).json({ error: 'Invalid credentials' });
+          }
+        }
+      } catch {}
+      if (!adminPass) return res.status(500).json({ error: 'Admin password not configured' });
+      if (username === adminUser || username === 'admin') {
+        if (password !== adminPass) return res.status(401).json({ error: 'Invalid credentials' });
         const token = await createSignedToken({ id: 1, username, role: 'admin', exp: Date.now() + 86400000 });
         return res.status(200).json({ token });
       }
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    if (path === '/auth/me' && method === 'GET') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(200).json({ id: user.id, username: user.username, role: user.role });
+    }
+
     if (path === '/auth/password' && method === 'PUT') {
-      return res.status(200).json({ message: 'Password updated (static admin)' });
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const { currentPassword, newPassword, newUsername } = body;
+      if (!currentPassword) return res.status(400).json({ error: 'Current password required' });
+      let adminUser = process.env.ADMIN_USERNAME || 'admin';
+      let adminPass = process.env.ADMIN_PASSWORD;
+      let storedHash = null;
+      try {
+        const { data: creds } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
+        if (creds?.value) {
+          if (creds.value.username) adminUser = creds.value.username;
+          if (creds.value.password_hash) storedHash = creds.value.password_hash;
+        }
+      } catch {}
+      let valid = false;
+      if (storedHash) {
+        valid = await bcrypt.compare(currentPassword, storedHash);
+      } else {
+        valid = currentPassword === adminPass;
+      }
+      if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
+      const updates = {};
+      if (newPassword) {
+        const hash = await bcrypt.hash(newPassword, 10);
+        updates.password_hash = hash;
+      }
+      if (newUsername) updates.username = newUsername;
+      if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Nothing to update' });
+      try {
+        const { data: existing } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
+        const merged = { ...(existing?.value || {}), ...updates };
+        await supabase.from('settings').upsert({ key: 'admin_credentials', value: merged, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+      } catch (e) {
+        return res.status(500).json({ error: 'Failed to save credentials' });
+      }
+      return res.status(200).json({ message: 'Credentials updated', username: updates.username || adminUser });
     }
 
     /* ─── WebAuthn ─── */
