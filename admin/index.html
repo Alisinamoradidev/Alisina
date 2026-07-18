@@ -253,8 +253,8 @@
             <div class="field"><label>Year</label><input type="number" id="pfYear"></div>
             <div class="field"><label>Badge</label><select id="pfBadge"><option value="sale">For Sale</option><option value="rent">For Rent</option><option value="sold">Sold</option></select></div>
             <div class="field"><label>Featured</label><select id="pfFeatured"><option value="0">No</option><option value="1">Yes</option></select></div>
-            <div class="field"><label>Lat</label><input type="text" id="pfLat" placeholder="e.g. 34.54517 or paste DMS coords"></div>
-            <div class="field"><label>Lng</label><input type="text" id="pfLng" placeholder="e.g. 69.14878"></div>
+            <div class="field"><label>Coordinates</label><input type="text" id="pfCoords" placeholder="Paste DMS: 34°32'42.6&quot;N 69°08'55.6&quot;E"></div>
+            <input type="hidden" id="pfLat"><input type="hidden" id="pfLng">
           </div>
 
           <div class="field"><label>Main Image URL</label><input type="url" id="pfImage" placeholder="https://..."><input type="file" accept="image/*" onchange="uploadImage(this, 'pfImage')" style="margin-top:6px"></div>

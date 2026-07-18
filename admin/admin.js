@@ -332,6 +332,7 @@ function openPropertyForm(property) {
   document.getElementById('pfFeatured').value = property ? (property.featured ? 1 : 0) : 0;
   document.getElementById('pfLat').value = property ? property.lat || '' : '';
   document.getElementById('pfLng').value = property ? property.lng || '' : '';
+  document.getElementById('pfCoords').value = property && property.lat && property.lng ? property.lat + ', ' + property.lng : '';
   document.getElementById('pfImage').value = property ? property.image || '' : '';
   document.getElementById('pfGallery').value = property && property.gallery ? property.gallery.join('\n') : '';
   document.getElementById('pfDescription').value = property ? property.description || '' : '';
@@ -376,17 +377,17 @@ function reverseGeocode(lat, lng) {
   }, 600);
 }
 
-/* Auto-fill Location when Lat/Lng change */
-document.getElementById('pfLat').addEventListener('input', function() {
-  const lng = parseFloat(document.getElementById('pfLng').value);
-  if (!isNaN(lng)) reverseGeocode(parseFloat(this.value), lng);
-});
-document.getElementById('pfLng').addEventListener('input', function() {
-  const lat = parseFloat(document.getElementById('pfLat').value);
-  if (!isNaN(lat)) reverseGeocode(lat, parseFloat(this.value));
+/* Auto-fill Location when Coordinates change */
+document.getElementById('pfCoords').addEventListener('input', function() {
+  const parsed = tryParseCoords(this.value);
+  if (parsed) {
+    document.getElementById('pfLat').value = parsed.lat;
+    document.getElementById('pfLng').value = parsed.lng;
+    reverseGeocode(parsed.lat, parsed.lng);
+  }
 });
 
-/* Paste DMS coordinates into Lat field to auto-convert */
+/* Paste DMS coordinates into Coordinates field to auto-convert */
 function handleDmsPaste(e) {
   const clipData = e.clipboardData || window.clipboardData;
   const text = clipData ? clipData.getData('text') : '';
@@ -396,10 +397,11 @@ function handleDmsPaste(e) {
     e.preventDefault();
     document.getElementById('pfLat').value = parsed.lat;
     document.getElementById('pfLng').value = parsed.lng;
+    document.getElementById('pfCoords').value = parsed.lat + ', ' + parsed.lng;
     reverseGeocode(parsed.lat, parsed.lng);
   }
 }
-document.getElementById('pfLat').addEventListener('paste', handleDmsPaste);
+document.getElementById('pfCoords').addEventListener('paste', handleDmsPaste);
 
 function closePropertyForm() { document.getElementById('propertyModal').style.display = 'none'; }
 
