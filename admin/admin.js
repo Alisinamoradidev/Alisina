@@ -342,7 +342,6 @@ function closePropertyForm() { document.getElementById('propertyModal').style.di
 
 document.getElementById('propertyForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const l10n = buildFullL10n(null, 'pf', '', ['title','location','description']);
   const data = {
     title: document.getElementById('pfTitle').value,
     location: document.getElementById('pfLocation').value,
@@ -359,9 +358,6 @@ document.getElementById('propertyForm').addEventListener('submit', async e => {
     image: document.getElementById('pfImage').value || '',
     gallery: document.getElementById('pfGallery').value.split('\n').map(s => s.trim()).filter(Boolean),
     description: document.getElementById('pfDescription').value || '',
-    title_l10n: l10n.title || null,
-    location_l10n: l10n.location || null,
-    description_l10n: l10n.description || null,
   };
   const btn = document.getElementById('propertySubmit');
   btn.disabled = true; btn.textContent = 'Saving...';
