@@ -379,7 +379,7 @@ body {
 .property-image {
   position: relative;
   width: 100%;
-  height: 220px;
+  height: 260px;
   overflow: hidden;
 }
 
@@ -960,8 +960,28 @@ body {
     background: #1557b0;
   }
 
+  .modal {
+    max-width: 100%;
+    border-radius: 0;
+    margin: 0;
+  }
+
   .modal-image {
-    height: 280px;
+    height: 55vw;
+    min-height: 300px;
+    max-height: 420px;
+  }
+
+  .carousel-thumbs img {
+    width: 90px !important;
+    height: 68px !important;
+    border-radius: 8px !important;
+  }
+
+  .carousel-btn {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 20px !important;
   }
 
   .modal-body {
@@ -1077,6 +1097,57 @@ body {
   }
 }
 
+@media (max-width: 480px) {
+  .modal-image {
+    height: 60vw;
+    min-height: 260px;
+    max-height: 360px;
+  }
+
+  .modal-close {
+    top: 8px;
+    right: 8px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .modal-body {
+    padding: 14px;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .modal-price {
+    font-size: 18px;
+  }
+
+  .modal-details {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 0;
+  }
+
+  .modal-details span {
+    font-size: 13px;
+  }
+
+  .modal-description {
+    font-size: 14px;
+  }
+
+  .carousel-thumbs {
+    gap: 6px !important;
+    padding: 8px !important;
+  }
+
+  .carousel-thumbs img {
+    width: 80px !important;
+    height: 60px !important;
+  }
+}
+
 /* Modal */
 .modal-overlay {
   display: none;
@@ -1084,9 +1155,9 @@ body {
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
   z-index: 3000;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 20px;
+  padding: 40px 20px;
   backdrop-filter: blur(4px);
   overflow-y: auto;
 }
@@ -1143,7 +1214,7 @@ body {
 
 .modal-image {
   width: 100%;
-  height: 400px;
+  height: 480px;
   overflow: visible;
 }
 

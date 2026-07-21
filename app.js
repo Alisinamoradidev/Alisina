@@ -14,7 +14,11 @@ async function loadPropertiesFromApi() {
     if (!res.ok) return hideSkeletons();
     const data = await res.json();
     if (data && data.length > 0) {
-      properties = data;
+      properties = data.map(p => {
+        if (typeof p.gallery === 'string') { try { p.gallery = JSON.parse(p.gallery); } catch(e) { p.gallery = []; } }
+        if (!Array.isArray(p.gallery)) p.gallery = [];
+        return p;
+      });
       updateListings();
       renderSoldProperties();
       if (typeof L !== 'undefined') initMap();
@@ -708,26 +712,35 @@ function tryInitMap() {
 /* Gallery Carousel */
 function initCarousel(modalImageEl, images) {
   if (!images || images.length === 0) return;
-  let current = 0;
   modalImageEl.innerHTML = `
     <div class="carousel" style="position:relative;width:100%;height:100%;display:flex;flex-direction:column">
-      <div class="carousel-main" style="position:relative;flex:1;min-height:0">
+      <div class="carousel-main" style="position:relative;flex:1;min-height:0;touch-action:pan-y">
         <img src="${images[0]}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
         ${images.length > 1 ? `
-          <button class="carousel-btn carousel-prev" onclick="carouselMove(-1)" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-left"></i></button>
-          <button class="carousel-btn carousel-next" onclick="carouselMove(1)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-right"></i></button>
-          <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;padding:2px 12px;border-radius:12px;font-size:12px;z-index:5" id="carouselCounter">1 / ${images.length}</div>
+          <button class="carousel-btn carousel-prev" onclick="carouselMove(-1)" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-left"></i></button>
+          <button class="carousel-btn carousel-next" onclick="carouselMove(1)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-right"></i></button>
+          <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;padding:4px 14px;border-radius:12px;font-size:13px;z-index:5" id="carouselCounter">1 / ${images.length}</div>
         ` : ''}
       </div>
       ${images.length > 1 ? `
-        <div class="carousel-thumbs" style="display:flex;gap:6px;padding:8px;overflow-x:auto;background:#111;flex-shrink:0">
-          ${images.map((src, i) => `<img src="${src}" onclick="carouselGo(${i})" style="width:60px;height:45px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:${i === 0 ? 1 : 0.5};border:${i === 0 ? '2px solid var(--primary)' : '2px solid transparent'};flex-shrink:0;transition:opacity 0.2s,border 0.2s" data-index="${i}">`).join('')}
+        <div class="carousel-thumbs" style="display:flex;gap:6px;padding:8px;overflow-x:auto;background:#111;flex-shrink:0;-webkit-overflow-scrolling:touch">
+          ${images.map((src, i) => `<img src="${src}" onclick="carouselGo(${i})" style="width:80px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer;opacity:${i === 0 ? 1 : 0.5};border:${i === 0 ? '2px solid var(--primary)' : '2px solid transparent'};flex-shrink:0;transition:opacity 0.2s,border 0.2s" data-index="${i}">`).join('')}
         </div>
       ` : ''}
     </div>`;
   window._carouselImages = images;
   window._carouselThumbs = modalImageEl.querySelectorAll('.carousel-thumbs img');
   window._carouselImg = modalImageEl.querySelector('.carousel-main img');
+  const mainEl = modalImageEl.querySelector('.carousel-main');
+  if (mainEl && images.length > 1) {
+    let sx = 0, sy = 0;
+    mainEl.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    mainEl.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) { dx < 0 ? carouselMove(1) : carouselMove(-1); }
+    }, { passive: true });
+  }
 }
 
 function carouselMove(dir) {
@@ -765,7 +778,10 @@ function goToImage(index) {
 const _origOpenModal = openModal;
 openModal = function(p) {
   _origOpenModal(p);
-  const images = [p.image, ...(p.gallery || [])].filter(Boolean);
+  let gallery = p.gallery || [];
+  if (typeof gallery === 'string') { try { gallery = JSON.parse(gallery); } catch(e) { gallery = []; } }
+  if (!Array.isArray(gallery)) gallery = [];
+  const images = [p.image, ...gallery].filter(Boolean);
   initCarousel($('modalImage'), images);
 };
 
