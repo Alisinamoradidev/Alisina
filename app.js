@@ -131,8 +131,10 @@ function getDescription(type) {
 }
 
 function setFavIcon(btn, id) {
+  const use = btn.querySelector('use');
+  if (use) { use.setAttribute('href', favorites.has(id) ? '#heart-solid' : '#heart-outline'); return; }
   const icon = btn.querySelector('i');
-  icon.className = favorites.has(id) ? 'fas fa-heart' : 'far fa-heart';
+  if (icon) icon.className = favorites.has(id) ? 'fas fa-heart' : 'far fa-heart';
 }
 
 function createPropertyCard(p, idx = 0) {
@@ -224,7 +226,11 @@ function renderProperties(list) {
   pageItems.forEach((p, i) => listingsGrid.appendChild(createPropertyCard(p, i)));
   renderPagination(totalPages, list);
   requestAnimationFrame(() => {
-    document.querySelectorAll('.property-card').forEach((card, i) => setTimeout(() => card.classList.add('visible'), i * 80));
+    const cards = document.querySelectorAll('.property-card');
+    const len = cards.length;
+    for (let i = 0; i < len; i++) {
+      cards[i].classList.add('visible');
+    }
   });
 }
 
@@ -304,15 +310,16 @@ function openModal(p) {
   if (p.lat && p.lng) { mapLink.href = `https://www.google.com/maps?q=${p.lat},${p.lng}`; mapLink.style.display = ''; modalMapEl.style.display = ''; loadLeafletScript().then(() => { setTimeout(() => { if (window._modalMap) { window._modalMap.remove(); } window._modalMap = L.map(modalMapEl, { zoomControl: false }).setView([p.lat, p.lng], 15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(window._modalMap); L.marker([p.lat, p.lng]).addTo(window._modalMap); setTimeout(() => window._modalMap.invalidateSize(), 100); }, 100); }).catch(() => {}); } else { mapLink.style.display = 'none'; modalMapEl.style.display = 'none'; }
   $('modalDetails').innerHTML = `<span><i class="fas fa-bed"></i> ${p.beds} Beds</span><span><i class="fas fa-bath"></i> ${p.baths} Baths</span><span><i class="fas fa-ruler-combined"></i> ${p.sqft.toLocaleString()} sqft</span><span><i class="fas fa-calendar"></i> Built ${p.year}</span>`;
   $('modalDescription').textContent = getDescription(p.type);
-  const mf = $('modalFav'), icon = mf.querySelector('i');
-  if (favorites.has(p.id)) { icon.className = 'fas fa-heart'; mf.classList.add('saved'); } else { icon.className = 'far fa-heart'; mf.classList.remove('saved'); }
+  const mf = $('modalFav'), use = mf.querySelector('use');
+  if (use) { use.setAttribute('href', favorites.has(p.id) ? '#heart-solid' : '#heart-outline'); } else { const icon = mf.querySelector('i'); if (icon) icon.className = favorites.has(p.id) ? 'fas fa-heart' : 'far fa-heart'; }
+  if (favorites.has(p.id)) mf.classList.add('saved'); else mf.classList.remove('saved');
   modalOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
   mf.onclick = () => {
     favorites.has(p.id) ? favorites.delete(p.id) : favorites.add(p.id);
     localStorage.setItem('favs', JSON.stringify([...favorites]));
-    const ic = mf.querySelector('i');
-    if (favorites.has(p.id)) { ic.className = 'fas fa-heart'; mf.classList.add('saved'); } else { ic.className = 'far fa-heart'; mf.classList.remove('saved'); }
+    const icu = mf.querySelector('use');
+    if (icu) { icu.setAttribute('href', favorites.has(p.id) ? '#heart-solid' : '#heart-outline'); } else { const ic = mf.querySelector('i'); if (ic) ic.className = favorites.has(p.id) ? 'fas fa-heart' : 'far fa-heart'; }
     const cf = document.querySelector(`.property-fav[data-id="${p.id}"]`);
     if (cf) setFavIcon(cf, p.id);
     showToast(favorites.has(p.id) ? 'Added to favorites' : 'Removed from favorites');
@@ -454,15 +461,16 @@ function showToast(msg) {
 
 /* Dark Mode */
 const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'dark') { document.body.setAttribute('data-theme', 'dark'); $('themeToggle').querySelector('i').className = 'fas fa-sun'; }
+function setThemeIcon(name) { const el = $('themeToggle'); const use = el.querySelector('use'); if (use) use.setAttribute('href', '#' + name); else { const i = el.querySelector('i'); if (i) i.className = 'fas ' + name; } }
+if (savedTheme === 'dark') { document.body.setAttribute('data-theme', 'dark'); setThemeIcon('sun'); }
 $('themeToggle').addEventListener('click', () => {
   const d = document.body.hasAttribute('data-theme');
-  if (d) { document.body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); $('themeToggle').querySelector('i').className = 'fas fa-moon'; }
-  else { document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); $('themeToggle').querySelector('i').className = 'fas fa-sun'; }
+  if (d) { document.body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); setThemeIcon('moon'); }
+  else { document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); setThemeIcon('sun'); }
 });
 
 /* Scroll to Top */
-window.addEventListener('scroll', () => { window.scrollY > 400 ? scrollTop.classList.add('visible') : scrollTop.classList.remove('visible'); });
+window.addEventListener('scroll', () => { window.scrollY > 400 ? scrollTop.classList.add('visible') : scrollTop.classList.remove('visible'); }, { passive: true });
 scrollTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 /* Testimonials */
@@ -872,7 +880,7 @@ function initAnimations() {
         revealObserver.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
 
   document.querySelectorAll('.reveal, .stagger').forEach(el => revealObserver.observe(el));
 }
@@ -884,13 +892,16 @@ function animateCounter(el) {
   el.dataset.animated = 'true';
   const suffix = el.textContent.includes('+') ? '+' : el.textContent.includes('%') ? '%' : '';
   const duration = 1200;
-  const stepTime = Math.max(16, Math.floor(duration / target));
-  let current = 0;
-  const timer = setInterval(() => {
-    current += 1;
-    if (current >= target) { current = target; clearInterval(timer); }
-    el.textContent = current.toLocaleString() + suffix;
-  }, stepTime);
+  let start = null;
+  function step(ts) {
+    if (!start) start = ts;
+    const progress = Math.min((ts - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.floor(eased * target);
+    el.textContent = (progress >= 1 ? target : current).toLocaleString() + suffix;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
 /* Header shadow on scroll */

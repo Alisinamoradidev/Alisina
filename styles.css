@@ -58,7 +58,6 @@ body {
   color: var(--text);
   background: var(--bg);
   line-height: 1.6;
-  transition: background var(--transition), color var(--transition);
   overflow-x: hidden;
 }
 
@@ -186,6 +185,7 @@ body {
   justify-content: center;
   background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
   padding: 120px 0 80px;
+  contain: layout style;
 }
 
 .hero-overlay {
@@ -284,6 +284,8 @@ body {
 /* Section */
 .section {
   padding: 80px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
 }
 
 .section-header {
@@ -2027,10 +2029,12 @@ body {
   transform: translateY(30px);
   transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: opacity, transform;
 }
 .reveal.visible {
   opacity: 1;
   transform: translateY(0);
+  will-change: auto;
 }
 
 /* Stagger grid children */
@@ -2039,32 +2043,33 @@ body {
   transform: translateY(20px);
   transition: opacity 0.5s ease, transform 0.5s ease;
   transition-delay: calc(var(--i, 0) * 0.07s);
+  will-change: opacity, transform;
 }
 .stagger.visible > * {
   opacity: 1;
   transform: translateY(0);
+  will-change: auto;
 }
 
 /* Hero image layer */
 .hero-image {
-  position: absolute;
-  inset: 0;
-  background: url('https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1600&q=85') center / cover no-repeat;
   opacity: 0.6;
-  z-index: 0;
 }
 
 /* Hero text entrance */
 .hero-content h1 {
   animation: heroTextIn 0.8s ease forwards;
+  will-change: opacity, transform;
 }
 .hero-content p {
   animation: heroTextIn 0.8s ease 0.15s forwards;
   opacity: 0;
+  will-change: opacity, transform;
 }
 .hero-content .search-form {
   animation: heroTextIn 0.8s ease 0.3s forwards;
   opacity: 0;
+  will-change: opacity, transform;
 }
 @keyframes heroTextIn {
   from { opacity: 0; transform: translateY(20px); }
@@ -2079,6 +2084,7 @@ body {
 .agent-wrapper {
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               box-shadow 0.35s ease;
+  will-change: transform;
 }
 .property-card:hover,
 .blog-card:hover,
@@ -2087,6 +2093,7 @@ body {
 .agent-wrapper:hover {
   transform: translateY(-6px);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+  will-change: auto;
 }
 
 /* Property card image zoom */
@@ -2104,15 +2111,18 @@ body {
 .btn-search,
 .btn-outline {
   transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  will-change: transform;
 }
 .btn-submit:hover,
 .btn-primary:hover,
 .btn-search:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(26, 115, 232, 0.3);
+  will-change: auto;
 }
 .btn-outline:hover {
   transform: translateY(-2px);
+  will-change: auto;
 }
 
 /* Counter animation */
