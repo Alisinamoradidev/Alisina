@@ -3,6 +3,13 @@ let token = localStorage.getItem('admin_token');
 const ADMIN_PAGE_SIZE = 10;
 let adminPageData = {}; /* { viewName: { items, page, totalPages } } */
 
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function adminPaginate(view, items) {
   const key = view;
   if (!adminPageData[key]) adminPageData[key] = { page: 1 };
@@ -252,18 +259,18 @@ function renderProperties(props) {
         ? `<button class="btn-outline btn-sm" onclick="cancelPropertyStatus(${p.id})" title="Cancel ${statusLabel} — make available again"><i class="fas fa-undo"></i> Cancel</button>`
         : '';
       const renewalBtn = status === 'rented' && p.renter_email
-        ? `<button class="btn-outline btn-sm" onclick="sendRenewalEmail(${p.id})" title="Send renewal email to ${p.renter_email}" ${p.renewal_email_sent ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-envelope"></i> ${p.renewal_email_sent ? 'Email Sent' : 'Send Renewal'}</button>`
+        ? `<button class="btn-outline btn-sm" onclick="sendRenewalEmail(${p.id})" title="Send renewal email to ${escapeHtml(p.renter_email)}" ${p.renewal_email_sent ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-envelope"></i> ${p.renewal_email_sent ? 'Email Sent' : 'Send Renewal'}</button>`
         : '';
       const renterInfo = status === 'rented' && p.renter_email
-        ? `<br><small style="color:var(--text-muted);font-size:11px">Renter: ${p.renter_name || p.renter_email}</small>`
+        ? `<br><small style="color:var(--text-muted);font-size:11px">Renter: ${escapeHtml(p.renter_name || p.renter_email)}</small>`
         : '';
       const statusBlock = `<span style="color:${statusColor};font-weight:600;font-size:12px">${statusLabel}</span>${countdownHtml}${renterInfo}${cancelBtn || renewalBtn ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">' + renewalBtn + ' ' + cancelBtn + '</div>' : ''}`;
       tr.innerHTML = `
         <td>${p.id}</td>
-        <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small><div style="margin-top:4px">${statusBlock}</div></td>
+        <td><strong>${escapeHtml(p.title)}</strong><br><small style="color:var(--text-muted)">${escapeHtml(p.location)}</small><div style="margin-top:4px">${statusBlock}</div></td>
         <td>${formatPrice(p)}</td>
-        <td>${p.type}</td>
-        <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${p.badge}</span></td>
+        <td>${escapeHtml(p.type)}</td>
+        <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${escapeHtml(p.badge)}</span></td>
         <td></td>
         <td>${payStr}</td>
         <td>${p.featured ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '—'}</td>
@@ -281,21 +288,21 @@ function renderProperties(props) {
       const statusColor = status === 'deposited' ? '#d97706' : status === 'rented' ? '#dc2626' : '#059669';
       const statusLabel = status === 'available' ? 'Available' : status === 'deposited' ? 'Deposited' : 'Rented';
       const cancelBtn = (status === 'deposited' || status === 'rented')
-        ? `<button class="btn-outline btn-sm" onclick="cancelPropertyStatus(${p.id})" title="Cancel ${statusLabel} — make available again"><i class="fas fa-undo"></i> Cancel</button>`
+        ? `<button class="btn-outline btn-sm" onclick="cancelPropertyStatus(${p.id})" title="Cancel ${statusLabel} — make available again"><i class="fas fa-undo"></i> Cancelbutton>`
         : '';
       const renewalBtn = status === 'rented' && p.renter_email
-        ? `<button class="btn-outline btn-sm" onclick="sendRenewalEmail(${p.id})" title="Send renewal email to ${p.renter_email}" ${p.renewal_email_sent ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-envelope"></i> ${p.renewal_email_sent ? 'Email Sent' : 'Send Renewal'}</button>`
+        ? `<button class="btn-outline btn-sm" onclick="sendRenewalEmail(${p.id})" title="Send renewal email to ${escapeHtml(p.renter_email)}" ${p.renewal_email_sent ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-envelope"></i> ${p.renewal_email_sent ? 'Email Sent' : 'Send Renewal'}</button>`
         : '';
       const renterInfo = status === 'rented' && p.renter_email
-        ? `<br><small style="color:var(--text-muted);font-size:11px">Renter: ${p.renter_name || p.renter_email}</small>`
+        ? `<br><small style="color:var(--text-muted);font-size:11px">Renter: ${escapeHtml(p.renter_name || p.renter_email)}</small>`
         : '';
       const statusBlock = `<span style="color:${statusColor};font-weight:600;font-size:12px">${statusLabel}</span>${renterInfo}${cancelBtn || renewalBtn ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">' + renewalBtn + ' ' + cancelBtn + '</div>' : ''}`;
       tr.innerHTML = `
         <td>${p.id}</td>
-        <td><strong>${p.title}</strong><br><small style="color:var(--text-muted)">${p.location}</small><div style="margin-top:4px">${statusBlock}</div></td>
+        <td><strong>${escapeHtml(p.title)}</strong><br><small style="color:var(--text-muted)">${escapeHtml(p.location)}</small><div style="margin-top:4px">${statusBlock}</div></td>
         <td>${formatPrice(p)}</td>
-        <td>${p.type}</td>
-        <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${p.badge}</span></td>
+        <td>${escapeHtml(p.type)}</td>
+        <td><span style="color:${p.badge === 'sale' ? 'var(--primary)' : '#059669'}">${escapeHtml(p.badge)}</span></td>
         <td></td>
         <td>—</td>
         <td>${p.featured ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '—'}</td>
@@ -536,8 +543,8 @@ async function loadPosts() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${p.id}</td>
-        <td><strong>${p.title}</strong></td>
-        <td><code>${p.slug}</code></td>
+        <td><strong>${escapeHtml(p.title)}</strong></td>
+        <td><code>${escapeHtml(p.slug)}</code></td>
         <td>${p.published ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '<span style="color:var(--text-muted)">Draft</span>'}</td>
         <td>${p.created_at?.split(' ')[0] || ''}</td>
         <td><div class="actions">
@@ -561,7 +568,7 @@ function openPostForm(post) {
   document.getElementById('pfPostTitle').value = post ? post.title : '';
   document.getElementById('pfPostSlug').value = post ? post.slug : '';
   document.getElementById('pfPostExcerpt').value = post ? post.excerpt || '' : '';
-  if (quillEditor) { if (post && post.content) quillEditor.root.innerHTML = post.content; else quillEditor.root.innerHTML = ''; }
+  if (quillEditor) { if (post && post.content) quillEditor.root.innerHTML = DOMPurify.sanitize(post.content); else quillEditor.root.innerHTML = ''; }
   document.getElementById('pfPostContent').value = '';
   document.getElementById('pfPostImage').value = post ? post.image || '' : '';
   document.getElementById('pfPostAuthor').value = post ? post.author || 'Primenest Reality' : 'Primenest Reality';
@@ -639,7 +646,7 @@ async function loadTestimonials() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${t.id}</td>
-        <td><strong>${t.name}</strong>${t.role ? `<br><small style="color:var(--text-muted)">${t.role}</small>` : ''}</td>
+        <td><strong>${escapeHtml(t.name)}</strong>${t.role ? `<br><small style="color:var(--text-muted)">${escapeHtml(t.role)}</small>` : ''}</td>
         <td>${'<i class="fas fa-star" style="color:#f59e0b"></i>'.repeat(Math.min(5, Math.max(1, t.rating || 5)))}</td>
         <td>${t.published !== false ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '<span style="color:var(--text-muted)">No</span>'}</td>
         <td>${t.display_order || 0}</td>
@@ -725,14 +732,14 @@ async function loadMessages() {
       const div = document.createElement('div'); div.className = 'msg-card';
       div.innerHTML = `
         <button class="btn-danger btn-sm" onclick="deleteMessage(${m.id})" style="float:right"><i class="fas fa-trash"></i></button>
-        <h4>${m.name} <small style="color:var(--text-muted);font-weight:400">(${m.email})</small></h4>
+        <h4>${escapeHtml(m.name)} <small style="color:var(--text-muted);font-weight:400">(${escapeHtml(m.email)})</small></h4>
         <div class="meta">
-          <span><i class="far fa-calendar"></i> ${m.created_at}</span>
-          ${m.inquiry_type ? `<span>Type: ${m.inquiry_type}</span>` : ''}
-          ${m.phone ? `<span>Phone: ${m.phone}</span>` : ''}
+          <span><i class="far fa-calendar"></i> ${escapeHtml(m.created_at)}</span>
+          ${m.inquiry_type ? `<span>Type: ${escapeHtml(m.inquiry_type)}</span>` : ''}
+          ${m.phone ? `<span>Phone: ${escapeHtml(m.phone)}</span>` : ''}
         </div>
-        ${m.property ? `<p><strong>Property:</strong> ${m.property}</p>` : ''}
-        <p>${m.message}</p>`;
+        ${m.property ? `<p><strong>Property:</strong> ${escapeHtml(m.property)}</p>` : ''}
+        <p>${escapeHtml(m.message)}</p>`;
       list.appendChild(div);
     });
   } catch (e) { console.error('Admin error:', e.message); }
@@ -1578,8 +1585,9 @@ document.getElementById('settingsForm').addEventListener('submit', async functio
     const body = { currentPassword: current };
     if (newUsername) body.newUsername = newUsername;
     if (newPassword) body.newPassword = newPassword;
-    await api('/api/auth/password', { method: 'PUT', body: JSON.stringify(body) });
-    err.style.color = '#22c55e'; err.textContent = 'Updated successfully';
+    const result = await api('/api/auth/password', { method: 'PUT', body: JSON.stringify(body) });
+    if (result.token) { token = result.token; localStorage.setItem('admin_token', result.token); }
+    err.style.color = '#22c55e'; err.textContent = 'Updated successfully — please log in again with your new credentials';
     document.getElementById('settingsCurrentPw').value = '';
     document.getElementById('settingsNewUsername').value = '';
     document.getElementById('settingsNewPassword').value = '';

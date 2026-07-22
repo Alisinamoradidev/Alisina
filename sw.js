@@ -1,9 +1,9 @@
-const CACHE_NAME = 'primenest-v3';
+const CACHE_NAME = 'primenest-v4';
 const ASSETS = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/app.js',
+  '/styles.min.css',
+  '/app.min.js',
   '/config.js',
   '/images/logo.jpeg',
   '/images/icon-192.jpeg',

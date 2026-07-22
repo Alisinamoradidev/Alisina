@@ -10,7 +10,18 @@ const {
 } = require('@simplewebauthn/server');
 
 const rpName = 'Primenest Admin';
-const CHALLENGE_SECRET = process.env.JWT_SECRET || process.env.ADMIN_PASSWORD || 'opencode-fallback-key';
+const CHALLENGE_SECRET = process.env.JWT_SECRET;
+if (!CHALLENGE_SECRET) console.error('SECURITY: JWT_SECRET is not set — WebAuthn challenges use a fallback. Set JWT_SECRET in your environment.');
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function signChallenge(challenge) {
   return crypto.createHmac('sha256', CHALLENGE_SECRET).update(challenge).digest('hex');
@@ -84,12 +95,12 @@ async function sendRenewalEmail(prop) {
   if (!toEmail) return false;
 
   const bodyContent = `
-    <p style="margin:0 0 6px;color:#64748b;font-size:14px">Hi ${prop.renter_name || 'there'},</p>
-    <p style="margin:0 0 16px;color:#334155;font-size:15px">Your rental for <strong>${prop.title}</strong> is expiring on <strong>${expiresDate}</strong>.</p>
+    <p style="margin:0 0 6px;color:#64748b;font-size:14px">Hi ${escapeHtml(prop.renter_name || 'there')},</p>
+    <p style="margin:0 0 16px;color:#334155;font-size:15px">Your rental for <strong>${escapeHtml(prop.title)}</strong> is expiring on <strong>${expiresDate}</strong>.</p>
     <p style="margin:0 0 20px;color:#334155;font-size:15px">Would you like to re-rent this property? You can choose a new duration (1 Month, 6 Months, or 1 Year) and complete payment.</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${prop.title}</td></tr>
-      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Location</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${prop.location || ''}</td></tr>
+      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Property</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${escapeHtml(prop.title)}</td></tr>
+      <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Location</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${escapeHtml(prop.location || '')}</td></tr>
       <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Current Plan</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right">${durationLabels[prop.rental_duration] || prop.rental_duration}</td></tr>
       <tr><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:14px">Monthly Price</td><td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-weight:600;text-align:right;color:#2563eb;font-size:16px">${monthlyPrice}</td></tr>
       <tr><td style="padding:12px 0;color:#64748b;font-size:14px">Expires</td><td style="padding:12px 0;font-weight:600;text-align:right;color:#dc2626">${expiresDate}</td></tr>
@@ -185,16 +196,21 @@ async function getFaceEngine() {
 }
 
 let _tokenSecret = null;
+let _tokenSecretPromise = null;
 async function getTokenSecret() {
   if (_tokenSecret) return _tokenSecret;
-  try {
-    const { data } = await supabase.from('settings').select('value').eq('key', 'token_secret').maybeSingle();
-    if (data?.value?.secret) { _tokenSecret = data.value.secret; return _tokenSecret; }
-  } catch {}
-  if (process.env.JWT_SECRET) { _tokenSecret = process.env.JWT_SECRET; return _tokenSecret; }
-  _tokenSecret = crypto.randomBytes(32).toString('hex');
-  try { await supabase.from('settings').upsert({ key: 'token_secret', value: { secret: _tokenSecret }, updated_at: new Date().toISOString() }); } catch {}
-  return _tokenSecret;
+  if (_tokenSecretPromise) return _tokenSecretPromise;
+  _tokenSecretPromise = (async () => {
+    try {
+      const { data } = await supabase.from('settings').select('value').eq('key', 'token_secret').maybeSingle();
+      if (data?.value?.secret) { _tokenSecret = data.value.secret; return _tokenSecret; }
+    } catch {}
+    if (process.env.JWT_SECRET) { _tokenSecret = process.env.JWT_SECRET; return _tokenSecret; }
+    _tokenSecret = crypto.randomBytes(32).toString('hex');
+    try { await supabase.from('settings').upsert({ key: 'token_secret', value: { secret: _tokenSecret }, updated_at: new Date().toISOString() }); } catch {}
+    return _tokenSecret;
+  })();
+  return _tokenSecretPromise;
 }
 
 async function createSignedToken(payload) {
@@ -207,10 +223,13 @@ async function createSignedToken(payload) {
 module.exports = async (req, res) => {
   const allowedOrigins = [process.env.SITE_URL || 'https://alisina-nu.vercel.app'];
   const requestOrigin = req.headers.origin;
-  const corsOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
-  res.setHeader('Access-Control-Allow-Origin', corsOrigin);
+  const corsOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : null;
+  if (corsOrigin) res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -239,24 +258,29 @@ module.exports = async (req, res) => {
     if (seoPropMatch) {
       const id = parseInt(seoPropMatch[1]);
       const { data: p } = await supabase.from('properties').select('*').eq('id', id).maybeSingle();
-      if (!p) return res.status(404).setHeader('Content-Type', 'text/html').end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Property Not Found | Primenest Reality</title><link rel="stylesheet" href="/styles.css"><style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#1e293b;background:#f8fafc;text-align:center;padding:24px}h1{font-size:72px;margin:0;background:linear-gradient(135deg,#1e3a5f,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#64748b;margin:8px 0 24px}a{color:#2563eb}</style></head><body><div><h1>404</h1><p>Property not found</p><a href="/">Back to Home</a></div></body></html>');
+      if (!p) return res.status(404).setHeader('Content-Type', 'text/html').end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Property Not Found | Primenest Reality</title><link rel="stylesheet" href="/styles.min.css"><style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#1e293b;background:#f8fafc;text-align:center;padding:24px}h1{font-size:72px;margin:0;background:linear-gradient(135deg,#1e3a5f,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#64748b;margin:8px 0 24px}a{color:#2563eb}</style></head><body><div><h1>404</h1><p>Property not found</p><a href="/">Back to Home</a></div></body></html>');
       const price = p.badge === 'rent' ? `$${p.price.toLocaleString()}/mo` : `$${p.price.toLocaleString()}`;
       const desc = `${p.title} — ${p.beds} bed, ${p.baths} bath ${p.type} in ${p.location}. ${price}. Browse property details, photos, and more.`;
       const img = p.image || 'https://alisina-nu.vercel.app/images/alisina.jpg';
       const title = `${p.title} | Primenest Reality`;
+      const safeTitle = escapeHtml(title);
+      const safeDesc = escapeHtml(desc);
+      const safeImg = escapeHtml(img);
+      const safePropTitle = escapeHtml(p.title);
+      const safePropDesc = escapeHtml(desc).replace(/&quot;/g, '"');
       return res.status(200).setHeader('Content-Type', 'text/html').end(`<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
-<meta name="description" content="${desc.replace(/"/g,'&quot;')}">
-<meta property="og:title" content="${p.title}"><meta property="og:description" content="${desc.replace(/"/g,'&quot;')}"><meta property="og:image" content="${img}"><meta property="og:url" content="https://alisina-nu.vercel.app/property/${id}"><meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${p.title}"><meta name="twitter:description" content="${desc.replace(/"/g,'&quot;')}"><meta name="twitter:image" content="${img}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safeTitle}</title>
+<meta name="description" content="${safeDesc}">
+<meta property="og:title" content="${safePropTitle}"><meta property="og:description" content="${safeDesc}"><meta property="og:image" content="${safeImg}"><meta property="og:url" content="https://alisina-nu.vercel.app/property/${id}"><meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${safePropTitle}"><meta name="twitter:description" content="${safeDesc}"><meta name="twitter:image" content="${safeImg}">
 <link rel="canonical" href="https://alisina-nu.vercel.app/property/${id}">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"${p.title}","description":"${desc.replace(/"/g,'&quot;')}","image":"${img}","offers":{"@type":"Offer","priceCurrency":"USD","price":${p.price},"availability":"https://schema.org/InStock"}}</script>
-<link rel="icon" type="image/jpeg" href="/images/logo.jpeg"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":${JSON.stringify(p.title)},"description":${JSON.stringify(desc)},"image":${JSON.stringify(img)},"offers":{"@type":"Offer","priceCurrency":"USD","price":${p.price},"availability":"https://schema.org/InStock"}}</script>
+<link rel="icon" type="image/jpeg" href="/images/logo.jpeg"><link rel="stylesheet" href="/styles.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WGYY6MVM5P"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-WGYY6MVM5P')</script>
 </head><body>
 <script>window.__propertyId=${id};</script>
-<script src="/app.js"></script>
+<script src="/app.min.js"></script>
 <script src="/config.js"></script>
 </body></html>`);
     }
@@ -266,28 +290,32 @@ module.exports = async (req, res) => {
     if (blogSlugMatch) {
       const slug = decodeURIComponent(blogSlugMatch[1]);
       const { data: post } = await supabase.from('posts').select('*').eq('slug', slug).maybeSingle();
-      if (!post) return res.status(404).setHeader('Content-Type', 'text/html').end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Post Not Found | Primenest Reality</title><link rel="stylesheet" href="/styles.css"><style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#1e293b;background:#f8fafc;text-align:center;padding:24px}h1{font-size:72px;margin:0;background:linear-gradient(135deg,#1e3a5f,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#64748b;margin:8px 0 24px}a{color:#2563eb}</style></head><body><div><h1>404</h1><p>Post not found</p><a href="/">Back to Home</a></div></body></html>');
+      if (!post) return res.status(404).setHeader('Content-Type', 'text/html').end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Post Not Found | Primenest Reality</title><link rel="stylesheet" href="/styles.min.css"><style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#1e293b;background:#f8fafc;text-align:center;padding:24px}h1{font-size:72px;margin:0;background:linear-gradient(135deg,#1e3a5f,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#64748b;margin:8px 0 24px}a{color:#2563eb}</style></head><body><div><h1>404</h1><p>Post not found</p><a href="/">Back to Home</a></div></body></html>');
       const img = post.image || 'https://alisina-nu.vercel.app/images/alisina.jpg';
       const postTitle = `${post.title} | Primenest Reality Blog`;
-      const postDesc = (post.excerpt || post.content || '').replace(/<[^>]*>/g,'').substring(0,200).replace(/"/g,'&quot;');
+      const postDesc = (post.excerpt || post.content || '').replace(/<[^>]*>/g,'').substring(0,200);
+      const safePostTitle = escapeHtml(postTitle);
+      const safePostDesc = escapeHtml(postDesc);
+      const safeImg = escapeHtml(img);
+      const safeSlug = escapeHtml(slug);
       return res.status(200).setHeader('Content-Type', 'text/html').end(`<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${postTitle}</title>
-<meta name="description" content="${postDesc}">
-<meta property="og:title" content="${post.title}"><meta property="og:description" content="${postDesc}"><meta property="og:image" content="${img}"><meta property="og:url" content="https://alisina-nu.vercel.app/blog/${slug}"><meta property="og:type" content="article">
-<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${post.title}"><meta name="twitter:description" content="${postDesc}"><meta name="twitter:image" content="${img}">
-<link rel="canonical" href="https://alisina-nu.vercel.app/blog/${slug}">
-<link rel="icon" type="image/jpeg" href="/images/logo.jpeg"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safePostTitle}</title>
+<meta name="description" content="${safePostDesc}">
+<meta property="og:title" content="${escapeHtml(post.title)}"><meta property="og:description" content="${safePostDesc}"><meta property="og:image" content="${safeImg}"><meta property="og:url" content="https://alisina-nu.vercel.app/blog/${safeSlug}"><meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(post.title)}"><meta name="twitter:description" content="${safePostDesc}"><meta name="twitter:image" content="${safeImg}">
+<link rel="canonical" href="https://alisina-nu.vercel.app/blog/${safeSlug}">
+<link rel="icon" type="image/jpeg" href="/images/logo.jpeg"><link rel="stylesheet" href="/styles.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WGYY6MVM5P"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-WGYY6MVM5P')</script>
 </head><body>
 <div class="container" style="max-width:720px;margin:40px auto;padding:0 24px">
 <a href="/" style="color:#2563eb;text-decoration:none;margin-bottom:24px;display:inline-block">&larr; Back to Home</a>
-${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;border-radius:12px;margin:16px 0 24px;max-height:400px;object-fit:cover">` : ''}
-<h1 style="font-size:32px;margin-bottom:8px">${post.title}</h1>
-<p style="color:#94a3b8;font-size:14px;margin-bottom:24px">${post.created_at?.split(' ')[0] || ''} &bull; By ${post.author || 'Primenest Reality'}</p>
+${post.image ? `<img src="${escapeHtml(post.image)}" alt="${escapeHtml(post.title)}" style="width:100%;border-radius:12px;margin:16px 0 24px;max-height:400px;object-fit:cover">` : ''}
+<h1 style="font-size:32px;margin-bottom:8px">${escapeHtml(post.title)}</h1>
+<p style="color:#94a3b8;font-size:14px;margin-bottom:24px">${post.created_at?.split(' ')[0] || ''} &bull; By ${escapeHtml(post.author || 'Primenest Reality')}</p>
 <div style="font-size:16px;line-height:1.8;color:#334155">${post.content || ''}</div>
 </div>
-<script src="/app.js"></script>
+<script src="/app.min.js"></script>
 <script src="/config.js"></script>
 </body></html>`);
     }
@@ -323,7 +351,10 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
       if (type) query = query.eq('type', type);
       if (badge) query = query.eq('badge', badge);
-      if (search) query = query.or(`title.ilike.%${search}%,location.ilike.%${search}%`);
+      if (search) {
+        const safeSearch = search.replace(/[%_]/g, m => '\\' + m).substring(0, 100);
+        query = query.or(`title.ilike.%${safeSearch}%,location.ilike.%${safeSearch}%`);
+      }
       if (minPrice) query = query.gte('price', Number(minPrice));
       if (maxPrice) query = query.lte('price', Number(maxPrice));
 
@@ -362,8 +393,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const auth = req.headers.authorization;
       const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
-      const upd = { ...body, updated_at: new Date().toISOString() };
-      for (const f of ['title_l10n','location_l10n','description_l10n']) {
+      const allowedFields = ['title','location','price','type','beds','baths','sqft','year','badge','featured','lat','lng','image','gallery','description','status','rented_at','rental_duration','renter_email','renter_name','renewal_email_sent','title_l10n','location_l10n','description_l10n'];
+      const upd = { updated_at: new Date().toISOString() };
+      for (const f of allowedFields) {
         if (body[f] !== undefined) upd[f] = body[f];
       }
       const { error } = await supabase.from('properties').update(upd).eq('id', propMatch[1]);
@@ -412,12 +444,15 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         return res.status(200).json({ success: true, message: `Renewal email sent to ${prop.renter_email}` });
       } catch (e) {
         console.error('Send renewal email error:', e.message);
-        return res.status(500).json({ error: e.message });
+        return res.status(500).json({ error: 'Failed to send renewal email' });
       }
     }
 
     /* Auto-expire rented properties whose duration has passed */
     if (path === '/properties/check-expired' && method === 'GET') {
+      const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+      const allowed = await checkRateLimit('check_expired_' + ip, 10, 300);
+      if (!allowed) return res.status(429).json({ error: 'Too many requests' });
       const { data: rented } = await supabase.from('properties').select('id, rented_at, rental_duration, renewal_email_sent, renter_email, renter_name, title, location, price').eq('status', 'rented').not('rented_at', 'is', null);
       if (!rented || rented.length === 0) return res.status(200).json({ expired: [], checked: 0 });
       const durationMonths = { '1month': 1, '6months': 6, '1year': 12 };
@@ -454,7 +489,14 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const auth = req.headers.authorization;
       const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
-      const { data, error } = await supabase.from('properties').insert({ ...body, gallery: body.gallery || [] }).select().single();
+      const allowedFields = ['title','location','price','type','beds','baths','sqft','year','badge','featured','lat','lng','image','gallery','description'];
+      const prop = {};
+      for (const f of allowedFields) {
+        if (body[f] !== undefined) prop[f] = body[f];
+      }
+      if (!prop.title || prop.price === undefined) return res.status(400).json({ error: 'title and price are required' });
+      prop.gallery = prop.gallery || [];
+      const { data, error } = await supabase.from('properties').insert(prop).select().single();
       if (error) throw error;
       return res.status(201).json(data);
     }
@@ -489,7 +531,13 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const auth = req.headers.authorization;
       const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
-      const { data, error } = await supabase.from('posts').insert(body).select().single();
+      const allowedFields = ['title','slug','excerpt','content','image','author','published','title_l10n','excerpt_l10n','content_l10n'];
+      const post = {};
+      for (const f of allowedFields) {
+        if (body[f] !== undefined) post[f] = body[f];
+      }
+      if (!post.title || !post.slug) return res.status(400).json({ error: 'title and slug are required' });
+      const { data, error } = await supabase.from('posts').insert(post).select().single();
       if (error) throw error;
       return res.status(201).json(data);
     }
@@ -498,8 +546,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const auth = req.headers.authorization;
       const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
-      const upd = { ...body, updated_at: new Date().toISOString() };
-      for (const f of ['title_l10n','excerpt_l10n','content_l10n']) {
+      const allowedFields = ['title','slug','excerpt','content','image','author','published','title_l10n','excerpt_l10n','content_l10n'];
+      const upd = { updated_at: new Date().toISOString() };
+      for (const f of allowedFields) {
         if (body[f] !== undefined) upd[f] = body[f];
       }
       const { error } = await supabase.from('posts').update(upd).eq('id', blogMatch[1]);
@@ -538,8 +587,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const auth = req.headers.authorization;
       const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
-      const upd = { ...body, updated_at: new Date().toISOString() };
-      for (const f of ['name_l10n','role_l10n','content_l10n']) {
+      const allowedFields = ['name','role','content','rating','display_order','published','image','name_l10n','role_l10n','content_l10n'];
+      const upd = { updated_at: new Date().toISOString() };
+      for (const f of allowedFields) {
         if (body[f] !== undefined) upd[f] = body[f];
       }
       const { error } = await supabase.from('testimonials').update(upd).eq('id', testimonialMatch[1]);
@@ -561,16 +611,25 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const auth = req.headers.authorization;
       const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
-      const { data, error } = await supabase.from('testimonials').insert(body).select().single();
+      const allowedFields = ['name','role','content','rating','display_order','published','image','name_l10n','role_l10n','content_l10n'];
+      const testimonial = {};
+      for (const f of allowedFields) {
+        if (body[f] !== undefined) testimonial[f] = body[f];
+      }
+      if (!testimonial.name || !testimonial.content) return res.status(400).json({ error: 'name and content are required' });
+      const { data, error } = await supabase.from('testimonials').insert(testimonial).select().single();
       if (error) throw error;
       return res.status(201).json(data);
     }
 
     /* Contact */
     if (path === '/contact' && method === 'POST') {
-      const allowed = await checkRateLimit('contact_' + (body.email || 'unknown'), 3, 300);
-      if (!allowed) return res.status(429).json({ error: 'Too many messages. Try again later.' });
-      const { data, error } = await supabase.from('contacts').insert(body).select().single();
+      const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+      const contactAllowed = await checkRateLimit('contact_' + ip, 3, 300);
+      if (!contactAllowed) return res.status(429).json({ error: 'Too many messages. Try again later.' });
+      const { name, email, phone, inquiry_type, property, message } = body;
+      const insertData = { name, email, phone, inquiry_type, property, message };
+      const { data, error } = await supabase.from('contacts').insert(insertData).select().single();
       if (error) throw error;
       /* Send email notification via Gmail SMTP */
       try {
@@ -585,18 +644,18 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
           await t.sendMail({
             from: `"Primenest Reality" <${gmailUser}>`,
             to: toEmail,
-            subject: `New inquiry from ${body.name || 'Visitor'}`,
+            subject: `New inquiry from ${escapeHtml(body.name || 'Visitor')}`,
             html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
               <h2 style="color:#2563eb;margin-bottom:16px">New Contact Inquiry</h2>
               <table style="width:100%;border-collapse:collapse">
-                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Name</td><td style="padding:8px 0;border-bottom:1px solid #eee;font-weight:600">${body.name || ''}</td></tr>
-                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Email</td><td style="padding:8px 0;border-bottom:1px solid #eee"><a href="mailto:${body.email || ''}">${body.email || ''}</a></td></tr>
-                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Phone</td><td style="padding:8px 0;border-bottom:1px solid #eee">${body.phone || 'N/A'}</td></tr>
-                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Inquiry</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-transform:capitalize">${body.inquiry_type || ''}</td></tr>
-                ${body.property ? `<tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Property</td><td style="padding:8px 0;border-bottom:1px solid #eee">${body.property}</td></tr>` : ''}
-                <tr><td style="padding:8px 0;color:#666">Message</td><td style="padding:8px 0">${body.message || ''}</td></tr>
+                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Name</td><td style="padding:8px 0;border-bottom:1px solid #eee;font-weight:600">${escapeHtml(body.name || '')}</td></tr>
+                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Email</td><td style="padding:8px 0;border-bottom:1px solid #eee"><a href="mailto:${escapeHtml(body.email || '')}">${escapeHtml(body.email || '')}</a></td></tr>
+                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Phone</td><td style="padding:8px 0;border-bottom:1px solid #eee">${escapeHtml(body.phone || 'N/A')}</td></tr>
+                <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Inquiry</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-transform:capitalize">${escapeHtml(body.inquiry_type || '')}</td></tr>
+                ${body.property ? `<tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Property</td><td style="padding:8px 0;border-bottom:1px solid #eee">${escapeHtml(body.property)}</td></tr>` : ''}
+                <tr><td style="padding:8px 0;color:#666">Message</td><td style="padding:8px 0">${escapeHtml(body.message || '')}</td></tr>
               </table>
-              <p style="margin-top:20px;color:#999;font-size:12px">Reply directly to ${body.email || 'this visitor'} to respond.</p>
+              <p style="margin-top:20px;color:#999;font-size:12px">Reply directly to ${escapeHtml(body.email || 'this visitor')} to respond.</p>
             </div>`
           });
         }
@@ -614,6 +673,9 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     }
 
     if (path === '/contact/messages' && method === 'GET') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
       const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20')));
       const from = (page - 1) * limit;
@@ -634,31 +696,53 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     /* Auth */
     if (path === '/auth/login' && method === 'POST') {
+      const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+      const loginAllowed = await checkRateLimit('login_' + ip, 5, 300);
+      if (!loginAllowed) return res.status(429).json({ error: 'Too many login attempts. Try again later.' });
       const { username, password } = body;
       if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
-      let adminUser = process.env.ADMIN_USERNAME || 'admin';
-      let adminPass = process.env.ADMIN_PASSWORD;
+      let credsFound = false;
       try {
         const { data: creds, error: credErr } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
         if (credErr) console.error('Login credentials read error:', credErr.message);
-        if (creds?.value) {
-          if (creds.value.username) adminUser = creds.value.username;
-          if (creds.value.password_hash) {
+        if (creds?.value?.username && creds?.value?.password_hash) {
+          credsFound = true;
+          if (username === creds.value.username) {
             const match = await bcrypt.compare(password, creds.value.password_hash);
             if (match) {
               const token = await createSignedToken({ id: 1, username, role: 'admin', exp: Date.now() + 86400000 });
               return res.status(200).json({ token });
             }
           }
+          return res.status(401).json({ error: 'Invalid credentials' });
         }
       } catch (e) { console.error('Login credentials exception:', e.message); }
-      if (!adminPass) return res.status(500).json({ error: 'Admin password not configured' });
-      if (username === adminUser || username === 'admin') {
-        if (password !== adminPass) return res.status(401).json({ error: 'Invalid credentials' });
+      if (credsFound) return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'No admin credentials configured. Go to /admin → Settings to set up your admin account.' });
+    }
+
+    if (path === '/auth/setup' && method === 'POST') {
+      const { username, password } = body;
+      if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+      if (username.length < 3) return res.status(400).json({ error: 'Username must be at least 3 characters' });
+      if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+      try {
+        const { data: existing } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
+        if (existing?.value?.username && existing?.value?.password_hash) {
+          return res.status(403).json({ error: 'Admin credentials already exist. Use Settings to change them.' });
+        }
+        const hash = await bcrypt.hash(password, 10);
+        const { error: upsertErr } = await supabase.from('settings').upsert({ key: 'admin_credentials', value: { username, password_hash: hash }, updated_at: new Date().toISOString() });
+        if (upsertErr) {
+          console.error('Setup upsert error:', upsertErr.message);
+          return res.status(500).json({ error: 'Failed to save credentials' });
+        }
         const token = await createSignedToken({ id: 1, username, role: 'admin', exp: Date.now() + 86400000 });
-        return res.status(200).json({ token });
+        return res.status(200).json({ token, message: 'Admin account created' });
+      } catch (e) {
+        console.error('Setup exception:', e.message);
+        return res.status(500).json({ error: 'Setup failed' });
       }
-      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     if (path === '/auth/me' && method === 'GET') {
@@ -674,8 +758,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { currentPassword, newPassword, newUsername } = body;
       if (!currentPassword) return res.status(400).json({ error: 'Current password required' });
-      let adminUser = process.env.ADMIN_USERNAME || 'admin';
-      let adminPass = process.env.ADMIN_PASSWORD;
+      let adminUser = null;
       let storedHash = null;
       try {
         const { data: creds, error: readErr } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
@@ -685,12 +768,8 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
           if (creds.value.password_hash) storedHash = creds.value.password_hash;
         }
       } catch (e) { console.error('Settings read exception:', e.message); }
-      let valid = false;
-      if (storedHash) {
-        valid = await bcrypt.compare(currentPassword, storedHash);
-      } else {
-        valid = currentPassword === adminPass;
-      }
+      if (!storedHash || !adminUser) return res.status(400).json({ error: 'No credentials configured. Use /auth/setup first.' });
+      const valid = await bcrypt.compare(currentPassword, storedHash);
       if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
       const updates = {};
       if (newPassword) {
@@ -705,13 +784,19 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         const { error: upsertErr } = await supabase.from('settings').upsert({ key: 'admin_credentials', value: merged, updated_at: new Date().toISOString() });
         if (upsertErr) {
           console.error('Settings upsert error:', upsertErr.message);
-          return res.status(500).json({ error: 'Failed to save: ' + upsertErr.message });
+          return res.status(500).json({ error: 'Failed to save settings' });
         }
+        const newSecret = crypto.randomBytes(32).toString('hex');
+        _tokenSecret = newSecret;
+        _tokenSecretPromise = null;
+        try { await supabase.from('settings').upsert({ key: 'token_secret', value: { secret: newSecret }, updated_at: new Date().toISOString() }); } catch {}
       } catch (e) {
         console.error('Settings upsert exception:', e.message);
-        return res.status(500).json({ error: 'Failed to save credentials: ' + e.message });
+        return res.status(500).json({ error: 'Failed to save credentials' });
       }
-      return res.status(200).json({ message: 'Credentials updated', username: updates.username || adminUser });
+      const updatedUsername = updates.username || adminUser;
+      const newToken = await createSignedToken({ id: 1, username: updatedUsername, role: 'admin', exp: Date.now() + 86400000 });
+      return res.status(200).json({ message: 'Credentials updated', username: updatedUsername, token: newToken });
     }
 
     /* ─── WebAuthn ─── */
@@ -719,7 +804,13 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     const webauthnCheckMatch = method === 'GET' && path.match(/^\/auth\/webauthn\/check\/(.+)$/);
     if (webauthnCheckMatch) {
       const username = decodeURIComponent(webauthnCheckMatch[1]);
-      const isAdmin = username === (process.env.ADMIN_USERNAME || 'admin');
+      let adminUser = null;
+      try {
+        const { data: creds } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
+        if (creds?.value?.username) adminUser = creds.value.username;
+      } catch (e) {}
+      if (!adminUser) adminUser = 'admin';
+      const isAdmin = username === adminUser;
       if (!isAdmin) return res.json({ hasPasskey: false });
       const { data: keys } = await supabase.from('webauthn_passkeys').select('id').eq('user_id', 1);
       return res.json({ hasPasskey: (keys || []).length > 0 });
@@ -775,7 +866,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
           expectedRPID: rpId,
         });
       } catch (e) {
-        return res.status(400).json({ error: e.message });
+        return res.status(400).json({ error: 'Passkey registration failed' });
       }
 
       if (!verification.verified) {
@@ -804,7 +895,13 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
       let allowCredentials = [];
       if (username) {
-        const isAdmin = username === (process.env.ADMIN_USERNAME || 'admin');
+        let adminUser = null;
+        try {
+          const { data: creds } = await supabase.from('settings').select('value').eq('key', 'admin_credentials').maybeSingle();
+          if (creds?.value?.username) adminUser = creds.value.username;
+        } catch (e) {}
+        if (!adminUser) adminUser = 'admin';
+        const isAdmin = username === adminUser;
         if (!isAdmin) return res.status(404).json({ error: 'User not found' });
         const { data: keys } = await supabase.from('webauthn_passkeys').select('*').eq('username', username);
         if (!keys?.length) return res.status(404).json({ error: 'No passkey registered for this user' });
@@ -855,7 +952,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
           },
         });
       } catch (e) {
-        return res.status(400).json({ error: e.message });
+        return res.status(400).json({ error: 'Passkey authentication failed' });
       }
 
       if (!verification.verified) {
@@ -903,7 +1000,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
           const result = await processImage(images[i]);
           embeddings.push(result.embedding);
         } catch (e) {
-          return res.status(400).json({ error: `Image ${i + 1}: ${e.message}` });
+          return res.status(400).json({ error: `Image ${i + 1}: face processing failed` });
         }
       }
 
@@ -963,7 +1060,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         const { verifyImage } = await getFaceEngine();
         result = await verifyImage(image, storedEmbeddings);
       } catch (e) {
-        return res.status(400).json({ error: e.message });
+        return res.status(400).json({ error: 'Face verification failed' });
       }
 
       if (!result.match) {
@@ -985,8 +1082,15 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
 
     /* Upload */
     if (path === '/upload' && method === 'POST') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { file, name } = body;
       if (!file || !name) return res.status(400).json({ error: 'file and name required' });
+      if (!file.startsWith('data:image/')) return res.status(400).json({ error: 'Only image files are allowed' });
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      const fileType = file.split(';')[0].split(':')[1] || '';
+      if (!allowedTypes.includes(fileType)) return res.status(400).json({ error: 'Only JPEG, PNG, GIF, and WebP images are allowed' });
       const base64Data = file.replace(/^data:image\/\w+;base64,/, '');
       const size = Buffer.byteLength(base64Data, 'base64');
       if (size > 3 * 1024 * 1024) return res.status(413).json({ error: 'File too large (max 3MB)' });
@@ -1219,7 +1323,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         return res.status(200).json({ success: true, message: `Email sent to ${toEmail}` });
       } catch (e) {
         console.error('resend notification error:', e.message);
-        return res.status(500).json({ error: e.message });
+        return res.status(500).json({ error: 'Failed to resend notification' });
       }
     }
 
@@ -1248,6 +1352,12 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
     if (path === '/payments/settings' && method === 'GET') {
       try {
         const key = url.searchParams.get('key') || 'bank_info';
+        const sensitiveKeys = ['gmail_smtp', 'stripe_secret_key', 'stripe_publishable_key', 'stripe_webhook_secret', 'deepl_api_key', 'notification_email', 'admin_credentials', 'token_secret'];
+        if (sensitiveKeys.includes(key)) {
+          const auth = req.headers.authorization;
+          const user = await getAuthUser(auth);
+          if (!user) return res.status(401).json({ error: 'Unauthorized' });
+        }
         const { data } = await supabase.from('settings').select('value').eq('key', key).maybeSingle();
         return res.status(200).json(data?.value || {});
       } catch { return res.status(200).json({}); }
@@ -1259,9 +1369,11 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       try {
         const { key, value, bank_name, account_name, account_number, routing, iban, swift } = body;
+        const allowedKeys = ['bank_info', 'gmail_smtp', 'notification_email', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'deepl_api_key'];
         let settingsKey = 'bank_info';
         let settingsValue = { bank_name, account_name, account_number, routing, iban, swift };
         if (key) {
+          if (!allowedKeys.includes(key)) return res.status(400).json({ error: 'Invalid settings key' });
           settingsKey = key;
           settingsValue = value;
         }
@@ -1292,7 +1404,12 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       try {
-        const { error } = await supabase.from('settings').upsert({ key: 'contact_info', value: body, updated_at: new Date().toISOString() });
+        const allowedFields = ['phone','email','address','whatsapp','whatsapp_message','facebook_url','instagram_url','linkedin_url','formsubmit_email'];
+        const filtered = {};
+        for (const f of allowedFields) {
+          if (body[f] !== undefined) filtered[f] = body[f];
+        }
+        const { error } = await supabase.from('settings').upsert({ key: 'contact_info', value: filtered, updated_at: new Date().toISOString() });
         if (error) throw error;
         return res.status(200).json({ success: true });
       } catch (e) {
@@ -1318,12 +1435,15 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         await supabase.from('payments').update({ status: 'refunded', updated_at: new Date().toISOString() }).eq('id', payment_id);
         return res.status(200).json({ success: true, refund_id: refund.id });
       } catch (e) {
-        return res.status(500).json({ error: e.message });
+        return res.status(500).json({ error: 'Refund failed' });
       }
     }
 
     /* Payment Summary per property */
     if (path === '/payments/summary' && method === 'GET') {
+      const auth = req.headers.authorization;
+      const user = await getAuthUser(auth);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       try {
         const { data: payments } = await supabase.from('payments').select('property_id, amount, status').eq('status', 'completed');
         if (!payments) return res.status(200).json([]);
@@ -1343,7 +1463,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         }));
         return res.status(200).json(result);
       } catch (e) {
-        return res.status(500).json({ error: e.message });
+        return res.status(500).json({ error: 'Failed to load payment summary' });
       }
     }
 
@@ -1366,7 +1486,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         }
         return res.status(200).json({ message: `Refunded ${refunded} of ${payments.length} payments` });
       } catch (e) {
-        return res.status(500).json({ error: e.message });
+        return res.status(500).json({ error: 'Refund-all failed' });
       }
     }
 
@@ -1394,7 +1514,7 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
         });
         return res.status(200).json({ success: true, messageId: info.messageId });
       } catch (e) {
-        return res.status(500).json({ error: e.message, code: e.code });
+        return res.status(500).json({ error: 'Email test failed — check SMTP configuration' });
       }
     }
 
@@ -1435,10 +1555,10 @@ ${post.image ? `<img src="${post.image}" alt="${post.title}" style="width:100%;b
       return res.status(200).json({ message: `Imported ${imported.length} properties`, count: imported.length });
     }
 
-    return res.status(404).json({ error: 'Not found', path, method });
+    return res.status(404).json({ error: 'Not found' });
 
   } catch (err) {
     console.error('API Error:', err);
-    return res.status(500).json({ error: err.message || 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
