@@ -9,7 +9,7 @@
 :root {
   --primary: #1a73e8;
   --primary-dark: #1557b0;
-  --accent: #2d8f47;
+  --accent: #1a6b2e;
   --dark: #1f2937;
   --gray: #4b5563;
   --light: #f3f4f6;
@@ -278,7 +278,7 @@ body {
 }
 
 .btn-search:hover {
-  background: #247a3a;
+  background: #145824;
 }
 
 /* Section */
