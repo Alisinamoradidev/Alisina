@@ -6,6 +6,9 @@
   box-sizing: border-box;
 }
 
+svg[aria-hidden="true"] { width: 1em; height: 1em; fill: currentColor; vertical-align: -.125em; flex-shrink: 0; }
+.property-details svg, .property-location svg, .map-popup-location svg { font-size: inherit; }
+
 :root {
   --primary: #1a73e8;
   --primary-dark: #1557b0;

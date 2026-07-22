@@ -42,11 +42,11 @@ function renderSoldProperties() {
       <div class="property-body">
         <div class="property-price" style="color:var(--text-muted);text-decoration:line-through">${formatPrice(p.price, 'sale')}</div>
         <div class="property-title">${sanitizeHTML(p.title)}</div>
-        <div class="property-location"><i class="fas fa-map-marker-alt"></i> ${sanitizeHTML(p.location)}</div>
+        <div class="property-location">${I('fas fa-map-marker-alt')} ${sanitizeHTML(p.location)}</div>
         <div class="property-details">
-          <span><i class="fas fa-bed"></i> ${p.beds} Beds</span>
-          <span><i class="fas fa-bath"></i> ${p.baths} Baths</span>
-          <span><i class="fas fa-ruler-combined"></i> ${p.sqft.toLocaleString()} sqft</span>
+          <span>${I('fas fa-bed')} ${p.beds} Beds</span>
+          <span>${I('fas fa-bath')} ${p.baths} Baths</span>
+          <span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} sqft</span>
         </div>
       </div>
     </div>
@@ -55,6 +55,8 @@ function renderSoldProperties() {
 function hideSkeletons() { document.querySelectorAll('.skeleton-card').forEach(e => e.remove()); }
 
 const $ = id => document.getElementById(id);
+const IM={'fas fa-map-marker-alt':'location-dot','fas fa-bed':'bed','fas fa-bath':'bath','fas fa-ruler-combined':'ruler-combined','fas fa-camera':'camera','far fa-heart':'heart-outline','fas fa-heart':'heart-solid','fas fa-times':'xmark','fas fa-credit-card':'credit-card','fas fa-star':'star','fas fa-chevron-left':'chevron-left','fas fa-chevron-right':'chevron-right','fas fa-arrow-right':'arrow-right','fas fa-calendar':'calendar','fas fa-check-circle':'circle-check','fas fa-plus-circle':'circle-plus','fas fa-external-link-alt':'arrow-up-right-from-square'};
+function I(c){return'<svg aria-hidden="true" focusable="false" class="'+c+'"><use href="#'+IM[c]+'"/></svg>';}
 
 /* Load contact info from backend and update all hardcoded values */
 async function loadContactInfo() {
@@ -146,19 +148,19 @@ function createPropertyCard(p, idx = 0) {
     <div class="property-image">
       <img src="${p.image}" alt="${sanitizeHTML(p.title)}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22><rect fill=%22%23d1d5db%22 width=%22600%22 height=%22400%22/><text fill=%22%236b7280%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>No Image</text></svg>'">
       <span class="property-badge ${p.badge === 'sold' ? 'badge-sold' : p.badge === 'sale' ? 'badge-sale' : 'badge-rent'}">${p.badge === 'sold' ? 'Sold' : p.badge === 'sale' ? 'For Sale' : 'For Rent'}</span>
-      <span class="photo-count"><i class="fas fa-camera"></i> ${p.gallery && p.gallery.length > 0 ? p.gallery.length + 1 : 1}</span>
-      <button class="property-fav" data-id="${p.id}" aria-label="Save property"><i class="far fa-heart"></i></button>
+      <span class="photo-count">${I('fas fa-camera')} ${p.gallery && p.gallery.length > 0 ? p.gallery.length + 1 : 1}</span>
+      <button class="property-fav" data-id="${p.id}" aria-label="Save property">${I('far fa-heart')}</button>
     </div>
       <div class="property-body">
       <div class="property-price">${formatPrice(p.price, p.badge)}</div>
       <div class="property-title">${sanitizeHTML(p.title)}</div>
-      <div class="property-location"><i class="fas fa-map-marker-alt"></i> ${sanitizeHTML(p.location)}</div>
+      <div class="property-location">${I('fas fa-map-marker-alt')} ${sanitizeHTML(p.location)}</div>
       <div class="property-details">
-        <span><i class="fas fa-bed"></i> ${p.beds} Beds</span>
-        <span><i class="fas fa-bath"></i> ${p.baths} Baths</span>
-        <span><i class="fas fa-ruler-combined"></i> ${p.sqft.toLocaleString()} sqft</span>
+        <span>${I('fas fa-bed')} ${p.beds} Beds</span>
+        <span>${I('fas fa-bath')} ${p.baths} Baths</span>
+        <span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} sqft</span>
       </div>
-      <button class="btn-compare" data-id="${p.id}" onclick="toggleCompare(${p.id})" title="Compare"><i class="fas ${compareItems.includes(p.id) ? 'fa-check-circle' : 'fa-plus-circle'}"></i></button>
+      <button class="btn-compare" data-id="${p.id}" onclick="toggleCompare(${p.id})" title="Compare">${I(`fas ${compareItems.includes(p.id) ? 'fa-check-circle' : 'fa-plus-circle'}`)}</button>
     </div>`;
   setFavIcon(card.querySelector('.property-fav'), p.id);
   return card;
@@ -178,7 +180,7 @@ function renderCompareBar() {
   const inner = bar.querySelector('.compare-bar-inner');
   const items = compareItems.map(id => properties.find(p => p.id === id)).filter(Boolean);
   inner.innerHTML = items.map(p => `
-    <div class="compare-chip"><span>${sanitizeHTML(p.title)}</span><i class="fas fa-times" onclick="toggleCompare(${p.id})"></i></div>
+    <div class="compare-chip"><span>${sanitizeHTML(p.title)}</span><span onclick="toggleCompare(${p.id})" style="cursor:pointer">${I('fas fa-times')}</span></div>
   `).join('');
   const btn = bar.querySelector('.compare-btn');
   btn.style.display = items.length >= 2 ? 'inline-flex' : 'none';
@@ -308,7 +310,7 @@ function openModal(p) {
   const mapLink = $('modalMapLink');
   const modalMapEl = $('modalMap');
   if (p.lat && p.lng) { mapLink.href = `https://www.google.com/maps?q=${p.lat},${p.lng}`; mapLink.style.display = ''; modalMapEl.style.display = ''; loadLeafletScript().then(() => { setTimeout(() => { if (window._modalMap) { window._modalMap.remove(); } window._modalMap = L.map(modalMapEl, { zoomControl: false }).setView([p.lat, p.lng], 15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(window._modalMap); L.marker([p.lat, p.lng]).addTo(window._modalMap); setTimeout(() => window._modalMap.invalidateSize(), 100); }, 100); }).catch(() => {}); } else { mapLink.style.display = 'none'; modalMapEl.style.display = 'none'; }
-  $('modalDetails').innerHTML = `<span><i class="fas fa-bed"></i> ${p.beds} Beds</span><span><i class="fas fa-bath"></i> ${p.baths} Baths</span><span><i class="fas fa-ruler-combined"></i> ${p.sqft.toLocaleString()} sqft</span><span><i class="fas fa-calendar"></i> Built ${p.year}</span>`;
+  $('modalDetails').innerHTML = `<span>${I('fas fa-bed')} ${p.beds} Beds</span><span>${I('fas fa-bath')} ${p.baths} Baths</span><span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} sqft</span><span>${I('fas fa-calendar')} Built ${p.year}</span>`;
   $('modalDescription').textContent = getDescription(p.type);
   const mf = $('modalFav'), use = mf.querySelector('use');
   if (use) { use.setAttribute('href', favorites.has(p.id) ? '#heart-solid' : '#heart-outline'); } else { const icon = mf.querySelector('i'); if (icon) icon.className = favorites.has(p.id) ? 'fas fa-heart' : 'far fa-heart'; }
@@ -332,7 +334,7 @@ function openModal(p) {
   const durationOpts = $('durationOptions');
   rentalDiv.style.display = 'none';
   if (p.badge === 'sale') {
-    payBtn.innerHTML = `<i class="fas fa-credit-card"></i> Pay $${DEPOSIT_AMOUNT.toLocaleString()} Deposit`;
+    payBtn.innerHTML = `${I('fas fa-credit-card')} Pay $${DEPOSIT_AMOUNT.toLocaleString()} Deposit`;
     payBtn.style.display = '';
     payBtn._payType = 'deposit';
     payBtn._propId = p.id;
@@ -362,7 +364,7 @@ function openModal(p) {
         const dur = btn.dataset.duration;
         const months = parseInt(btn.dataset.months);
         const total = p.price * months;
-        payBtn.innerHTML = `<i class="fas fa-credit-card"></i> Pay $${total.toLocaleString()} (${months > 1 ? months + ' months' : '1 month'})`;
+        payBtn.innerHTML = `${I('fas fa-credit-card')} Pay $${total.toLocaleString()} (${months > 1 ? months + ' months' : '1 month'})`;
         payBtn.style.display = '';
         payBtn._payType = 'rent';
         payBtn._propId = p.id;
@@ -483,7 +485,7 @@ function renderTestimonials() {
     }
     g.innerHTML = testimonials.map((t, i) => `
       <div class="testimonial-card" style="--i:${i}">
-        <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(Math.min(5, Math.max(1, t.rating || 5)))}</div>
+        <div class="testimonial-stars">${I('fas fa-star').repeat(Math.min(5, Math.max(1, t.rating || 5)))}</div>
         <p class="testimonial-text">"${sanitizeHTML(t.content)}"</p>
         <div class="testimonial-author">
           <div class="testimonial-avatar">${t.image ? `<img src="${t.image}" alt="${sanitizeHTML(t.name)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover">` : (t.name ? t.name.charAt(0).toUpperCase() : '?')}</div>
@@ -623,11 +625,11 @@ function createPopupContent(p) {
     <div class="map-popup-body">
       <div class="map-popup-price">${formatPrice(p.price, p.badge)}</div>
       <div class="map-popup-title">${sanitizeHTML(p.title)}</div>
-      <div class="map-popup-location"><i class="fas fa-map-marker-alt"></i> ${sanitizeHTML(p.location)}</div>
+          <div class="map-popup-location">${I('fas fa-map-marker-alt')} ${sanitizeHTML(p.location)}</div>
       <div class="map-popup-features">
-        <span><i class="fas fa-bed"></i> ${p.beds}</span>
-        <span><i class="fas fa-bath"></i> ${p.baths}</span>
-        <span><i class="fas fa-ruler-combined"></i> ${p.sqft.toLocaleString()} sqft</span>
+        <span>${I('fas fa-bed')} ${p.beds}</span>
+        <span>${I('fas fa-bath')} ${p.baths}</span>
+        <span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} sqft</span>
       </div>
       <button class="map-popup-btn" data-id="${p.id}">View Details</button>
     </div>`;
@@ -741,8 +743,8 @@ function initCarousel(modalImageEl, images) {
       <div class="carousel-main" style="position:relative;flex:1;min-height:0;touch-action:pan-y">
         <img src="${images[0]}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
         ${images.length > 1 ? `
-          <button class="carousel-btn carousel-prev" onclick="carouselMove(-1)" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-left"></i></button>
-          <button class="carousel-btn carousel-next" onclick="carouselMove(1)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-chevron-right"></i></button>
+          <button class="carousel-btn carousel-prev" onclick="carouselMove(-1)" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center">${I('fas fa-chevron-left')}</button>
+          <button class="carousel-btn carousel-next" onclick="carouselMove(1)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;z-index:5;font-size:18px;display:flex;align-items:center;justify-content:center">${I('fas fa-chevron-right')}</button>
           <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;padding:4px 14px;border-radius:12px;font-size:13px;z-index:5" id="carouselCounter">1 / ${images.length}</div>
         ` : ''}
       </div>
@@ -824,7 +826,7 @@ async function loadBlogPosts() {
           <div class="blog-date">${sanitizeHTML(p.created_at?.split(' ')[0]) || ''}</div>
           <h3 class="blog-title">${sanitizeHTML(p.title)}</h3>
           <p class="blog-excerpt">${sanitizeHTML(p.excerpt) || ''}</p>
-          <span class="blog-read-more">Read More <i class="fas fa-arrow-right"></i></span>
+          <span class="blog-read-more">Read More ${I('fas fa-arrow-right')}</span>
         </div>
       </a>
     `).join('');

@@ -4,9 +4,10 @@ import os
 import base64
 import logging
 import numpy as np
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,8 +16,8 @@ app = FastAPI(title="InsightFace Recognition API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=["https://alisina-nu.vercel.app"],
+    allow_methods=["POST"],
     allow_headers=["*"],
 )
 
@@ -63,8 +64,26 @@ class VerifyRequest(BaseModel):
     stored_embeddings: list[list[float]]
 
 
+FACE_API_SECRET = os.environ.get("FACE_API_SECRET", "")
+
+
+async def verify_api_key(authorization: Optional[str] = Header(None)):
+    if not FACE_API_SECRET:
+        raise HTTPException(status_code=500, detail="FACE_API_SECRET not configured")
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+    token = authorization.split(" ", 1)[1]
+    if not _secure_compare(token, FACE_API_SECRET):
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+
+def _secure_compare(a: str, b: str) -> bool:
+    import hmac
+    return hmac.compare_digest(a.encode(), b.encode())
+
+
 @app.post("/api/face/process")
-async def process_face(req: ProcessRequest):
+async def process_face(req: ProcessRequest, _auth: None = Depends(verify_api_key)):
     try:
         img = decode_image(req.image)
     except Exception:
@@ -98,7 +117,7 @@ async def process_face(req: ProcessRequest):
 
 
 @app.post("/api/face/verify")
-async def verify_face(req: VerifyRequest):
+async def verify_face(req: VerifyRequest, _auth: None = Depends(verify_api_key)):
     try:
         img = decode_image(req.image)
     except Exception:

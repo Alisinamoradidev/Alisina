@@ -548,8 +548,6 @@
   function rid(el){var cl=el.className;if(typeof cl!=='string')return null;if(cl.indexOf('far')!==-1&&cl.indexOf('fa-heart')!==-1)return'heart-outline';if(cl.indexOf('fa-heart')!==-1)return'heart-solid';if(cl.indexOf('fa-moon')!==-1)return'moon';if(cl.indexOf('fa-sun')!==-1)return'sun';var match=cl.match(/fa-([a-z-]+)/);return match&&map[match[1]]?map[match[1]]:null;}
   function rep(root){root.querySelectorAll('i').forEach(function(el){var id=rid(el);if(!id)return;var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');svg.setAttribute('class',el.className);var use=document.createElementNS('http://www.w3.org/2000/svg','use');use.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+id);svg.appendChild(use);el.parentNode.replaceChild(svg,el);});}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){rep(document);});else rep(document);
-  var pending=false;function schedule(){if(pending)return;pending=true;(window.requestIdleCallback||window.requestAnimationFrame||setTimeout)(function(){rep(document);pending=false;},0);}
-  new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
   })();
   </script>
   <script src="config.js"></script>
