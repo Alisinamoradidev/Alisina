@@ -56,7 +56,7 @@ function hideSkeletons() { document.querySelectorAll('.skeleton-card').forEach(e
 
 const $ = id => document.getElementById(id);
 const IM={'fas fa-map-marker-alt':'location-dot','fas fa-bed':'bed','fas fa-bath':'bath','fas fa-ruler-combined':'ruler-combined','fas fa-camera':'camera','far fa-heart':'heart-outline','fas fa-heart':'heart-solid','fas fa-times':'xmark','fas fa-credit-card':'credit-card','fas fa-star':'star','fas fa-chevron-left':'chevron-left','fas fa-chevron-right':'chevron-right','fas fa-arrow-right':'arrow-right','fas fa-calendar':'calendar','fas fa-check-circle':'circle-check','fas fa-plus-circle':'circle-plus','fas fa-external-link-alt':'arrow-up-right-from-square'};
-function I(c){return'<svg aria-hidden="true" focusable="false" class="'+c+'"><use href="#'+IM[c]+'"/></svg>';}
+function I(c){return'<svg aria-hidden="true" focusable="false" class="'+c+'"><use href="icons.svg#'+IM[c]+'"/></svg>';}
 const IC={};
 ['fas fa-map-marker-alt','fas fa-bed','fas fa-bath','fas fa-ruler-combined','fas fa-camera','far fa-heart','fas fa-heart','fas fa-times','fas fa-credit-card','fas fa-star','fas fa-chevron-left','fas fa-chevron-right','fas fa-arrow-right','fas fa-calendar','fas fa-check-circle','fas fa-plus-circle'].forEach(c=>{IC[c]=I(c);});
 
