@@ -145,7 +145,7 @@ function createPropertyCard(p, idx = 0) {
       <img src="${p.image}" alt="${sanitizeHTML(p.title)}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22><rect fill=%22%23d1d5db%22 width=%22600%22 height=%22400%22/><text fill=%22%236b7280%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>No Image</text></svg>'">
       <span class="property-badge ${p.badge === 'sold' ? 'badge-sold' : p.badge === 'sale' ? 'badge-sale' : 'badge-rent'}">${p.badge === 'sold' ? 'Sold' : p.badge === 'sale' ? 'For Sale' : 'For Rent'}</span>
       <span class="photo-count"><i class="fas fa-camera"></i> ${p.gallery && p.gallery.length > 0 ? p.gallery.length + 1 : 1}</span>
-      <button class="property-fav" data-id="${p.id}"><i class="far fa-heart"></i></button>
+      <button class="property-fav" data-id="${p.id}" aria-label="Save property"><i class="far fa-heart"></i></button>
     </div>
       <div class="property-body">
       <div class="property-price">${formatPrice(p.price, p.badge)}</div>
