@@ -10,8 +10,6 @@
   <meta name="keywords" content="real estate, properties, homes for sale, rent, Primenest Reality, buy house, real estate agent">
   <meta name="author" content="Primenest Reality">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <script>if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
-  <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; connect-src 'self' https://alisina-nu.vercel.app https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
 
@@ -32,9 +30,9 @@
   <link rel="apple-touch-icon" href="images/logo.jpeg">
   <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+  <link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></noscript>
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
@@ -116,8 +114,9 @@
     </div>
   </header>
 
+  <main>
   <section class="hero" id="home">
-    <div class="scroll-indicator" style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:1px;text-transform:uppercase">
+    <div class="scroll-indicator" style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,0.9);font-size:12px;letter-spacing:1px;text-transform:uppercase">
       <span>Scroll</span>
       <i class="fas fa-chevron-down" style="font-size:14px"></i>
     </div>
@@ -133,7 +132,7 @@
         </div>
         <div class="search-group">
           <i class="fas fa-dollar-sign"></i>
-          <select id="priceFilter">
+          <select id="priceFilter" aria-label="Filter by price">
             <option value="">Any Price</option>
             <option value="0-200000">Under $200k</option>
             <option value="200000-500000">$200k - $500k</option>
@@ -143,7 +142,7 @@
         </div>
         <div class="search-group">
           <i class="fas fa-home"></i>
-          <select id="typeFilter">
+          <select id="typeFilter" aria-label="Filter by property type">
             <option value="">All Types</option>
             <option value="house">House</option>
             <option value="apartment">Apartment</option>
@@ -153,7 +152,7 @@
         </div>
         <div class="search-group">
           <i class="fas fa-bed"></i>
-          <select id="bedsFilter">
+          <select id="bedsFilter" aria-label="Filter by bedrooms">
             <option value="">Any Beds</option>
             <option value="1">1+</option>
             <option value="2">2+</option>
@@ -164,7 +163,7 @@
         </div>
         <div class="search-group">
           <i class="fas fa-bath"></i>
-          <select id="bathsFilter">
+          <select id="bathsFilter" aria-label="Filter by bathrooms">
             <option value="">Any Baths</option>
             <option value="1">1+</option>
             <option value="2">2+</option>
@@ -187,7 +186,7 @@
         <span class="results-count" id="resultsCount">Showing 9 properties</span>
         <div class="sort-group">
           <i class="fas fa-arrow-down-wide-short"></i>
-          <select id="sortSelect">
+          <select id="sortSelect" aria-label="Sort properties">
             <option value="default">Default</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
@@ -205,12 +204,12 @@
         <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w60"></div><div class="sk-line w80"></div><div class="sk-line w40"></div></div></div>
       </div>
       <div class="pagination" id="pagination">
-        <button class="page-nav" id="prevPage" onclick="goToPage(currentPage - 1)">
+        <button class="page-nav" id="prevPage" aria-label="Previous page" onclick="goToPage(currentPage - 1)">
           <i class="fas fa-chevron-left"></i>
           <span>Prev</span>
         </button>
         <div class="page-numbers" id="pageNumbers"></div>
-        <button class="page-nav" id="nextPage" onclick="goToPage(currentPage + 1)">
+        <button class="page-nav" id="nextPage" aria-label="Next page" onclick="goToPage(currentPage + 1)">
           <span>Next</span>
           <i class="fas fa-chevron-right"></i>
         </button>
@@ -223,7 +222,7 @@
       <div id="compareBar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:2px solid var(--primary);padding:12px 24px;z-index:1000;box-shadow:0 -4px 12px rgba(0,0,0,0.1);align-items:center;gap:12px;flex-wrap:wrap">
         <span style="font-weight:600;color:var(--text);white-space:nowrap">Compare:</span>
         <div class="compare-bar-inner" style="display:flex;gap:8px;flex-wrap:wrap;flex:1"></div>
-        <button class="btn-primary btn-sm compare-btn" style="display:none" onclick="openCompare()"><i class="fas fa-arrows-left-right"></i> Compare</button>
+        <button class="btn-primary btn-sm compare-btn" style="display:none" onclick="openCompare()" aria-label="Compare selected properties"><i class="fas fa-arrows-left-right"></i> Compare</button>
       </div>
     </div>
   </section>
@@ -365,7 +364,7 @@
           <input type="text" name="name" placeholder="Your Name" required>
           <input type="email" name="email" placeholder="Your Email" required>
           <input type="tel" name="phone" placeholder="Your Phone">
-          <select name="inquiry_type" id="inquiryType">
+          <select name="inquiry_type" id="inquiryType" aria-label="Inquiry type">
             <option value="">I'm interested in...</option>
             <option value="buy">Buying a property</option>
             <option value="rent">Renting a property</option>
@@ -381,21 +380,21 @@
           <div class="info-item">
             <i class="fas fa-envelope"></i>
             <div>
-              <h4>Email</h4>
+              <h3>Email</h3>
               <p data-contact="email">info@primenest.com</p>
             </div>
           </div>
           <div class="info-item">
             <i class="fas fa-phone"></i>
             <div>
-              <h4>Phone</h4>
+              <h3>Phone</h3>
               <p data-contact="phone">+1-555-0123</p>
             </div>
           </div>
           <div class="info-item">
             <i class="fas fa-map-marker-alt"></i>
             <div>
-              <h4>Office</h4>
+              <h3>Office</h3>
               <p data-contact="address">123 Main St, New York, NY 10001</p>
             </div>
           </div>
@@ -403,10 +402,11 @@
       </div>
     </div>
   </section>
+  </main>
 
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal" id="propertyModal">
-      <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+      <button class="modal-close" id="modalClose" aria-label="Close"><i class="fas fa-times"></i></button>
       <div class="modal-image" id="modalImage"></div>
       <div class="modal-body">
         <div class="modal-header">
@@ -437,10 +437,10 @@
         <div class="modal-actions">
           <button class="btn-submit" id="modalInquire">Inquire Now</button>
           <button class="btn-submit btn-pay" id="modalPay" style="display:none"><i class="fas fa-credit-card"></i> Pay Deposit</button>
-          <button class="btn-fav" id="modalFav"><i class="far fa-heart"></i> Save</button>
+          <button class="btn-fav" id="modalFav" aria-label="Save property"><i class="far fa-heart"></i> Save</button>
         </div>
         <div id="rentalDuration" style="display:none;margin-top:16px;padding:20px;background:var(--muted);border-radius:var(--radius)">
-          <h4 style="margin:0 0 4px;color:var(--text);font-size:16px"><i class="fas fa-clock"></i> Select Rental Duration</h4>
+          <h3 style="margin:0 0 4px;color:var(--text);font-size:16px"><i class="fas fa-clock"></i> Select Rental Duration</h3>
           <p style="margin:0 0 14px;color:var(--text-secondary);font-size:13px">Choose how long you want to rent this property</p>
           <div id="durationOptions" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px"></div>
         </div>
@@ -467,7 +467,7 @@
     <div class="chat-body" id="chatBody">
       <div class="chat-header">
         <span><i class="fas fa-robot"></i> Primenest AI</span>
-        <button id="chatClose"><i class="fas fa-times"></i></button>
+        <button id="chatClose" aria-label="Close chat"><i class="fas fa-times"></i></button>
       </div>
       <div class="chat-msgs" id="chatMsgs"></div>
     </div>
@@ -484,7 +484,7 @@
           <p>Your trusted real estate partner.</p>
         </div>
         <div class="footer-links">
-          <h4>Quick Links</h4>
+          <h3>Quick Links</h3>
           <a href="#home">Home</a>
           <a href="#listings">Listings</a>
           <a href="#quiz">Quiz</a>
@@ -493,18 +493,18 @@
           <a href="#contact">Contact</a>
         </div>
         <div class="footer-links">
-          <h4>Property Types</h4>
-          <a href="#">Houses</a>
-          <a href="#">Apartments</a>
-          <a href="#">Condos</a>
-          <a href="#">Villas</a>
+          <h3>Property Types</h3>
+          <a href="#listings">Houses</a>
+          <a href="#listings">Apartments</a>
+          <a href="#listings">Condos</a>
+          <a href="#listings">Villas</a>
         </div>
         <div class="footer-social">
-          <h4>Follow Us</h4>
+          <h3>Follow Us</h3>
           <div class="social-icons">
-            <a href="#" target="_blank" rel="noopener"><i class="fab fa-facebook"></i></a>
-            <a href="#" target="_blank" rel="noopener"><i class="fab fa-instagram"></i></a>
-            <a href="#" target="_blank" rel="noopener"><i class="fab fa-linkedin"></i></a>
+            <a href="#" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+            <a href="#" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
           </div>
         </div>
       </div>
@@ -516,7 +516,7 @@
 
   <div class="modal-overlay" id="compareModal" style="display:none">
     <div class="modal modal-lg">
-      <div class="modal-header"><h3>Compare Properties</h3><button class="modal-close" onclick="closeCompare()">&times;</button></div>
+      <div class="modal-header"><h3>Compare Properties</h3><button class="modal-close" aria-label="Close comparison" onclick="closeCompare()">&times;</button></div>
       <div class="modal-body" id="compareModalBody" style="overflow-x:auto"></div>
     </div>
   </div>
@@ -530,7 +530,7 @@
         <div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:2px">Add to your home screen for faster access</div>
       </div>
       <button id="installBtn" style="background:#fff;color:#1a73e8;border:none;padding:10px 24px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap">Install</button>
-      <button id="installClose" style="background:transparent;color:rgba(255,255,255,0.7);border:none;font-size:22px;cursor:pointer;padding:4px 8px;line-height:1">&times;</button>
+      <button id="installClose" aria-label="Dismiss install banner" style="background:transparent;color:rgba(255,255,255,0.7);border:none;font-size:22px;cursor:pointer;padding:4px 8px;line-height:1">&times;</button>
     </div>
   </div>
 
@@ -538,7 +538,7 @@
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/sw.js').catch(function(){});
     }
 
     /* PWA Install Banner */
@@ -571,7 +571,6 @@
         localStorage.setItem('pwa_dismissed', '1');
       });
 
-      /* Fallback: if no beforeinstallprompt fires within 3s, show banner anyway */
       setTimeout(function() {
         if (banner.style.display === 'none' && !deferredPrompt) {
           banner.style.display = 'block';

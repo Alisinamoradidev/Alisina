@@ -21,7 +21,7 @@ async function loadPropertiesFromApi() {
       });
       updateListings();
       renderSoldProperties();
-      if (typeof L !== 'undefined') initMap();
+      if (typeof L !== 'undefined') initMap(); else tryInitMap();
     }
     hideSkeletons();
   } catch { hideSkeletons(); }
@@ -301,7 +301,7 @@ function openModal(p) {
   $('modalLocation').querySelector('span').textContent = p.location;
   const mapLink = $('modalMapLink');
   const modalMapEl = $('modalMap');
-  if (p.lat && p.lng) { mapLink.href = `https://www.google.com/maps?q=${p.lat},${p.lng}`; mapLink.style.display = ''; modalMapEl.style.display = ''; setTimeout(() => { if (window._modalMap) { window._modalMap.remove(); } window._modalMap = L.map(modalMapEl, { zoomControl: false }).setView([p.lat, p.lng], 15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(window._modalMap); L.marker([p.lat, p.lng]).addTo(window._modalMap); setTimeout(() => window._modalMap.invalidateSize(), 100); }, 100); } else { mapLink.style.display = 'none'; modalMapEl.style.display = 'none'; }
+  if (p.lat && p.lng) { mapLink.href = `https://www.google.com/maps?q=${p.lat},${p.lng}`; mapLink.style.display = ''; modalMapEl.style.display = ''; loadLeafletScript().then(() => { setTimeout(() => { if (window._modalMap) { window._modalMap.remove(); } window._modalMap = L.map(modalMapEl, { zoomControl: false }).setView([p.lat, p.lng], 15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(window._modalMap); L.marker([p.lat, p.lng]).addTo(window._modalMap); setTimeout(() => window._modalMap.invalidateSize(), 100); }, 100); }).catch(() => {}); } else { mapLink.style.display = 'none'; modalMapEl.style.display = 'none'; }
   $('modalDetails').innerHTML = `<span><i class="fas fa-bed"></i> ${p.beds} Beds</span><span><i class="fas fa-bath"></i> ${p.baths} Baths</span><span><i class="fas fa-ruler-combined"></i> ${p.sqft.toLocaleString()} sqft</span><span><i class="fas fa-calendar"></i> Built ${p.year}</span>`;
   $('modalDescription').textContent = getDescription(p.type);
   const mf = $('modalFav'), icon = mf.querySelector('i');
@@ -701,12 +701,28 @@ function initMap() {
   observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
 }
 
+/* Map — lazy-loaded when user scrolls to #map or calls initMap */
+function loadLeafletScript() {
+  return new Promise((resolve, reject) => {
+    if (typeof L !== 'undefined') { resolve(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
 function tryInitMap() {
-  if (typeof L !== 'undefined') { initMap(); return; }
-  const interval = setInterval(() => {
-    if (typeof L !== 'undefined') { clearInterval(interval); initMap(); }
-  }, 200);
-  setTimeout(() => clearInterval(interval), 10000);
+  var el = document.getElementById('propertyMap');
+  if (!el) return;
+  var observer = new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting) {
+      observer.disconnect();
+      loadLeafletScript().then(function() { initMap(); }).catch(function(){});
+    }
+  }, { rootMargin: '200px' });
+  observer.observe(el);
 }
 
 /* Gallery Carousel */
