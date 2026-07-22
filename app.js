@@ -42,11 +42,11 @@ function renderSoldProperties() {
       <div class="property-body">
         <div class="property-price" style="color:var(--text-muted);text-decoration:line-through">${formatPrice(p.price, 'sale')}</div>
         <div class="property-title">${sanitizeHTML(p.title)}</div>
-        <div class="property-location">${I('fas fa-map-marker-alt')} ${sanitizeHTML(p.location)}</div>
+        <div class="property-location">${IC['fas fa-map-marker-alt']} ${sanitizeHTML(p.location)}</div>
         <div class="property-details">
-          <span>${I('fas fa-bed')} ${p.beds} Beds</span>
-          <span>${I('fas fa-bath')} ${p.baths} Baths</span>
-          <span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} sqft</span>
+          <span>${IC['fas fa-bed']} ${p.beds} Beds</span>
+          <span>${IC['fas fa-bath']} ${p.baths} Baths</span>
+          <span>${IC['fas fa-ruler-combined']} ${p.sqft.toLocaleString()} sqft</span>
         </div>
       </div>
     </div>
@@ -57,6 +57,8 @@ function hideSkeletons() { document.querySelectorAll('.skeleton-card').forEach(e
 const $ = id => document.getElementById(id);
 const IM={'fas fa-map-marker-alt':'location-dot','fas fa-bed':'bed','fas fa-bath':'bath','fas fa-ruler-combined':'ruler-combined','fas fa-camera':'camera','far fa-heart':'heart-outline','fas fa-heart':'heart-solid','fas fa-times':'xmark','fas fa-credit-card':'credit-card','fas fa-star':'star','fas fa-chevron-left':'chevron-left','fas fa-chevron-right':'chevron-right','fas fa-arrow-right':'arrow-right','fas fa-calendar':'calendar','fas fa-check-circle':'circle-check','fas fa-plus-circle':'circle-plus','fas fa-external-link-alt':'arrow-up-right-from-square'};
 function I(c){return'<svg aria-hidden="true" focusable="false" class="'+c+'"><use href="#'+IM[c]+'"/></svg>';}
+const IC={};
+['fas fa-map-marker-alt','fas fa-bed','fas fa-bath','fas fa-ruler-combined','fas fa-camera','far fa-heart','fas fa-heart','fas fa-times','fas fa-credit-card','fas fa-star','fas fa-chevron-left','fas fa-chevron-right','fas fa-arrow-right','fas fa-calendar','fas fa-check-circle','fas fa-plus-circle'].forEach(c=>{IC[c]=I(c);});
 
 /* Load contact info from backend and update all hardcoded values */
 async function loadContactInfo() {
@@ -148,19 +150,19 @@ function createPropertyCard(p, idx = 0) {
     <div class="property-image">
       <img src="${p.image}" alt="${sanitizeHTML(p.title)}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22><rect fill=%22%23d1d5db%22 width=%22600%22 height=%22400%22/><text fill=%22%236b7280%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>No Image</text></svg>'">
       <span class="property-badge ${p.badge === 'sold' ? 'badge-sold' : p.badge === 'sale' ? 'badge-sale' : 'badge-rent'}">${p.badge === 'sold' ? 'Sold' : p.badge === 'sale' ? 'For Sale' : 'For Rent'}</span>
-      <span class="photo-count">${I('fas fa-camera')} ${p.gallery && p.gallery.length > 0 ? p.gallery.length + 1 : 1}</span>
-      <button class="property-fav" data-id="${p.id}" aria-label="Save property">${I('far fa-heart')}</button>
+      <span class="photo-count">${IC['fas fa-camera']} ${p.gallery && p.gallery.length > 0 ? p.gallery.length + 1 : 1}</span>
+      <button class="property-fav" data-id="${p.id}" aria-label="Save property">${IC['far fa-heart']}</button>
     </div>
       <div class="property-body">
       <div class="property-price">${formatPrice(p.price, p.badge)}</div>
       <div class="property-title">${sanitizeHTML(p.title)}</div>
-      <div class="property-location">${I('fas fa-map-marker-alt')} ${sanitizeHTML(p.location)}</div>
+      <div class="property-location">${IC['fas fa-map-marker-alt']} ${sanitizeHTML(p.location)}</div>
       <div class="property-details">
-        <span>${I('fas fa-bed')} ${p.beds} Beds</span>
-        <span>${I('fas fa-bath')} ${p.baths} Baths</span>
-        <span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} sqft</span>
+        <span>${IC['fas fa-bed']} ${p.beds} Beds</span>
+        <span>${IC['fas fa-bath']} ${p.baths} Baths</span>
+        <span>${IC['fas fa-ruler-combined']} ${p.sqft.toLocaleString()} sqft</span>
       </div>
-      <button class="btn-compare" data-id="${p.id}" onclick="toggleCompare(${p.id})" title="Compare">${I(`fas ${compareItems.includes(p.id) ? 'fa-check-circle' : 'fa-plus-circle'}`)}</button>
+      <button class="btn-compare" data-id="${p.id}" onclick="toggleCompare(${p.id})" title="Compare">${I(compareItems.includes(p.id) ? 'fas fa-check-circle' : 'fas fa-plus-circle')}</button>
     </div>`;
   setFavIcon(card.querySelector('.property-fav'), p.id);
   return card;
@@ -225,7 +227,9 @@ function renderProperties(list) {
   const start = (currentPage - 1) * pageSize;
   const pageItems = list.slice(start, start + pageSize);
   resultsCount.textContent = `Showing ${start + 1}–${Math.min(start + pageSize, list.length)} of ${list.length} properties`;
-  pageItems.forEach((p, i) => listingsGrid.appendChild(createPropertyCard(p, i)));
+  const frag = document.createDocumentFragment();
+  pageItems.forEach((p, i) => frag.appendChild(createPropertyCard(p, i)));
+  listingsGrid.appendChild(frag);
   renderPagination(totalPages, list);
   requestAnimationFrame(() => {
     const cards = document.querySelectorAll('.property-card');
@@ -541,8 +545,10 @@ function showFaqOptions() {
   $('chatMsgs').scrollTop = $('chatMsgs').scrollHeight;
 }
 
-$('chatToggle').addEventListener('click', toggleChat);
-$('chatClose').addEventListener('click', () => $('chatBody').classList.remove('open'));
+requestIdleCallback(function() {
+  $('chatToggle').addEventListener('click', toggleChat);
+  $('chatClose').addEventListener('click', () => $('chatBody').classList.remove('open'));
+});
 
 /* Property Match Quiz */
 function startQuiz() {
@@ -836,13 +842,16 @@ async function loadBlogPosts() {
 function hideBlogSkeletons() { document.querySelectorAll('#blogGrid .skeleton-card').forEach(e => e.remove()); }
 
 
-renderTestimonials();
-resetQuiz();
 updateListings();
 loadPropertiesFromApi();
-tryInitMap();
-loadBlogPosts();
-loadContactInfo();
+
+setTimeout(function() {
+  renderTestimonials();
+  resetQuiz();
+  loadBlogPosts();
+  loadContactInfo();
+  tryInitMap();
+}, 0);
 
 /* Open property modal if loaded from /property/:id page */
 if (window.__propertyId) {
@@ -913,4 +922,8 @@ document.addEventListener('scroll', () => {
   h.classList.toggle('scrolled', window.scrollY > 60);
 }, { passive: true });
 
-initAnimations();
+if (typeof requestIdleCallback !== 'undefined') {
+  requestIdleCallback(initAnimations);
+} else {
+  setTimeout(initAnimations, 100);
+}
