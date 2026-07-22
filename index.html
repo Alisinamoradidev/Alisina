@@ -100,10 +100,10 @@
         </a>
         <div class="header-actions">
           <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-            <i class="fas fa-moon"></i>
+            <svg aria-hidden="true" focusable="false" class="fas fa-moon"><use href="#moon"/></svg>
           </button>
           <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">
-            <i class="fas fa-bars"></i>
+            <svg aria-hidden="true" focusable="false" class="fas fa-bars"><use href="#bars"/></svg>
           </button>
           <nav class="nav" id="nav">
             <a href="#home">Home</a>
@@ -126,7 +126,7 @@
   <section class="hero" id="home">
     <div class="scroll-indicator" style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,0.9);font-size:12px;letter-spacing:1px;text-transform:uppercase">
       <span>Scroll</span>
-      <i class="fas fa-chevron-down" style="font-size:14px"></i>
+      <svg aria-hidden="true" focusable="false" class="fas fa-chevron-down" style="font-size:14px"><use href="#chevron-down"/></svg>
     </div>
     <img src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=400&q=65" alt="" width="1200" height="800" fetchpriority="high" decoding="async" class="hero-image" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0">
     <div class="hero-overlay"></div>
@@ -135,11 +135,11 @@
       <p>Discover the finest properties in prime locations</p>
       <form class="search-form" id="searchForm">
         <div class="search-group">
-          <i class="fas fa-search"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-search"><use href="#magnifying-glass"/></svg>
           <input type="text" id="searchInput" placeholder="Search by location, type, or keyword...">
         </div>
         <div class="search-group">
-          <i class="fas fa-dollar-sign"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-dollar-sign"><use href="#dollar-sign"/></svg>
           <select id="priceFilter" aria-label="Filter by price">
             <option value="">Any Price</option>
             <option value="0-200000">Under $200k</option>
@@ -149,7 +149,7 @@
           </select>
         </div>
         <div class="search-group">
-          <i class="fas fa-home"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-home"><use href="#house"/></svg>
           <select id="typeFilter" aria-label="Filter by property type">
             <option value="">All Types</option>
             <option value="house">House</option>
@@ -159,7 +159,7 @@
           </select>
         </div>
         <div class="search-group">
-          <i class="fas fa-bed"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-bed"><use href="#bed"/></svg>
           <select id="bedsFilter" aria-label="Filter by bedrooms">
             <option value="">Any Beds</option>
             <option value="1">1+</option>
@@ -170,7 +170,7 @@
           </select>
         </div>
         <div class="search-group">
-          <i class="fas fa-bath"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-bath"><use href="#bath"/></svg>
           <select id="bathsFilter" aria-label="Filter by bathrooms">
             <option value="">Any Baths</option>
             <option value="1">1+</option>
@@ -193,7 +193,7 @@
       <div class="listings-bar">
         <span class="results-count" id="resultsCount">Showing 9 properties</span>
         <div class="sort-group">
-          <i class="fas fa-arrow-down-wide-short"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-arrow-down-wide-short"><use href="#arrow-down-wide-short"/></svg>
           <select id="sortSelect" aria-label="Sort properties">
             <option value="default">Default</option>
             <option value="price-asc">Price: Low to High</option>
@@ -213,24 +213,24 @@
       </div>
       <div class="pagination" id="pagination">
         <button class="page-nav" id="prevPage" aria-label="Previous page" onclick="goToPage(currentPage - 1)">
-          <i class="fas fa-chevron-left"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-chevron-left"><use href="#chevron-left"/></svg>
           <span>Prev</span>
         </button>
         <div class="page-numbers" id="pageNumbers"></div>
         <button class="page-nav" id="nextPage" aria-label="Next page" onclick="goToPage(currentPage + 1)">
           <span>Next</span>
-          <i class="fas fa-chevron-right"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-chevron-right"><use href="#chevron-right"/></svg>
         </button>
       </div>
       <div class="no-results" id="noResults">
-        <i class="fas fa-search"></i>
+        <svg aria-hidden="true" focusable="false" class="fas fa-search"><use href="#magnifying-glass"/></svg>
         <h3>No properties found</h3>
         <p>Try adjusting your search or filter criteria</p>
       </div>
       <div id="compareBar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:2px solid var(--primary);padding:12px 24px;z-index:1000;box-shadow:0 -4px 12px rgba(0,0,0,0.1);align-items:center;gap:12px;flex-wrap:wrap">
         <span style="font-weight:600;color:var(--text);white-space:nowrap">Compare:</span>
         <div class="compare-bar-inner" style="display:flex;gap:8px;flex-wrap:wrap;flex:1"></div>
-        <button class="btn-primary btn-sm compare-btn" style="display:none" onclick="openCompare()" aria-label="Compare selected properties"><i class="fas fa-arrows-left-right"></i> Compare</button>
+        <button class="btn-primary btn-sm compare-btn" style="display:none" onclick="openCompare()" aria-label="Compare selected properties"><svg aria-hidden="true" focusable="false" class="fas fa-arrows-left-right"><use href="#arrows-left-right"/></svg> Compare</button>
       </div>
     </div>
   </section>
@@ -253,22 +253,22 @@
       </div>
       <div class="features-grid stagger">
         <div class="feature-card">
-          <i class="fas fa-map-marker-alt"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-map-marker-alt"><use href="#location-dot"/></svg>
           <h3>Prime Locations</h3>
           <p>Properties in the most sought-after neighborhoods</p>
         </div>
         <div class="feature-card">
-          <i class="fas fa-handshake"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-handshake"><use href="#handshake"/></svg>
           <h3>Expert Agents</h3>
           <p>Professional guidance every step of the way</p>
         </div>
         <div class="feature-card">
-          <i class="fas fa-shield-alt"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-shield-alt"><use href="#shield-halved"/></svg>
           <h3>Secure Deals</h3>
           <p>Transparent and legally protected transactions</p>
         </div>
         <div class="feature-card">
-          <i class="fas fa-clock"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-clock"><use href="#clock"/></svg>
           <h3>Fast Process</h3>
           <p>Streamlined process from search to move-in</p>
         </div>
@@ -386,21 +386,21 @@
         </form>
         <div class="contact-info">
           <div class="info-item">
-            <i class="fas fa-envelope"></i>
+            <svg aria-hidden="true" focusable="false" class="fas fa-envelope"><use href="#envelope"/></svg>
             <div>
               <h3>Email</h3>
               <p data-contact="email">info@primenest.com</p>
             </div>
           </div>
           <div class="info-item">
-            <i class="fas fa-phone"></i>
+            <svg aria-hidden="true" focusable="false" class="fas fa-phone"><use href="#phone"/></svg>
             <div>
               <h3>Phone</h3>
               <p data-contact="phone">+1-555-0123</p>
             </div>
           </div>
           <div class="info-item">
-            <i class="fas fa-map-marker-alt"></i>
+            <svg aria-hidden="true" focusable="false" class="fas fa-map-marker-alt"><use href="#location-dot"/></svg>
             <div>
               <h3>Office</h3>
               <p data-contact="address">123 Main St, New York, NY 10001</p>
@@ -414,7 +414,7 @@
 
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal" id="propertyModal">
-      <button class="modal-close" id="modalClose" aria-label="Close"><i class="fas fa-times"></i></button>
+      <button class="modal-close" id="modalClose" aria-label="Close"><svg aria-hidden="true" focusable="false" class="fas fa-times"><use href="#xmark"/></svg></button>
       <div class="modal-image" id="modalImage"></div>
       <div class="modal-body">
         <div class="modal-header">
@@ -422,9 +422,9 @@
           <div class="modal-price" id="modalPrice"></div>
         </div>
         <div class="modal-location" id="modalLocation">
-          <i class="fas fa-map-marker-alt"></i>
+          <svg aria-hidden="true" focusable="false" class="fas fa-map-marker-alt"><use href="#location-dot"/></svg>
           <span></span>
-          <a id="modalMapLink" href="#" target="_blank" rel="noopener" style="display:none;margin-left:8px;color:var(--primary);font-size:13px;text-decoration:underline;white-space:nowrap"><i class="fas fa-external-link-alt"></i> View on Map</a>
+          <a id="modalMapLink" href="#" target="_blank" rel="noopener" style="display:none;margin-left:8px;color:var(--primary);font-size:13px;text-decoration:underline;white-space:nowrap"><svg aria-hidden="true" focusable="false" class="fas fa-external-link-alt"><use href="#arrow-up-right-from-square"/></svg> View on Map</a>
         </div>
         <div id="modalMap" style="width:100%;height:200px;border-radius:var(--radius);margin-bottom:16px;display:none"></div>
         <div class="modal-details" id="modalDetails"></div>
@@ -435,20 +435,20 @@
           dining, and public transportation.
         </p>
         <div class="modal-features">
-          <span><i class="fas fa-check-circle"></i> Central A/C</span>
-          <span><i class="fas fa-check-circle"></i> Hardwood Floors</span>
-          <span><i class="fas fa-check-circle"></i> Laundry</span>
-          <span><i class="fas fa-check-circle"></i> Parking</span>
-          <span><i class="fas fa-check-circle"></i> Pet Friendly</span>
-          <span><i class="fas fa-check-circle"></i> Storage</span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="#circle-check"/></svg> Central A/C</span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="#circle-check"/></svg> Hardwood Floors</span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="#circle-check"/></svg> Laundry</span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="#circle-check"/></svg> Parking</span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="#circle-check"/></svg> Pet Friendly</span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="#circle-check"/></svg> Storage</span>
         </div>
         <div class="modal-actions">
           <button class="btn-submit" id="modalInquire">Inquire Now</button>
-          <button class="btn-submit btn-pay" id="modalPay" style="display:none"><i class="fas fa-credit-card"></i> Pay Deposit</button>
-          <button class="btn-fav" id="modalFav" aria-label="Save property"><i class="far fa-heart"></i> Save</button>
+          <button class="btn-submit btn-pay" id="modalPay" style="display:none"><svg aria-hidden="true" focusable="false" class="fas fa-credit-card"><use href="#credit-card"/></svg> Pay Deposit</button>
+          <button class="btn-fav" id="modalFav" aria-label="Save property"><svg aria-hidden="true" focusable="false" class="far fa-heart"><use href="#heart-outline"/></svg> Save</button>
         </div>
         <div id="rentalDuration" style="display:none;margin-top:16px;padding:20px;background:var(--muted);border-radius:var(--radius)">
-          <h3 style="margin:0 0 4px;color:var(--text);font-size:16px"><i class="fas fa-clock"></i> Select Rental Duration</h3>
+          <h3 style="margin:0 0 4px;color:var(--text);font-size:16px"><svg aria-hidden="true" focusable="false" class="fas fa-clock"><use href="#clock"/></svg> Select Rental Duration</h3>
           <p style="margin:0 0 14px;color:var(--text-secondary);font-size:13px">Choose how long you want to rent this property</p>
           <div id="durationOptions" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px"></div>
         </div>
@@ -461,21 +461,21 @@
   </div>
 
   <a href="#" class="whatsapp-btn" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
-    <i class="fab fa-whatsapp"></i>
+    <svg aria-hidden="true" focusable="false" class="fab fa-whatsapp"><use href="#whatsapp"/></svg>
   </a>
 
   <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">
-    <i class="fas fa-arrow-up"></i>
+    <svg aria-hidden="true" focusable="false" class="fas fa-arrow-up"><use href="#arrow-up"/></svg>
   </button>
 
   <div class="chat-widget" id="chatWidget">
     <button class="chat-toggle" id="chatToggle" aria-label="Open chat">
-      <i class="fas fa-comment-dots"></i>
+      <svg aria-hidden="true" focusable="false" class="fas fa-comment-dots"><use href="#comment-dots"/></svg>
     </button>
     <div class="chat-body" id="chatBody">
       <div class="chat-header">
-        <span><i class="fas fa-robot"></i> Primenest AI</span>
-        <button id="chatClose" aria-label="Close chat"><i class="fas fa-times"></i></button>
+        <span><svg aria-hidden="true" focusable="false" class="fas fa-robot"><use href="#robot"/></svg> Primenest AI</span>
+        <button id="chatClose" aria-label="Close chat"><svg aria-hidden="true" focusable="false" class="fas fa-times"><use href="#xmark"/></svg></button>
       </div>
       <div class="chat-msgs" id="chatMsgs"></div>
     </div>
@@ -510,9 +510,9 @@
         <div class="footer-social">
           <h3>Follow Us</h3>
           <div class="social-icons">
-            <a href="#" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-            <a href="#" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-            <a href="#" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            <a href="#" target="_blank" rel="noopener" aria-label="Facebook"><svg aria-hidden="true" focusable="false" class="fab fa-facebook"><use href="#facebook"/></svg></a>
+            <a href="#" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true" focusable="false" class="fab fa-instagram"><use href="#instagram"/></svg></a>
+            <a href="#" target="_blank" rel="noopener" aria-label="LinkedIn"><svg aria-hidden="true" focusable="false" class="fab fa-linkedin"><use href="#linkedin"/></svg></a>
           </div>
         </div>
       </div>
@@ -542,14 +542,6 @@
     </div>
   </div>
 
-  <script>
-  (function(){
-  var map={moon:'moon',sun:'sun',bars:'bars','chevron-down':'chevron-down','chevron-left':'chevron-left','chevron-right':'chevron-right',search:'magnifying-glass','dollar-sign':'dollar-sign',home:'house',bed:'bed',bath:'bath','ruler-combined':'ruler-combined','arrow-down-wide-short':'arrow-down-wide-short','arrows-left-right':'arrows-left-right','map-marker-alt':'location-dot',handshake:'handshake','shield-alt':'shield-halved',clock:'clock',envelope:'envelope',phone:'phone',times:'xmark','external-link-alt':'arrow-up-right-from-square','check-circle':'circle-check','credit-card':'credit-card',camera:'camera','plus-circle':'circle-plus',calendar:'calendar',star:'star','arrow-right':'arrow-right','arrow-up':'arrow-up','comment-dots':'comment-dots',robot:'robot',whatsapp:'whatsapp',facebook:'facebook',instagram:'instagram',linkedin:'linkedin'};
-  function rid(el){var cl=el.className;if(typeof cl!=='string')return null;if(cl.indexOf('far')!==-1&&cl.indexOf('fa-heart')!==-1)return'heart-outline';if(cl.indexOf('fa-heart')!==-1)return'heart-solid';if(cl.indexOf('fa-moon')!==-1)return'moon';if(cl.indexOf('fa-sun')!==-1)return'sun';var match=cl.match(/fa-([a-z-]+)/);return match&&map[match[1]]?map[match[1]]:null;}
-  function rep(root){root.querySelectorAll('i').forEach(function(el){var id=rid(el);if(!id)return;var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');svg.setAttribute('class',el.className);var use=document.createElementNS('http://www.w3.org/2000/svg','use');use.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+id);svg.appendChild(use);el.parentNode.replaceChild(svg,el);});}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){rep(document);});else rep(document);
-  })();
-  </script>
   <script src="config.js"></script>
   <script src="app.min.js"></script>
   <script>
