@@ -188,8 +188,9 @@
     });
   }
 
-  function setLanguage(lang) {
+  async function setLanguage(lang) {
     if (!LANGUAGES[lang]) lang = DEFAULT_LANG;
+    if (!cache[lang]) await loadTranslations(lang);
     currentLang = lang;
     try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
     setCookie(COOKIE_NAME, lang);
