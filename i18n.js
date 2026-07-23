@@ -6,21 +6,39 @@
   'use strict';
 
   var LANGUAGES = {
-    en: { label: 'English', flag: '\uD83C\uDDFA\uD83C\uDDF8', dir: 'ltr', font: 'Inter' },
-    fa: { label: '\u0641\u0627\u0631\u0633\u06CC', flag: '\uD83C\uDDEE\uD83C\uDDF7', dir: 'rtl', font: 'Vazirmatn' },
-    ps: { label: '\u067E\u0634\u062A\u0648', flag: '\uD83C\uDDE6\uD83C\uDDEB', dir: 'rtl', font: 'Vazirmatn' }
+    en: { label: 'English', dir: 'ltr', font: 'Inter' },
+    fa: { label: '\u0641\u0627\u0631\u0633\u06CC', dir: 'rtl', font: 'Vazirmatn' },
+    ps: { label: '\u067E\u0634\u062A\u0648', dir: 'rtl', font: 'Vazirmatn' }
   };
   var DEFAULT_LANG = 'en';
   var STORAGE_KEY = 'primenest_lang';
+  var COOKIE_NAME = 'primenest_lang';
   var cache = {};
   var currentLang = null;
   var listeners = [];
+
+  function setCookie(name, value, days) {
+    try {
+      var d = new Date();
+      d.setTime(d.getTime() + (days || 365) * 86400000);
+      document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+    } catch (e) {}
+  }
+
+  function getCookie(name) {
+    try {
+      var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+      return match ? decodeURIComponent(match[1]) : null;
+    } catch (e) { return null; }
+  }
 
   function detectLanguage() {
     try {
       var saved = localStorage.getItem(STORAGE_KEY);
       if (saved && LANGUAGES[saved]) return saved;
     } catch (e) {}
+    var cookie = getCookie(COOKIE_NAME);
+    if (cookie && LANGUAGES[cookie]) return cookie;
     var browser = (navigator.language || '').slice(0, 2).toLowerCase();
     if (browser === 'fa') return 'fa';
     if (browser === 'ps') return 'ps';
@@ -76,7 +94,12 @@
     var info = LANGUAGES[lang] || LANGUAGES[DEFAULT_LANG];
     setDir(info.dir);
     setLangAttribute(lang);
-    if (lang !== 'en') loadFont(lang);
+    if (lang !== 'en') {
+      loadFont(lang);
+      document.documentElement.setAttribute('translate', 'no');
+    } else {
+      document.documentElement.removeAttribute('translate');
+    }
     document.body.style.fontFamily = "'" + info.font + "', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
 
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
@@ -122,15 +145,13 @@
 
   function updateLanguageSwitcher() {
     document.querySelectorAll('.lang-switcher').forEach(function (container) {
-      var currentActive = container.querySelector('.lang-btn.active');
-      var currentCode = currentActive ? currentActive.dataset.lang : null;
       container.innerHTML = '';
       Object.keys(LANGUAGES).forEach(function (code) {
         var info = LANGUAGES[code];
         var btn = document.createElement('button');
         btn.className = 'lang-btn' + (code === currentLang ? ' active' : '');
         btn.dataset.lang = code;
-        btn.innerHTML = '<span class="lang-flag">' + info.flag + '</span> <span class="lang-label">' + info.label + '</span>';
+        btn.textContent = info.label;
         btn.setAttribute('aria-label', 'Switch to ' + info.label);
         btn.addEventListener('click', function () { setLanguage(code); });
         container.appendChild(btn);
@@ -142,6 +163,7 @@
     if (!LANGUAGES[lang]) lang = DEFAULT_LANG;
     currentLang = lang;
     try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
+    setCookie(COOKIE_NAME, lang);
     applyTranslations();
     updateLanguageSwitcher();
     listeners.forEach(function (fn) {
