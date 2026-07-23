@@ -487,3 +487,89 @@ td .actions { display: flex; gap: 6px; }
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
+
+/* ═══ Language Switcher (Admin) ═══ */
+.admin-header .lang-switcher {
+  position: relative;
+}
+.admin-header .lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-family: inherit;
+  line-height: 1;
+}
+.admin-header .lang-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(180, 140, 100, 0.06);
+}
+.admin-header .lang-btn .lang-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.admin-header .lang-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-end: 0;
+  min-width: 150px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 4px;
+  z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.2s ease;
+}
+.admin-header .lang-switcher.open .lang-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.admin-header .lang-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-align: start;
+}
+.admin-header .lang-option:hover {
+  background: rgba(180, 140, 100, 0.08);
+  color: var(--primary);
+}
+.admin-header .lang-option.active {
+  background: rgba(180, 140, 100, 0.12);
+  color: var(--primary);
+  font-weight: 600;
+}
+.admin-header .lang-option .lang-check {
+  margin-inline-start: auto;
+  opacity: 0;
+  color: var(--primary);
+}
+.admin-header .lang-option.active .lang-check {
+  opacity: 1;
+}
