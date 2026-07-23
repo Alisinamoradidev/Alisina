@@ -429,7 +429,8 @@
       "confirmRefund": "دغه تادیه بیرته ورکړئ؟ مبلغ از طريقه Stripe بیرته د مشتری ته ورګرځي.",
       "confirmRefundAll": "ټوله بشپړه تادیات بیرته ورکړئ؟ دا له طریقې Stripe ټولو مشتریانو ته پیسې بیرته ورګرځوي.",
       "confirmDeleteAll": "ټوله د تادیو ریکارډونه ړنګ کړئ؟",
-      "confirmDeleteSelected": "{count} ټاکلي شوي د تادیو ریکارډونه ړنګ کړئ؟"
+      "confirmDeleteSelected": "{count} ټاکلي شوي د تادیو ریکارډونه ړنګ کړئ؟",
+      "refunded": "تادیه بیرته وسپړ شوه"
     },
     "bank": {
       "title": "د تادیو ترتیبات",
@@ -455,7 +456,8 @@
       "routingNumber": "د راتلو نمبر",
       "iban": "IBAN",
       "swiftBic": "SWIFT/BIC",
-      "saveBankInfo": "بانک معلومات خوندي کړئ"
+      "saveBankInfo": "بانک معلومات خوندي کړئ",
+      "saved": "بانک معلومات خوندي شول"
     },
     "contactinfo": {
       "title": "د اړیکو معلومات",
@@ -473,7 +475,8 @@
       "facebookUrl": "Facebook URL",
       "instagramUrl": "Instagram URL",
       "linkedinUrl": "LinkedIn URL",
-      "saveContactInfo": "د اړیکو معلومات خوندي کړئ"
+      "saveContactInfo": "د اړیکو معلومات خوندي کړئ",
+      "saved": "د اړیکو معلومات خوندي شول! خپله ویبسایت ریفریش کړئ ته بدلون وګورئ."
     },
     "settings": {
       "title": "د اکونټ ترتیبات",
@@ -500,6 +503,10 @@
       "noPasskey": "اوس هیڅ کیلۍ نه ده ټاکل شوې",
       "passkeyNotSupported": "دغه برایسر کې کیلۍ ملاتړ نه لري",
       "removePasskeyConfirm": "خپله خوندي شوې کیلۍ لرې کړئ؟",
+      "gmailSaved": "Gmail پاسورډ خوندي شو",
+      "gmailNotSaved": "Gmail پاسورډ نه خوندي شوې",
+      "deeplKeySaved": "DeepL API کیلۍ خوندي شوه",
+      "settingsSaved": "ترتیبات خوندي شول",
       "faceSetupSuccess": "د مخ ننوتل {count} عکسونو سره ټاکله شوې!",
       "faceReady": "د مخ ننوتل چمتو دی",
       "noFace": "اوس هیڅ مخ نه ده ټاکل شوی",

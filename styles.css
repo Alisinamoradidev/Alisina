@@ -2474,22 +2474,18 @@ select {
 
 /* ═══ Language Switcher ═══ */
 .lang-switcher {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: var(--muted);
-  border-radius: 10px;
-  padding: 3px;
+  position: relative;
 }
 
 .lang-btn {
   display: flex;
   align-items: center;
-  padding: 5px 10px;
-  border: none;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: transparent;
-  color: var(--text-secondary);
+  background: var(--card-bg);
+  color: var(--text);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -2499,33 +2495,96 @@ select {
 }
 
 .lang-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.lang-btn .lang-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-end: 0;
+  min-width: 140px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  z-index: 1001;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.2s ease;
+}
+
+.lang-switcher.open .lang-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-align: start;
+}
+
+.lang-option:hover {
   background: color-mix(in srgb, var(--primary) 10%, transparent);
   color: var(--primary);
 }
 
-.lang-btn.active {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+.lang-option.active {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.lang-option .lang-check {
+  margin-inline-start: auto;
+  opacity: 0;
+  color: var(--primary);
+}
+
+.lang-option.active .lang-check {
+  opacity: 1;
 }
 
 @media (max-width: 768px) {
-  .lang-switcher {
-    position: absolute;
-    top: calc(100% + 10px);
+  .lang-dropdown {
+    position: fixed;
+    top: auto;
+    bottom: 0;
     inset-inline-end: 0;
-    z-index: 1002;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
-    border-radius: 12px;
-    padding: 4px;
+    inset-inline-start: 0;
+    min-width: auto;
+    border-radius: 16px 16px 0 0;
+    padding: 8px;
+    transform: translateY(100%);
   }
-  .lang-btn {
-    width: 100%;
-    justify-content: flex-start;
-    padding: 10px 14px;
-    border-radius: 8px;
+  .lang-switcher.open .lang-dropdown {
+    transform: translateY(0);
+  }
+  .lang-option {
+    padding: 14px 16px;
+    font-size: 15px;
+    border-radius: 10px;
   }
 }
 

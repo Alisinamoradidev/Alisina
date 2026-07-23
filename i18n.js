@@ -6,9 +6,9 @@
   'use strict';
 
   var LANGUAGES = {
-    en: { label: 'English', dir: 'ltr', font: 'Inter' },
-    fa: { label: '\u0641\u0627\u0631\u0633\u06CC', dir: 'rtl', font: 'Vazirmatn' },
-    ps: { label: '\u067E\u0634\u062A\u0648', dir: 'rtl', font: 'Vazirmatn' }
+    en: { label: 'English', icon: '🌐', dir: 'ltr', font: 'Inter' },
+    fa: { label: '\u0641\u0627\u0631\u0633\u06CC', icon: '\uD83C\uDDEE\uD83C\uDDF7', dir: 'rtl', font: 'Vazirmatn' },
+    ps: { label: '\u067E\u0634\u062A\u0648', icon: '\uD83C\uDDE6\uD83C\uDDEB', dir: 'rtl', font: 'Vazirmatn' }
   };
   var DEFAULT_LANG = 'en';
   var STORAGE_KEY = 'primenest_lang';
@@ -146,15 +146,44 @@
   function updateLanguageSwitcher() {
     document.querySelectorAll('.lang-switcher').forEach(function (container) {
       container.innerHTML = '';
+      var currentInfo = LANGUAGES[currentLang] || LANGUAGES[DEFAULT_LANG];
+
+      var btn = document.createElement('button');
+      btn.className = 'lang-btn';
+      btn.innerHTML = '<span class="lang-icon">' + currentInfo.icon + '</span> ' + currentInfo.label;
+      btn.setAttribute('aria-label', 'Change language');
+      btn.setAttribute('aria-expanded', 'false');
+
+      var dropdown = document.createElement('div');
+      dropdown.className = 'lang-dropdown';
+
       Object.keys(LANGUAGES).forEach(function (code) {
         var info = LANGUAGES[code];
-        var btn = document.createElement('button');
-        btn.className = 'lang-btn' + (code === currentLang ? ' active' : '');
-        btn.dataset.lang = code;
-        btn.textContent = info.label;
-        btn.setAttribute('aria-label', 'Switch to ' + info.label);
-        btn.addEventListener('click', function () { setLanguage(code); });
-        container.appendChild(btn);
+        var option = document.createElement('button');
+        option.className = 'lang-option' + (code === currentLang ? ' active' : '');
+        option.innerHTML = '<span>' + info.label + '</span><span class="lang-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></span>';
+        option.setAttribute('aria-label', 'Switch to ' + info.label);
+        option.addEventListener('click', function (e) {
+          e.stopPropagation();
+          setLanguage(code);
+          container.classList.remove('open');
+        });
+        dropdown.appendChild(option);
+      });
+
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        container.classList.toggle('open');
+        btn.setAttribute('aria-expanded', container.classList.contains('open'));
+      });
+
+      container.appendChild(btn);
+      container.appendChild(dropdown);
+    });
+
+    document.addEventListener('click', function () {
+      document.querySelectorAll('.lang-switcher.open').forEach(function (el) {
+        el.classList.remove('open');
       });
     });
   }

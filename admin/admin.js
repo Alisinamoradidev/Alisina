@@ -432,7 +432,7 @@ document.getElementById('propertyForm').addEventListener('submit', async e => {
     description: document.getElementById('pfDescription').value || '',
   };
   const btn = document.getElementById('propertySubmit');
-  btn.disabled = true; btn.textContent = 'Saving...';
+  btn.disabled = true; btn.textContent = i18n.t('common.saving');
   try {
     if (editingPropertyId) {
       await api(`/api/properties/${editingPropertyId}`, { method: 'PUT', body: JSON.stringify(data) });
@@ -443,7 +443,7 @@ document.getElementById('propertyForm').addEventListener('submit', async e => {
     loadProperties();
     loadDashboard();
   } catch (err) { alert(err.message); }
-  finally { btn.disabled = false; btn.textContent = editingPropertyId ? 'Update Property' : 'Save Property'; }
+  finally { btn.disabled = false; btn.textContent = editingPropertyId ? i18n.t('common.updateProperty') : i18n.t('common.saveProperty'); }
 });
 
 async function editProperty(id) {
@@ -594,7 +594,7 @@ document.getElementById('postForm').addEventListener('submit', async e => {
     content_l10n: l10n.content || null,
   };
   const btn = document.getElementById('postSubmit');
-  btn.disabled = true; btn.textContent = 'Saving...';
+  btn.disabled = true; btn.textContent = i18n.t('common.saving');
   try {
     if (editingPostId) {
       await api(`/api/blog/${editingPostId}`, { method: 'PUT', body: JSON.stringify(data) });
@@ -691,7 +691,7 @@ document.getElementById('testimonialForm').addEventListener('submit', async e =>
     content_l10n: l10n.content || null,
   };
   const btn = document.getElementById('testimonialSubmit');
-  btn.disabled = true; btn.textContent = 'Saving...';
+  btn.disabled = true; btn.textContent = i18n.t('common.saving');
   try {
     if (editingTestimonialId) {
       await api(`/api/testimonials/${editingTestimonialId}`, { method: 'PUT', body: JSON.stringify(data) });
@@ -841,7 +841,7 @@ async function refundPayment(id) {
   if (!confirm(i18n.t('admin.payments.confirmRefund'))) return;
   try {
     await api('/api/payments/refund', { method: 'POST', body: JSON.stringify({ payment_id: id }) });
-    alert('Payment refunded');
+    alert(i18n.t('admin.payments.refunded'));
     loadPayments();
   } catch (err) { alert(err.message); }
 }
@@ -902,9 +902,9 @@ async function loadStripeSettings() {
     document.getElementById('sfGmailEmail').value = (smtp && smtp.email) ? smtp.email : '';
     const passStatus = document.getElementById('sfGmailPassStatus');
     if (smtp && smtp.appPassword) {
-      if (passStatus) { passStatus.textContent = '✓ App password saved'; passStatus.style.color = '#059669'; passStatus.style.display = 'block'; }
+      if (passStatus) { passStatus.textContent = i18n.t('admin.settings.gmailSaved'); passStatus.style.color = '#059669'; passStatus.style.display = 'block'; }
     } else {
-      if (passStatus) { passStatus.textContent = '✗ No app password saved'; passStatus.style.color = '#dc2626'; passStatus.style.display = 'block'; }
+      if (passStatus) { passStatus.textContent = i18n.t('admin.settings.gmailNotSaved'); passStatus.style.color = '#dc2626'; passStatus.style.display = 'block'; }
     }
   } catch (e) { console.error('Admin error:', e.message); }
   try {
@@ -916,21 +916,21 @@ async function loadStripeSettings() {
 document.getElementById('deeplForm')?.addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('deeplSaveBtn');
-  btn.disabled = true; btn.textContent = 'Saving...';
+  btn.disabled = true; btn.textContent = i18n.t('common.saving');
   try {
     await api('/api/payments/settings', {
       method: 'PUT',
       body: JSON.stringify({ key: 'deepl_api_key', value: { key: document.getElementById('sfDeeplKey').value } })
     });
-    alert('DeepL API key saved');
+    alert(i18n.t('admin.settings.deeplKeySaved'));
   } catch (err) { alert(err.message); }
-  finally { btn.disabled = false; btn.textContent = 'Save DeepL Key'; }
+  finally { btn.disabled = false; btn.textContent = i18n.t('admin.bank.saveDeepLKey'); }
 });
 
 document.getElementById('stripeForm')?.addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('stripeSaveBtn');
-  btn.disabled = true; btn.textContent = 'Saving...';
+  btn.disabled = true; btn.textContent = i18n.t('common.saving');
   try {
     await api('/api/stripe/save', {
       method: 'POST',
@@ -956,13 +956,13 @@ document.getElementById('stripeForm')?.addEventListener('submit', async e => {
       });
       document.getElementById('sfGmailPass').value = '';
       const passStatus = document.getElementById('sfGmailPassStatus');
-      if (passStatus) { passStatus.textContent = '✓ App password saved'; passStatus.style.color = '#059669'; passStatus.style.display = 'block'; }
+      if (passStatus) { passStatus.textContent = i18n.t('admin.settings.gmailSaved'); passStatus.style.color = '#059669'; passStatus.style.display = 'block'; }
     }
-    alert('Settings saved');
+    alert(i18n.t('admin.settings.settingsSaved'));
     document.getElementById('sfSecKey').value = '';
     document.getElementById('sfWhsec').value = '';
   } catch (err) { alert(err.message); }
-  finally { btn.disabled = false; btn.textContent = 'Save Stripe Keys'; }
+  finally { btn.disabled = false; btn.textContent = i18n.t('admin.bank.saveStripeKeys'); }
 });
 
 /* Contact Info */
@@ -983,7 +983,7 @@ async function loadContactInfo() {
 document.getElementById('contactInfoForm')?.addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('ciSaveBtn');
-  btn.disabled = true; btn.textContent = 'Saving...';
+  btn.disabled = true; btn.textContent = i18n.t('common.saving');
   try {
     await api('/api/settings/contact', {
       method: 'PUT',
@@ -998,9 +998,9 @@ document.getElementById('contactInfoForm')?.addEventListener('submit', async e =
         linkedin_url: document.getElementById('ciLinkedin').value,
       })
     });
-    alert('Contact info saved! Refresh your website to see changes.');
+    alert(i18n.t('admin.contactinfo.saved'));
   } catch (err) { alert(err.message); }
-  finally { btn.disabled = false; btn.textContent = 'Save Contact Info'; }
+  finally { btn.disabled = false; btn.textContent = i18n.t('admin.contactinfo.saveContactInfo'); }
 });
 
 /* Bank Info */
@@ -1019,7 +1019,7 @@ async function loadBankInfo() {
 document.getElementById('bankForm')?.addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('bankSaveBtn');
-  btn.disabled = true; btn.textContent = 'Saving...';
+  btn.disabled = true; btn.textContent = i18n.t('common.saving');
   try {
     await api('/api/payments/settings', {
       method: 'PUT',
@@ -1032,9 +1032,9 @@ document.getElementById('bankForm')?.addEventListener('submit', async e => {
         swift: document.getElementById('bfSwift').value,
       })
     });
-    alert('Bank info saved');
+    alert(i18n.t('admin.bank.saved'));
   } catch (err) { alert(err.message); }
-  finally { btn.disabled = false; btn.textContent = 'Save Bank Info'; }
+  finally { btn.disabled = false; btn.textContent = i18n.t('admin.bank.saveBankInfo'); }
 });
 
 /* Change Password */
@@ -1314,7 +1314,7 @@ async function setupPasskey() {
 
 async function removePasskey() {
   if (!confirm(i18n.t('admin.settings.removePasskeyConfirm'))) return;
-  alert('Delete the passkey from your device settings (browser password manager). The passkey record has been removed from the server.');
+  alert(i18n.t('admin.settings.passkeyDeleteHint'));
   try {
     await fetch(`${API}/api/auth/webauthn/passkeys`, {
       method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
@@ -1580,7 +1580,7 @@ document.getElementById('settingsForm').addEventListener('submit', async functio
   const err = document.getElementById('settingsError');
   const btn = this.querySelector('button[type="submit"]');
   if (!newUsername && !newPassword) { err.style.color = '#dc2626'; err.textContent = i18n.t('admin.settings.enterNewCredentials'); return; }
-  btn.disabled = true; btn.textContent = 'Saving...'; err.textContent = '';
+  btn.disabled = true; btn.textContent = i18n.t('common.saving'); err.textContent = '';
   try {
     const body = { currentPassword: current };
     if (newUsername) body.newUsername = newUsername;

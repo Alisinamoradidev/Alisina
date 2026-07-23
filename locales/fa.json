@@ -429,7 +429,8 @@
       "confirmRefund": "این پرداخت بازپرداخت شود؟ مبلغ از طریق Stripe به مشتری بازگردانده خواهد شد.",
       "confirmRefundAll": "همه پرداخت‌های تکمیل‌شده بازپرداخت شوند؟ مبالغ از طریق Stripe به همه مشتریان بازگردانده خواهند شد.",
       "confirmDeleteAll": "همه رکوردهای پرداخت حذف شوند؟",
-      "confirmDeleteSelected": "{count} رکورد پرداخت انتخاب‌شده حذف شوند؟"
+      "confirmDeleteSelected": "{count} رکورد پرداخت انتخاب‌شده حذف شوند؟",
+      "refunded": "پرداخت بازگشت شد"
     },
     "bank": {
       "title": "تنظیمات پرداخت",
@@ -455,7 +456,8 @@
       "routingNumber": "شماره سوئیفت",
       "iban": "IBAN",
       "swiftBic": "SWIFT/BIC",
-      "saveBankInfo": "ذخیره اطلاعات بانکی"
+      "saveBankInfo": "ذخیره اطلاعات بانکی",
+      "saved": "اطلاعات بانکی ذخیره شد"
     },
     "contactinfo": {
       "title": "اطلاعات تماس",
@@ -473,7 +475,8 @@
       "facebookUrl": "آدرس Facebook",
       "instagramUrl": "آدرس Instagram",
       "linkedinUrl": "آدرس LinkedIn",
-      "saveContactInfo": "ذخیره اطلاعات تماس"
+      "saveContactInfo": "ذخیره اطلاعات تماس",
+      "saved": "اطلاعات تماس ذخیره شد! سایت را رفرش کنید تا تغییرات را ببینید."
     },
     "settings": {
       "title": "تنظیمات حساب",
@@ -500,6 +503,10 @@
       "noPasskey": "هنوز Passkey راه‌اندازی نشده",
       "passkeyNotSupported": "Passkey در این مرورگر پشتیبانی نمی‌شود",
       "removePasskeyConfirm": "Passkey ذخیره‌شده حذف شود؟",
+      "gmailSaved": "رمز عبور Gmail ذخیره شد",
+      "gmailNotSaved": "رمز عبور Gmail ذخیره نشده",
+      "deeplKeySaved": "کلید API DeepL ذخیره شد",
+      "settingsSaved": "تنظیمات ذخیره شد",
       "faceSetupSuccess": "ورود با چهره با {count} عکس راه‌اندازی شد!",
       "faceReady": "ورود با چهره آماده",
       "noFace": "هنوز چهره‌ای ثبت نشده",

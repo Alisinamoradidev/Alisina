@@ -429,7 +429,8 @@
       "confirmRefund": "Refund this payment? The amount will be returned to the customer via Stripe.",
       "confirmRefundAll": "Refund ALL completed payments? This will return money to all customers via Stripe.",
       "confirmDeleteAll": "Delete ALL payment records?",
-      "confirmDeleteSelected": "Delete {count} selected payment record(s)?"
+      "confirmDeleteSelected": "Delete {count} selected payment record(s)?",
+      "refunded": "Payment refunded"
     },
     "bank": {
       "title": "Payment Settings",
@@ -455,7 +456,8 @@
       "routingNumber": "Routing Number",
       "iban": "IBAN",
       "swiftBic": "SWIFT/BIC",
-      "saveBankInfo": "Save Bank Info"
+      "saveBankInfo": "Save Bank Info",
+      "saved": "Bank info saved"
     },
     "contactinfo": {
       "title": "Contact Information",
@@ -473,7 +475,8 @@
       "facebookUrl": "Facebook URL",
       "instagramUrl": "Instagram URL",
       "linkedinUrl": "LinkedIn URL",
-      "saveContactInfo": "Save Contact Info"
+      "saveContactInfo": "Save Contact Info",
+      "saved": "Contact info saved! Refresh your website to see changes."
     },
     "settings": {
       "title": "Account Settings",
@@ -500,6 +503,10 @@
       "noPasskey": "No passkey set up yet",
       "passkeyNotSupported": "Passkey not supported on this browser",
       "removePasskeyConfirm": "Remove your saved passkey?",
+      "gmailSaved": "Gmail app password saved",
+      "gmailNotSaved": "No Gmail app password saved",
+      "deeplKeySaved": "DeepL API key saved",
+      "settingsSaved": "Settings saved",
       "faceSetupSuccess": "Face login set up with {count} photos!",
       "faceReady": "Face login ready",
       "noFace": "No face set up yet",
