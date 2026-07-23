@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <script>if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
   <style>svg[aria-hidden="true"]{width:1em;height:1em;fill:currentColor;vertical-align:-.125em;flex-shrink:0}html[data-theme="dark"]{background:#0f172a}html[data-theme="dark"] body{color:#f1f5f9}html[data-theme="dark"] .logo img{filter:brightness(0) invert(1)}@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}.hero{position:relative;width:100%;height:100vh;min-height:600px;overflow:hidden;background:#1e3a5f}.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,.55),rgba(15,23,42,.78));z-index:1}.hero-content{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;text-align:center;padding:0 20px}.hero-content h1{color:#fff;font-size:clamp(2rem,5vw,3.5rem);font-weight:800;margin-bottom:12px}.hero-content p{color:rgba(255,255,255,.85);font-size:clamp(1rem,2.5vw,1.25rem);margin-bottom:24px}.search-form{display:flex;gap:8px;max-width:700px;width:100%;background:rgba(255,255,255,.95);border-radius:12px;padding:8px}.search-group{flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;background:transparent}.search-group svg,.search-group i{color:#64748b;font-size:14px}.search-group input,.search-group select{width:100%;border:none;background:transparent;font-size:14px;color:#1f2937;outline:none}</style>
@@ -26,6 +26,12 @@
   <meta name="twitter:description" content="Find your dream home with Primenest Reality.">
   <meta name="twitter:image" content="https://alisina-nu.vercel.app/images/logo.jpeg">
 
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="en" href="https://alisina-nu.vercel.app/">
+  <link rel="alternate" hreflang="fa" href="https://alisina-nu.vercel.app/?lang=fa">
+  <link rel="alternate" hreflang="ps" href="https://alisina-nu.vercel.app/?lang=ps">
+  <link rel="alternate" hreflang="x-default" href="https://alisina-nu.vercel.app/">
+
   <link rel="icon" type="image/jpeg" href="images/logo.jpeg">
   <link rel="apple-touch-icon" href="images/logo.jpeg">
   <link rel="manifest" href="site.webmanifest">
@@ -35,6 +41,8 @@
   <link rel="dns-prefetch" href="https://frxidigxcxtehybcoaez.supabase.co">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap"></noscript>
   <link rel="preload" href="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=400&q=65" as="image" fetchpriority="high">
   <link rel="preload" href="icons.svg" as="image" type="image/svg+xml">
   <link rel="stylesheet" href="styles.min.css" media="print" onload="this.media='all'">
@@ -101,6 +109,7 @@
           <span>Primenest Reality</span>
         </a>
         <div class="header-actions">
+          <div class="lang-switcher" id="langSwitcher"></div>
           <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
             <svg aria-hidden="true" focusable="false" class="fas fa-moon"><use href="icons.svg#moon"/></svg>
           </button>
@@ -108,15 +117,15 @@
             <svg aria-hidden="true" focusable="false" class="fas fa-bars"><use href="icons.svg#bars"/></svg>
           </button>
           <nav class="nav" id="nav">
-            <a href="#home">Home</a>
-            <a href="#listings">Listings</a>
-            <a href="#sold">Sold</a>
-            <a href="#about">About</a>
-            <a href="#blog">Blog</a>
-            <a href="#quiz">Quiz</a>
-            <a href="#map">Map</a>
-            <a href="#agent">Agent</a>
-            <a href="#contact">Contact</a>
+            <a href="#home" data-i18n="nav.home">Home</a>
+            <a href="#listings" data-i18n="nav.listings">Listings</a>
+            <a href="#sold" data-i18n="nav.sold">Sold</a>
+            <a href="#about" data-i18n="nav.about">About</a>
+            <a href="#blog" data-i18n="nav.blog">Blog</a>
+            <a href="#quiz" data-i18n="nav.quiz">Quiz</a>
+            <a href="#map" data-i18n="nav.map">Map</a>
+            <a href="#agent" data-i18n="nav.agent">Agent</a>
+            <a href="#contact" data-i18n="nav.contact">Contact</a>
           </nav>
         </div>
         </div>
@@ -127,43 +136,43 @@
   <main>
   <section class="hero" id="home">
     <div class="scroll-indicator" style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,0.9);font-size:12px;letter-spacing:1px;text-transform:uppercase">
-      <span>Scroll</span>
+      <span data-i18n="hero.scroll">Scroll</span>
       <svg aria-hidden="true" focusable="false" class="fas fa-chevron-down" style="font-size:14px"><use href="icons.svg#chevron-down"/></svg>
     </div>
     <img src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=400&q=65" alt="" width="1200" height="800" fetchpriority="high" decoding="async" class="hero-image" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0">
     <div class="hero-overlay"></div>
     <div class="container hero-content">
-      <h1>Find Your Perfect Home</h1>
-      <p>Discover the finest properties in prime locations</p>
+      <h1 data-i18n="hero.title">Find Your Perfect Home</h1>
+      <p data-i18n="hero.subtitle">Discover the finest properties in prime locations</p>
       <form class="search-form" id="searchForm">
         <div class="search-group">
           <svg aria-hidden="true" focusable="false" class="fas fa-search"><use href="icons.svg#magnifying-glass"/></svg>
-          <input type="text" id="searchInput" placeholder="Search by location, type, or keyword...">
+          <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" placeholder="Search by location, type, or keyword...">
         </div>
         <div class="search-group">
           <svg aria-hidden="true" focusable="false" class="fas fa-dollar-sign"><use href="icons.svg#dollar-sign"/></svg>
           <select id="priceFilter" aria-label="Filter by price">
-            <option value="">Any Price</option>
-            <option value="0-200000">Under $200k</option>
-            <option value="200000-500000">$200k - $500k</option>
-            <option value="500000-1000000">$500k - $1M</option>
-            <option value="1000000-999999999">$1M+</option>
+            <option value="" data-i18n="search.anyPrice">Any Price</option>
+            <option value="0-200000" data-i18n="search.under200k">Under $200k</option>
+            <option value="200000-500000" data-i18n="search.200to500k">$200k - $500k</option>
+            <option value="500000-1000000" data-i18n="search.500kto1m">$500k - $1M</option>
+            <option value="1000000-999999999" data-i18n="search.over1m">$1M+</option>
           </select>
         </div>
         <div class="search-group">
           <svg aria-hidden="true" focusable="false" class="fas fa-home"><use href="icons.svg#house"/></svg>
           <select id="typeFilter" aria-label="Filter by property type">
-            <option value="">All Types</option>
-            <option value="house">House</option>
-            <option value="apartment">Apartment</option>
-            <option value="condo">Condo</option>
-            <option value="villa">Villa</option>
+            <option value="" data-i18n="search.allTypes">All Types</option>
+            <option value="house" data-i18n="search.house">House</option>
+            <option value="apartment" data-i18n="search.apartment">Apartment</option>
+            <option value="condo" data-i18n="search.condo">Condo</option>
+            <option value="villa" data-i18n="search.villa">Villa</option>
           </select>
         </div>
         <div class="search-group">
           <svg aria-hidden="true" focusable="false" class="fas fa-bed"><use href="icons.svg#bed"/></svg>
           <select id="bedsFilter" aria-label="Filter by bedrooms">
-            <option value="">Any Beds</option>
+            <option value="" data-i18n="search.anyBeds">Any Beds</option>
             <option value="1">1+</option>
             <option value="2">2+</option>
             <option value="3">3+</option>
@@ -174,14 +183,14 @@
         <div class="search-group">
           <svg aria-hidden="true" focusable="false" class="fas fa-bath"><use href="icons.svg#bath"/></svg>
           <select id="bathsFilter" aria-label="Filter by bathrooms">
-            <option value="">Any Baths</option>
+            <option value="" data-i18n="search.anyBaths">Any Baths</option>
             <option value="1">1+</option>
             <option value="2">2+</option>
             <option value="3">3+</option>
             <option value="4">4+</option>
           </select>
         </div>
-        <button type="submit" class="btn-search">Search</button>
+        <button type="submit" class="btn-search" data-i18n="search.search">Search</button>
       </form>
     </div>
   </section>
@@ -189,19 +198,19 @@
   <section class="section reveal" id="listings">
     <div class="container">
       <div class="section-header">
-        <h2>Featured Properties</h2>
-        <p>Explore our handpicked selection of premium properties</p>
+        <h2 data-i18n="listings.featuredTitle">Featured Properties</h2>
+        <p data-i18n="listings.featuredSubtitle">Explore our handpicked selection of premium properties</p>
       </div>
       <div class="listings-bar">
         <span class="results-count" id="resultsCount">Showing 9 properties</span>
         <div class="sort-group">
           <svg aria-hidden="true" focusable="false" class="fas fa-arrow-down-wide-short"><use href="icons.svg#arrow-down-wide-short"/></svg>
           <select id="sortSelect" aria-label="Sort properties">
-            <option value="default">Default</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-            <option value="name-asc">Name: A-Z</option>
-            <option value="name-desc">Name: Z-A</option>
+            <option value="default" data-i18n="listings.default">Default</option>
+            <option value="price-asc" data-i18n="listings.priceLowToHigh">Price: Low to High</option>
+            <option value="price-desc" data-i18n="listings.priceHighToLow">Price: High to Low</option>
+            <option value="name-asc" data-i18n="listings.nameAZ">Name: A-Z</option>
+            <option value="name-desc" data-i18n="listings.nameZA">Name: Z-A</option>
           </select>
         </div>
       </div>
@@ -216,23 +225,23 @@
       <div class="pagination" id="pagination">
         <button class="page-nav" id="prevPage" aria-label="Previous page" onclick="goToPage(currentPage - 1)">
           <svg aria-hidden="true" focusable="false" class="fas fa-chevron-left"><use href="icons.svg#chevron-left"/></svg>
-          <span>Prev</span>
+          <span data-i18n="common.prev">Prev</span>
         </button>
         <div class="page-numbers" id="pageNumbers"></div>
         <button class="page-nav" id="nextPage" aria-label="Next page" onclick="goToPage(currentPage + 1)">
-          <span>Next</span>
+          <span data-i18n="common.next">Next</span>
           <svg aria-hidden="true" focusable="false" class="fas fa-chevron-right"><use href="icons.svg#chevron-right"/></svg>
         </button>
       </div>
       <div class="no-results" id="noResults">
         <svg aria-hidden="true" focusable="false" class="fas fa-search"><use href="icons.svg#magnifying-glass"/></svg>
-        <h3>No properties found</h3>
-        <p>Try adjusting your search or filter criteria</p>
+        <h3 data-i18n="listings.noResults">No properties found</h3>
+        <p data-i18n="listings.noResultsDesc">Try adjusting your search or filter criteria</p>
       </div>
       <div id="compareBar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:2px solid var(--primary);padding:12px 24px;z-index:1000;box-shadow:0 -4px 12px rgba(0,0,0,0.1);align-items:center;gap:12px;flex-wrap:wrap">
-        <span style="font-weight:600;color:var(--text);white-space:nowrap">Compare:</span>
+        <span style="font-weight:600;color:var(--text);white-space:nowrap" data-i18n="compare.label">Compare:</span>
         <div class="compare-bar-inner" style="display:flex;gap:8px;flex-wrap:wrap;flex:1"></div>
-        <button class="btn-primary btn-sm compare-btn" style="display:none" onclick="openCompare()" aria-label="Compare selected properties"><svg aria-hidden="true" focusable="false" class="fas fa-arrows-left-right"><use href="icons.svg#arrows-left-right"/></svg> Compare</button>
+        <button class="btn-primary btn-sm compare-btn" style="display:none" onclick="openCompare()" aria-label="Compare selected properties"><svg aria-hidden="true" focusable="false" class="fas fa-arrows-left-right"><use href="icons.svg#arrows-left-right"/></svg> <span data-i18n="compare.compareBtn">Compare</span></button>
       </div>
     </div>
   </section>
@@ -240,39 +249,39 @@
   <section class="section reveal" id="sold" style="background:var(--bg-secondary)">
     <div class="container">
       <div class="section-header">
-        <h2>Sold Properties</h2>
-        <p>Properties we've helped close successfully</p>
+        <h2 data-i18n="sold.title">Sold Properties</h2>
+        <p data-i18n="sold.subtitle">Properties we've helped close successfully</p>
       </div>
       <div class="listings-grid stagger" id="soldGrid"></div>
-      <p class="no-results" id="soldEmpty" style="display:none;text-align:center;padding:40px;color:var(--text-secondary)">No sold properties yet.</p>
+      <p class="no-results" id="soldEmpty" style="display:none;text-align:center;padding:40px;color:var(--text-secondary)" data-i18n="sold.noSold">No sold properties yet.</p>
     </div>
   </section>
   <section class="section about reveal" id="about">
     <div class="container">
       <div class="section-header">
-        <h2>Why Choose Us</h2>
-        <p>We make finding your dream home effortless</p>
+        <h2 data-i18n="about.title">Why Choose Us</h2>
+        <p data-i18n="about.subtitle">We make finding your dream home effortless</p>
       </div>
       <div class="features-grid stagger">
         <div class="feature-card">
           <svg aria-hidden="true" focusable="false" class="fas fa-map-marker-alt"><use href="icons.svg#location-dot"/></svg>
-          <h3>Prime Locations</h3>
-          <p>Properties in the most sought-after neighborhoods</p>
+          <h3 data-i18n="about.primeLocations">Prime Locations</h3>
+          <p data-i18n="about.primeLocationsDesc">Properties in the most sought-after neighborhoods</p>
         </div>
         <div class="feature-card">
           <svg aria-hidden="true" focusable="false" class="fas fa-handshake"><use href="icons.svg#handshake"/></svg>
-          <h3>Expert Agents</h3>
-          <p>Professional guidance every step of the way</p>
+          <h3 data-i18n="about.expertAgents">Expert Agents</h3>
+          <p data-i18n="about.expertAgentsDesc">Professional guidance every step of the way</p>
         </div>
         <div class="feature-card">
           <svg aria-hidden="true" focusable="false" class="fas fa-shield-alt"><use href="icons.svg#shield-halved"/></svg>
-          <h3>Secure Deals</h3>
-          <p>Transparent and legally protected transactions</p>
+          <h3 data-i18n="about.secureDeals">Secure Deals</h3>
+          <p data-i18n="about.secureDealsDesc">Transparent and legally protected transactions</p>
         </div>
         <div class="feature-card">
           <svg aria-hidden="true" focusable="false" class="fas fa-clock"><use href="icons.svg#clock"/></svg>
-          <h3>Fast Process</h3>
-          <p>Streamlined process from search to move-in</p>
+          <h3 data-i18n="about.fastProcess">Fast Process</h3>
+          <p data-i18n="about.fastProcessDesc">Streamlined process from search to move-in</p>
         </div>
       </div>
     </div>
@@ -285,10 +294,10 @@
           <img src="images/alisina.jpg" alt="Alisina Moradi" width="360" height="400" loading="lazy" decoding="async">
         </div>
         <div class="agent-info">
-          <span class="agent-tag">Your Trusted Agent</span>
-          <h2>Alisina Moradi</h2>
-          <p class="agent-role">Founder & Lead Real Estate Agent</p>
-          <p class="agent-bio">
+          <span class="agent-tag" data-i18n="agent.tag">Your Trusted Agent</span>
+          <h2 data-i18n="agent.name">Alisina Moradi</h2>
+          <p class="agent-role" data-i18n="agent.role">Founder & Lead Real Estate Agent</p>
+          <p class="agent-bio" data-i18n="agent.bio">
             With years of experience in the real estate market, I help buyers and sellers 
             find the perfect property. My commitment is to provide transparent, professional, 
             and personalized service to every client.
@@ -296,15 +305,15 @@
           <div class="agent-stats stagger">
             <div class="stat">
               <span class="stat-number">150+</span>
-              <span class="stat-label">Properties Sold</span>
+              <span class="stat-label" data-i18n="agent.propertiesSold">Properties Sold</span>
             </div>
             <div class="stat">
               <span class="stat-number">98%</span>
-              <span class="stat-label">Happy Clients</span>
+              <span class="stat-label" data-i18n="agent.happyClients">Happy Clients</span>
             </div>
             <div class="stat">
               <span class="stat-number">12+</span>
-              <span class="stat-label">Years Experience</span>
+              <span class="stat-label" data-i18n="agent.yearsExperience">Years Experience</span>
             </div>
           </div>
         </div>
@@ -315,8 +324,8 @@
   <section class="section blog reveal" id="blog">
     <div class="container">
       <div class="section-header">
-        <h2>Latest from the Blog</h2>
-        <p>Real estate market insights, tips, and local guides</p>
+        <h2 data-i18n="blog.title">Latest from the Blog</h2>
+        <p data-i18n="blog.subtitle">Real estate market insights, tips, and local guides</p>
       </div>
       <div class="blog-grid stagger" id="blogGrid">
         <div class="skeleton-card"><div class="sk-img h-48"></div><div class="sk-body"><div class="sk-line w40"></div><div class="sk-line w80"></div><div class="sk-line w100"></div></div></div>
@@ -329,8 +338,8 @@
   <section class="section testimonials reveal" id="testimonials">
     <div class="container">
       <div class="section-header">
-        <h2>What My Clients Say</h2>
-        <p>Trusted by buyers, sellers, and investors</p>
+        <h2 data-i18n="testimonials.title">What My Clients Say</h2>
+        <p data-i18n="testimonials.subtitle">Trusted by buyers, sellers, and investors</p>
       </div>
       <div class="testimonials-grid stagger" id="testimonialsGrid"></div>
     </div>
@@ -339,14 +348,14 @@
   <section class="section quiz-section reveal" id="quiz">
     <div class="container">
       <div class="section-header">
-        <h2>Property Match Quiz</h2>
-        <p>Answer 4 quick questions and find your perfect property</p>
+        <h2 data-i18n="quiz.title">Property Match Quiz</h2>
+        <p data-i18n="quiz.subtitle">Answer 4 quick questions and find your perfect property</p>
       </div>
       <div class="quiz-wrapper">
         <div id="quizIntro">
-          <h3>Find Your Perfect Property</h3>
-          <p>Answer 4 quick questions and I'll match you with the best properties.</p>
-          <button class="btn-search" onclick="startQuiz()">Start Quiz</button>
+          <h3 data-i18n="quiz.introTitle">Find Your Perfect Property</h3>
+          <p data-i18n="quiz.introSubtitle">Answer 4 quick questions and I'll match you with the best properties.</p>
+          <button class="btn-search" onclick="startQuiz()" data-i18n="quiz.startQuiz">Start Quiz</button>
         </div>
         <div id="quizQuestions" style="display:none"></div>
       </div>
@@ -356,8 +365,8 @@
   <section class="section map-section reveal" id="map">
     <div class="container">
       <div class="section-header">
-        <h2>Properties on Map</h2>
-        <p>Explore all listings in one view</p>
+        <h2 data-i18n="map.title">Properties on Map</h2>
+        <p data-i18n="map.subtitle">Explore all listings in one view</p>
       </div>
       <div id="propertyMap"></div>
     </div>
@@ -366,45 +375,45 @@
   <section class="section contact reveal" id="contact">
     <div class="container">
       <div class="section-header">
-        <h2>Get In Touch</h2>
-        <p>Ready to find your dream home? Reach out to us</p>
+        <h2 data-i18n="contact.title">Get In Touch</h2>
+        <p data-i18n="contact.subtitle">Ready to find your dream home? Reach out to us</p>
       </div>
       <div class="contact-wrapper">
         <form class="contact-form" id="contactForm" method="POST">
-          <input type="text" name="name" placeholder="Your Name" required>
-          <input type="email" name="email" placeholder="Your Email" required>
-          <input type="tel" name="phone" placeholder="Your Phone">
+          <input type="text" name="name" data-i18n-placeholder="contact.name" placeholder="Your Name" required>
+          <input type="email" name="email" data-i18n-placeholder="contact.email" placeholder="Your Email" required>
+          <input type="tel" name="phone" data-i18n-placeholder="contact.phone" placeholder="Your Phone">
           <select name="inquiry_type" id="inquiryType" aria-label="Inquiry type">
-            <option value="">I'm interested in...</option>
-            <option value="buy">Buying a property</option>
-            <option value="rent">Renting a property</option>
-            <option value="sell">Selling my property</option>
-            <option value="invest">Real estate investment</option>
-            <option value="other">Other inquiry</option>
+            <option value="" data-i18n="contact.inquiryType">I'm interested in...</option>
+            <option value="buy" data-i18n="contact.buy">Buying a property</option>
+            <option value="rent" data-i18n="contact.rent">Renting a property</option>
+            <option value="sell" data-i18n="contact.sell">Selling my property</option>
+            <option value="invest" data-i18n="contact.invest">Real estate investment</option>
+            <option value="other" data-i18n="contact.other">Other inquiry</option>
           </select>
-          <input type="text" name="property" id="inquiryProperty" placeholder="Property you're interested in (optional)">
-          <textarea name="message" rows="4" placeholder="Tell me what you're looking for..." required></textarea>
-          <button type="submit" class="btn-submit">Send Message</button>
+          <input type="text" name="property" id="inquiryProperty" data-i18n-placeholder="contact.property" placeholder="Property you're interested in (optional)">
+          <textarea name="message" rows="4" data-i18n-placeholder="contact.message" placeholder="Tell me what you're looking for..." required></textarea>
+          <button type="submit" class="btn-submit" data-i18n="contact.send">Send Message</button>
         </form>
         <div class="contact-info">
           <div class="info-item">
             <svg aria-hidden="true" focusable="false" class="fas fa-envelope"><use href="icons.svg#envelope"/></svg>
             <div>
-              <h3>Email</h3>
+              <h3 data-i18n="contact.emailLabel">Email</h3>
               <p data-contact="email">info@primenest.com</p>
             </div>
           </div>
           <div class="info-item">
             <svg aria-hidden="true" focusable="false" class="fas fa-phone"><use href="icons.svg#phone"/></svg>
             <div>
-              <h3>Phone</h3>
+              <h3 data-i18n="contact.phoneLabel">Phone</h3>
               <p data-contact="phone">+1-555-0123</p>
             </div>
           </div>
           <div class="info-item">
             <svg aria-hidden="true" focusable="false" class="fas fa-map-marker-alt"><use href="icons.svg#location-dot"/></svg>
             <div>
-              <h3>Office</h3>
+              <h3 data-i18n="contact.officeLabel">Office</h3>
               <p data-contact="address">123 Main St, New York, NY 10001</p>
             </div>
           </div>
@@ -416,7 +425,7 @@
 
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal" id="propertyModal">
-      <button class="modal-close" id="modalClose" aria-label="Close"><svg aria-hidden="true" focusable="false" class="fas fa-times"><use href="icons.svg#xmark"/></svg></button>
+      <button class="modal-close" id="modalClose" aria-label="Close" data-i18n-aria="modal.close"><svg aria-hidden="true" focusable="false" class="fas fa-times"><use href="icons.svg#xmark"/></svg></button>
       <div class="modal-image" id="modalImage"></div>
       <div class="modal-body">
         <div class="modal-header">
@@ -426,7 +435,7 @@
         <div class="modal-location" id="modalLocation">
           <svg aria-hidden="true" focusable="false" class="fas fa-map-marker-alt"><use href="icons.svg#location-dot"/></svg>
           <span></span>
-          <a id="modalMapLink" href="#" target="_blank" rel="noopener" style="display:none;margin-left:8px;color:var(--primary);font-size:13px;text-decoration:underline;white-space:nowrap"><svg aria-hidden="true" focusable="false" class="fas fa-external-link-alt"><use href="icons.svg#arrow-up-right-from-square"/></svg> View on Map</a>
+          <a id="modalMapLink" href="#" target="_blank" rel="noopener" style="display:none;margin-left:8px;color:var(--primary);font-size:13px;text-decoration:underline;white-space:nowrap"><svg aria-hidden="true" focusable="false" class="fas fa-external-link-alt"><use href="icons.svg#arrow-up-right-from-square"/></svg> <span data-i18n="modal.viewOnMap">View on Map</span></a>
         </div>
         <div id="modalMap" style="width:100%;height:200px;border-radius:var(--radius);margin-bottom:16px;display:none"></div>
         <div class="modal-details" id="modalDetails"></div>
@@ -437,25 +446,25 @@
           dining, and public transportation.
         </p>
         <div class="modal-features">
-          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> Central A/C</span>
-          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> Hardwood Floors</span>
-          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> Laundry</span>
-          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> Parking</span>
-          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> Pet Friendly</span>
-          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> Storage</span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> <span data-i18n="modal.centralAC">Central A/C</span></span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> <span data-i18n="modal.hardwoodFloors">Hardwood Floors</span></span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> <span data-i18n="modal.laundry">Laundry</span></span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> <span data-i18n="modal.parking">Parking</span></span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> <span data-i18n="modal.petFriendly">Pet Friendly</span></span>
+          <span><svg aria-hidden="true" focusable="false" class="fas fa-check-circle"><use href="icons.svg#circle-check"/></svg> <span data-i18n="modal.storage">Storage</span></span>
         </div>
         <div class="modal-actions">
-          <button class="btn-submit" id="modalInquire">Inquire Now</button>
-          <button class="btn-submit btn-pay" id="modalPay" style="display:none"><svg aria-hidden="true" focusable="false" class="fas fa-credit-card"><use href="icons.svg#credit-card"/></svg> Pay Deposit</button>
-          <button class="btn-fav" id="modalFav" aria-label="Save property"><svg aria-hidden="true" focusable="false" class="far fa-heart"><use href="icons.svg#heart-outline"/></svg> Save</button>
+          <button class="btn-submit" id="modalInquire" data-i18n="modal.inquireNow">Inquire Now</button>
+          <button class="btn-submit btn-pay" id="modalPay" style="display:none"><svg aria-hidden="true" focusable="false" class="fas fa-credit-card"><use href="icons.svg#credit-card"/></svg> <span data-i18n="modal.payDeposit">Pay Deposit</span></button>
+          <button class="btn-fav" id="modalFav" aria-label="Save property" data-i18n-aria="modal.save"><svg aria-hidden="true" focusable="false" class="far fa-heart"><use href="icons.svg#heart-outline"/></svg> <span data-i18n="modal.save">Save</span></button>
         </div>
         <div id="rentalDuration" style="display:none;margin-top:16px;padding:20px;background:var(--muted);border-radius:var(--radius)">
-          <h3 style="margin:0 0 4px;color:var(--text);font-size:16px"><svg aria-hidden="true" focusable="false" class="fas fa-clock"><use href="icons.svg#clock"/></svg> Select Rental Duration</h3>
-          <p style="margin:0 0 14px;color:var(--text-secondary);font-size:13px">Choose how long you want to rent this property</p>
+          <h3 style="margin:0 0 4px;color:var(--text);font-size:16px"><svg aria-hidden="true" focusable="false" class="fas fa-clock"><use href="icons.svg#clock"/></svg> <span data-i18n="modal.selectRentalDuration">Select Rental Duration</span></h3>
+          <p style="margin:0 0 14px;color:var(--text-secondary);font-size:13px" data-i18n="modal.chooseDuration">Choose how long you want to rent this property</p>
           <div id="durationOptions" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px"></div>
         </div>
         <div class="bank-info" id="bankInfo" style="display:none;margin-top:16px;padding:16px;background:var(--muted);border-radius:var(--radius);font-size:13px">
-          <strong style="color:var(--text)">Bank Transfer Option</strong>
+          <strong style="color:var(--text)" data-i18n="modal.bankTransfer">Bank Transfer Option</strong>
           <div id="bankInfoDetails" style="margin-top:8px;color:var(--text-secondary);line-height:1.8"></div>
         </div>
       </div>
@@ -476,7 +485,7 @@
     </button>
     <div class="chat-body" id="chatBody">
       <div class="chat-header">
-        <span><svg aria-hidden="true" focusable="false" class="fas fa-robot"><use href="icons.svg#robot"/></svg> Primenest AI</span>
+        <span><svg aria-hidden="true" focusable="false" class="fas fa-robot"><use href="icons.svg#robot"/></svg> <span data-i18n="chat.title">Primenest AI</span></span>
         <button id="chatClose" aria-label="Close chat"><svg aria-hidden="true" focusable="false" class="fas fa-times"><use href="icons.svg#xmark"/></svg></button>
       </div>
       <div class="chat-msgs" id="chatMsgs"></div>
@@ -491,26 +500,26 @@
             <img src="images/logo.jpeg" alt="Primenest Reality" width="40" height="40" style="border-radius:8px;object-fit:cover">
             <span>Primenest Reality</span>
           </a>
-          <p>Your trusted real estate partner.</p>
+          <p data-i18n="footer.tagline">Your trusted real estate partner.</p>
         </div>
         <div class="footer-links">
-          <h3>Quick Links</h3>
-          <a href="#home">Home</a>
-          <a href="#listings">Listings</a>
-          <a href="#quiz">Quiz</a>
-          <a href="#map">Map</a>
-          <a href="#agent">Agent</a>
-          <a href="#contact">Contact</a>
+          <h3 data-i18n="footer.quickLinks">Quick Links</h3>
+          <a href="#home" data-i18n="nav.home">Home</a>
+          <a href="#listings" data-i18n="nav.listings">Listings</a>
+          <a href="#quiz" data-i18n="nav.quiz">Quiz</a>
+          <a href="#map" data-i18n="nav.map">Map</a>
+          <a href="#agent" data-i18n="nav.agent">Agent</a>
+          <a href="#contact" data-i18n="nav.contact">Contact</a>
         </div>
         <div class="footer-links">
-          <h3>Property Types</h3>
-          <a href="#listings">Houses</a>
-          <a href="#listings">Apartments</a>
-          <a href="#listings">Condos</a>
-          <a href="#listings">Villas</a>
+          <h3 data-i18n="footer.propertyTypes">Property Types</h3>
+          <a href="#listings" data-i18n="footer.houses">Houses</a>
+          <a href="#listings" data-i18n="footer.apartments">Apartments</a>
+          <a href="#listings" data-i18n="footer.condos">Condos</a>
+          <a href="#listings" data-i18n="footer.villas">Villas</a>
         </div>
         <div class="footer-social">
-          <h3>Follow Us</h3>
+          <h3 data-i18n="footer.followUs">Follow Us</h3>
           <div class="social-icons">
             <a href="#" target="_blank" rel="noopener" aria-label="Facebook"><svg aria-hidden="true" focusable="false" class="fab fa-facebook"><use href="icons.svg#facebook"/></svg></a>
             <a href="#" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true" focusable="false" class="fab fa-instagram"><use href="icons.svg#instagram"/></svg></a>
@@ -519,14 +528,14 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 Primenest Reality. All rights reserved.</p>
+        <p data-i18n="footer.copyright">&copy; 2026 Primenest Reality. All rights reserved.</p>
       </div>
     </div>
   </footer>
 
   <div class="modal-overlay" id="compareModal" style="display:none">
     <div class="modal modal-lg">
-      <div class="modal-header"><h3>Compare Properties</h3><button class="modal-close" aria-label="Close comparison" onclick="closeCompare()">&times;</button></div>
+      <div class="modal-header"><h3 data-i18n="compare.title">Compare Properties</h3><button class="modal-close" aria-label="Close comparison" onclick="closeCompare()">&times;</button></div>
       <div class="modal-body" id="compareModalBody" style="overflow-x:auto"></div>
     </div>
   </div>
@@ -536,15 +545,16 @@
     <div style="max-width:600px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       <img src="images/icon-192.jpeg" alt="App Icon" width="48" height="48" style="border-radius:12px;object-fit:cover;flex-shrink:0">
       <div style="flex:1;min-width:0">
-        <div style="color:#fff;font-weight:700;font-size:16px">Install Primenest Reality</div>
-        <div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:2px">Add to your home screen for faster access</div>
+        <div style="color:#fff;font-weight:700;font-size:16px" data-i18n="pwa.installTitle">Install Primenest Reality</div>
+        <div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:2px" data-i18n="pwa.installSubtitle">Add to your home screen for faster access</div>
       </div>
-      <button id="installBtn" style="background:#fff;color:#1a73e8;border:none;padding:10px 24px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap">Install</button>
-      <button id="installClose" aria-label="Dismiss install banner" style="background:transparent;color:rgba(255,255,255,0.7);border:none;font-size:22px;cursor:pointer;padding:4px 8px;line-height:1">&times;</button>
+      <button id="installBtn" style="background:#fff;color:#1a73e8;border:none;padding:10px 24px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap" data-i18n="pwa.install">Install</button>
+      <button id="installClose" aria-label="Dismiss install banner" data-i18n-aria="pwa.dismiss" style="background:transparent;color:rgba(255,255,255,0.7);border:none;font-size:22px;cursor:pointer;padding:4px 8px;line-height:1">&times;</button>
     </div>
   </div>
 
   <script src="config.js"></script>
+  <script src="i18n.js"></script>
   <script src="app.min.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

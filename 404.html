@@ -1,9 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>404 — Page Not Found | Primenest Reality</title>
+  <link rel="alternate" hreflang="en" href="https://alisina-nu.vercel.app/">
+  <link rel="alternate" hreflang="fa" href="https://alisina-nu.vercel.app/?lang=fa">
+  <link rel="alternate" hreflang="ps" href="https://alisina-nu.vercel.app/?lang=ps">
+  <link rel="alternate" hreflang="x-default" href="https://alisina-nu.vercel.app/">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -17,6 +22,7 @@
       text-align: center;
       padding: 24px;
     }
+    [dir="rtl"] body { font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     .container { max-width: 480px; }
     h1 { font-size: 96px; font-weight: 800; background: linear-gradient(135deg,#1e3a5f,#2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
     h2 { font-size: 24px; margin: 16px 0 8px; }
@@ -24,6 +30,27 @@
     a { display: inline-block; padding: 12px 28px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 15px; transition: background .2s; }
     a:hover { background: #1d4ed8; }
   </style>
+  <script>
+    (function() {
+      var lang = localStorage.getItem('primenest_lang') || 'en';
+      if (lang === 'fa' || lang === 'ps') {
+        document.documentElement.setAttribute('dir', 'rtl');
+        document.documentElement.setAttribute('lang', lang);
+      }
+      var translations = {
+        en: { title: '404 — Page Not Found | Primenest Reality', heading: 'Page not found', message: "The page you're looking for doesn't exist or has been moved.", back: 'Back to Home' },
+        fa: { title: '404 — صفحه یافت نشد | پرایم‌نست رئالیتی', heading: 'صفحه یافت نشد', message: 'صفحه‌ای که به دنبال آن هستید وجود ندارد یا منتقل شده است.', back: 'بازگشت به صفحه اصلی' },
+        ps: { title: '404 — پاڼه ونه موندل شوه | Primenest Reality', heading: 'پاڼه ونه موندل شوه', message: 'دا پاڼه چې تاسو لټوئ دا شته نه ده یا وړانګېدلې ده.', back: 'کورته اصلي پاڼه ته' }
+      };
+      var t = translations[lang] || translations.en;
+      document.title = t.title;
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelector('h2').textContent = t.heading;
+        document.querySelector('p').textContent = t.message;
+        document.querySelector('a').textContent = t.back;
+      });
+    })();
+  </script>
 </head>
 <body>
   <div class="container">

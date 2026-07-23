@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,12 +7,17 @@
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-  <title>Admin Panel — Primenest Reality</title>
+  <title data-i18n="admin.login.title">Admin Panel — Primenest Reality</title>
+  <link rel="alternate" hreflang="en" href="https://alisina-nu.vercel.app/admin">
+  <link rel="alternate" hreflang="fa" href="https://alisina-nu.vercel.app/admin?lang=fa">
+  <link rel="alternate" hreflang="ps" href="https://alisina-nu.vercel.app/admin?lang=ps">
+  <link rel="alternate" hreflang="x-default" href="https://alisina-nu.vercel.app/admin">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 
@@ -28,28 +33,28 @@
             <div class="icon-wrap">
               <img src="../images/logo.jpeg" alt="Primenest Reality" width="36" height="36" style="border-radius:8px;object-fit:cover">
             </div>
-            <h1>Admin Panel</h1>
-            <p>Primenest Reality</p>
+            <h1 data-i18n="admin.login.title">Admin Panel</h1>
+            <p data-i18n="admin.login.subtitle">Primenest Reality</p>
           </div>
           <form id="loginForm">
             <div class="field-group">
               <i class="fas fa-user input-icon"></i>
-              <input type="text" id="loginUser" placeholder="Username" required autocomplete="username webauthn">
+              <input type="text" id="loginUser" data-i18n-placeholder="admin.login.username" placeholder="Username" required autocomplete="username webauthn">
             </div>
             <div class="field-group">
               <i class="fas fa-lock input-icon"></i>
-              <input type="password" id="loginPass" placeholder="Password" required autocomplete="current-password">
+              <input type="password" id="loginPass" data-i18n-placeholder="admin.login.password" placeholder="Password" required autocomplete="current-password">
             </div>
             <p class="login-error" id="loginError"></p>
-            <button type="submit" class="btn-login" id="loginBtn">Sign In</button>
-            <div class="passkey-divider"><span>or</span></div>
-            <button type="button" class="btn-passkey" id="passkeyLoginBtn" onclick="loginWithPasskey()"><i class="fas fa-fingerprint"></i> Sign in with fingerprint</button>
-            <button type="button" class="btn-face" id="faceLoginBtn" onclick="loginWithFace()"><i class="fas fa-camera"></i> Sign in with face</button>
+            <button type="submit" class="btn-login" id="loginBtn" data-i18n="admin.login.signIn">Sign In</button>
+            <div class="passkey-divider"><span data-i18n="admin.login.or">or</span></div>
+            <button type="button" class="btn-passkey" id="passkeyLoginBtn" onclick="loginWithPasskey()"><i class="fas fa-fingerprint"></i> <span data-i18n="admin.login.passkeyLogin">Sign in with fingerprint</span></button>
+            <button type="button" class="btn-face" id="faceLoginBtn" onclick="loginWithFace()"><i class="fas fa-camera"></i> <span data-i18n="admin.login.faceLogin">Sign in with face</span></button>
           </form>
           <div class="card-footer">
-            <span><span class="status-dot"></span> System Ready</span>
+            <span><span class="status-dot"></span> <span data-i18n="admin.login.systemReady">System Ready</span></span>
             <span>&middot;</span>
-            <a href="#">Forgot password?</a>
+            <a href="#" data-i18n="admin.login.forgotPassword">Forgot password?</a>
           </div>
         </div>
       </div>
@@ -58,183 +63,181 @@
     <div id="adminView" style="display:none">
       <header class="admin-header">
         <div class="admin-header-inner">
-          <h1><img src="../images/logo.jpeg" alt="Primenest Reality" width="22" height="22" style="vertical-align:middle;margin-right:6px;border-radius:4px;object-fit:cover"> Admin Panel</h1>
+          <h1><img src="../images/logo.jpeg" alt="Primenest Reality" width="22" height="22" style="vertical-align:middle;margin-right:6px;border-radius:4px;object-fit:cover"> <span data-i18n="admin.login.title">Admin Panel</span></h1>
           <div class="admin-header-right">
+            <div class="lang-switcher" id="langSwitcher"></div>
             <span id="userDisplay">admin</span>
-            <button class="btn-header-icon" data-view="settings" title="Settings"><i class="fas fa-cog"></i></button>
-            <button class="btn-outline" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <button class="btn-header-icon" data-view="settings" title="Settings" data-i18n-title="admin.header.settings"><i class="fas fa-cog"></i></button>
+            <button class="btn-outline" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span data-i18n="admin.header.logout">Logout</span></button>
           </div>
         </div>
       </header>
 
       <nav class="admin-nav">
-        <button class="nav-btn active" data-view="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</button>
-        <button class="nav-btn" data-view="properties"><i class="fas fa-home"></i> Properties</button>
-        <button class="nav-btn" data-view="blog"><i class="fas fa-newspaper"></i> Blog</button>
-        <button class="nav-btn" data-view="messages"><i class="fas fa-envelope"></i> Messages</button>
-        <button class="nav-btn" data-view="testimonials"><i class="fas fa-star"></i> Testimonials</button>
-
-        <button class="nav-btn" data-view="payments"><i class="fas fa-credit-card"></i> Payments</button>
-        <button class="nav-btn" data-view="bank"><i class="fas fa-university"></i> Bank Info</button>
-        <button class="nav-btn" data-view="contactinfo"><i class="fas fa-address-card"></i> Contact Info</button>
-        <button class="nav-btn" data-view="settings"><i class="fas fa-cog"></i> Settings</button>
+        <button class="nav-btn active" data-view="dashboard"><i class="fas fa-chart-pie"></i> <span data-i18n="admin.nav.dashboard">Dashboard</span></button>
+        <button class="nav-btn" data-view="properties"><i class="fas fa-home"></i> <span data-i18n="admin.nav.properties">Properties</span></button>
+        <button class="nav-btn" data-view="blog"><i class="fas fa-newspaper"></i> <span data-i18n="admin.nav.blog">Blog</span></button>
+        <button class="nav-btn" data-view="messages"><i class="fas fa-envelope"></i> <span data-i18n="admin.nav.messages">Messages</span></button>
+        <button class="nav-btn" data-view="testimonials"><i class="fas fa-star"></i> <span data-i18n="admin.nav.testimonials">Testimonials</span></button>
+        <button class="nav-btn" data-view="payments"><i class="fas fa-credit-card"></i> <span data-i18n="admin.nav.payments">Payments</span></button>
+        <button class="nav-btn" data-view="bank"><i class="fas fa-university"></i> <span data-i18n="admin.nav.bank">Bank Info</span></button>
+        <button class="nav-btn" data-view="contactinfo"><i class="fas fa-address-card"></i> <span data-i18n="admin.nav.contactinfo">Contact Info</span></button>
+        <button class="nav-btn" data-view="settings"><i class="fas fa-cog"></i> <span data-i18n="admin.nav.settings">Settings</span></button>
       </nav>
 
       <main class="admin-content">
         <div id="viewDashboard" class="view active">
-          <h2>Dashboard</h2>
+          <h2 data-i18n="admin.dashboard.title">Dashboard</h2>
           <div class="stats-grid" id="statsGrid">
-            <div class="stat-card"><div class="stat-value" id="statProperties">—</div><div class="stat-label">Properties</div></div>
-            <div class="stat-card"><div class="stat-value" id="statFeatured">—</div><div class="stat-label">Featured</div></div>
-            <div class="stat-card"><div class="stat-value" id="statPosts">—</div><div class="stat-label">Blog Posts</div></div>
-            <div class="stat-card"><div class="stat-value" id="statMessages">—</div><div class="stat-label">Messages</div></div>
-
-            <div class="stat-card"><div class="stat-value" id="statTestimonials">—</div><div class="stat-label">Testimonials</div></div>
-
+            <div class="stat-card"><div class="stat-value" id="statProperties">—</div><div class="stat-label" data-i18n="admin.dashboard.properties">Properties</div></div>
+            <div class="stat-card"><div class="stat-value" id="statFeatured">—</div><div class="stat-label" data-i18n="admin.dashboard.featured">Featured</div></div>
+            <div class="stat-card"><div class="stat-value" id="statPosts">—</div><div class="stat-label" data-i18n="admin.dashboard.blogPosts">Blog Posts</div></div>
+            <div class="stat-card"><div class="stat-value" id="statMessages">—</div><div class="stat-label" data-i18n="admin.dashboard.messages">Messages</div></div>
+            <div class="stat-card"><div class="stat-value" id="statTestimonials">—</div><div class="stat-label" data-i18n="admin.dashboard.testimonials">Testimonials</div></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px">
-            <div style="background:var(--bg-card);border-radius:12px;padding:16px"><h3 style="margin-bottom:12px">Payments by Month</h3><canvas id="chartPayments" height="200"></canvas></div>
-            <div style="background:var(--bg-card);border-radius:12px;padding:16px"><h3 style="margin-bottom:12px">Property Distribution</h3><canvas id="chartProperties" height="200"></canvas></div>
+            <div style="background:var(--bg-card);border-radius:12px;padding:16px"><h3 style="margin-bottom:12px" data-i18n="admin.dashboard.paymentsByMonth">Payments by Month</h3><canvas id="chartPayments" height="200"></canvas></div>
+            <div style="background:var(--bg-card);border-radius:12px;padding:16px"><h3 style="margin-bottom:12px" data-i18n="admin.dashboard.propertyDistribution">Property Distribution</h3><canvas id="chartProperties" height="200"></canvas></div>
           </div>
         </div>
 
         <div id="viewProperties" class="view">
           <div class="view-header">
-            <h2>Properties</h2>
+            <h2 data-i18n="admin.properties.title">Properties</h2>
             <div class="view-actions">
-              <input type="text" id="propSearch" placeholder="Search..." class="search-input">
-              <button class="btn-outline" onclick="exportCSV('properties')"><i class="fas fa-download"></i> Export CSV</button>
-              <button class="btn-outline" onclick="document.getElementById('csvFileInput').click()"><i class="fas fa-upload"></i> Import CSV</button>
+              <input type="text" id="propSearch" data-i18n-placeholder="admin.properties.search" placeholder="Search..." class="search-input">
+              <button class="btn-outline" onclick="exportCSV('properties')"><i class="fas fa-download"></i> <span data-i18n="admin.properties.exportCSV">Export CSV</span></button>
+              <button class="btn-outline" onclick="document.getElementById('csvFileInput').click()"><i class="fas fa-upload"></i> <span data-i18n="admin.properties.importCSV">Import CSV</span></button>
               <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="importCSV(this)">
-              <button class="btn-danger" onclick="deleteAllProperties()"><i class="fas fa-trash"></i> Delete All</button>
-              <button class="btn-primary" onclick="openPropertyForm()"><i class="fas fa-plus"></i> Add</button>
+              <button class="btn-danger" onclick="deleteAllProperties()"><i class="fas fa-trash"></i> <span data-i18n="admin.properties.deleteAll">Delete All</span></button>
+              <button class="btn-primary" onclick="openPropertyForm()"><i class="fas fa-plus"></i> <span data-i18n="admin.properties.add">Add</span></button>
             </div>
           </div>
-          <div class="table-wrap"><table id="propertiesTable"><thead><tr><th>ID</th><th>Title</th><th>Price</th><th>Type</th><th>Badge</th><th>Status</th><th>Payments</th><th>Featured</th><th>Actions</th></tr></thead><tbody id="propertiesBody"></tbody></table></div>
-          <div class="pagination-bar" id="pagination_Properties" style="display:none;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px"><span id="pageInfo_Properties"></span><div><button class="btn-outline btn-sm" id="prevPage_Properties"><i class="fas fa-chevron-left"></i> Prev</button><button class="btn-outline btn-sm" id="nextPage_Properties" style="margin-left:8px">Next <i class="fas fa-chevron-right"></i></button></div></div>
-          <p class="empty-state" id="propertiesEmpty">No properties yet.</p>
+          <div class="table-wrap"><table id="propertiesTable"><thead><tr><th data-i18n="admin.properties.id">ID</th><th data-i18n="admin.properties.titleCol">Title</th><th data-i18n="admin.properties.price">Price</th><th data-i18n="admin.properties.type">Type</th><th data-i18n="admin.properties.badge">Badge</th><th data-i18n="admin.properties.status">Status</th><th data-i18n="admin.properties.payments">Payments</th><th data-i18n="admin.properties.featured">Featured</th><th data-i18n="admin.properties.actions">Actions</th></tr></thead><tbody id="propertiesBody"></tbody></table></div>
+          <div class="pagination-bar" id="pagination_Properties" style="display:none;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px"><span id="pageInfo_Properties"></span><div><button class="btn-outline btn-sm" id="prevPage_Properties"><i class="fas fa-chevron-left"></i> <span data-i18n="admin.properties.prev">Prev</span></button><button class="btn-outline btn-sm" id="nextPage_Properties" style="margin-left:8px"><span data-i18n="admin.properties.next">Next</span> <i class="fas fa-chevron-right"></i></button></div></div>
+          <p class="empty-state" id="propertiesEmpty" data-i18n="admin.properties.empty">No properties yet.</p>
         </div>
 
         <div id="viewBlog" class="view">
           <div class="view-header">
-            <h2>Blog Posts</h2>
+            <h2 data-i18n="admin.blog.title">Blog Posts</h2>
             <div class="view-actions">
-              <button class="btn-danger" onclick="deleteAllPosts()"><i class="fas fa-trash"></i> Delete All</button>
-              <button class="btn-primary" onclick="openPostForm()"><i class="fas fa-plus"></i> New Post</button>
+              <button class="btn-danger" onclick="deleteAllPosts()"><i class="fas fa-trash"></i> <span data-i18n="admin.blog.deleteAll">Delete All</span></button>
+              <button class="btn-primary" onclick="openPostForm()"><i class="fas fa-plus"></i> <span data-i18n="admin.blog.newPost">New Post</span></button>
             </div>
           </div>
-          <div class="table-wrap"><table id="postsTable"><thead><tr><th>ID</th><th>Title</th><th>Slug</th><th>Published</th><th>Date</th><th>Actions</th></tr></thead><tbody id="postsBody"></tbody></table></div>
-          <div class="pagination-bar" id="pagination_Blog" style="display:none;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px"><span id="pageInfo_Blog"></span><div><button class="btn-outline btn-sm" id="prevPage_Blog"><i class="fas fa-chevron-left"></i> Prev</button><button class="btn-outline btn-sm" id="nextPage_Blog" style="margin-left:8px">Next <i class="fas fa-chevron-right"></i></button></div></div>
-          <p class="empty-state" id="postsEmpty">No posts yet.</p>
+          <div class="table-wrap"><table id="postsTable"><thead><tr><th data-i18n="admin.blog.id">ID</th><th data-i18n="admin.blog.titleCol">Title</th><th data-i18n="admin.blog.slug">Slug</th><th data-i18n="admin.blog.published">Published</th><th data-i18n="admin.blog.date">Date</th><th data-i18n="admin.blog.actions">Actions</th></tr></thead><tbody id="postsBody"></tbody></table></div>
+          <div class="pagination-bar" id="pagination_Blog" style="display:none;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px"><span id="pageInfo_Blog"></span><div><button class="btn-outline btn-sm" id="prevPage_Blog"><i class="fas fa-chevron-left"></i> <span data-i18n="admin.properties.prev">Prev</span></button><button class="btn-outline btn-sm" id="nextPage_Blog" style="margin-left:8px"><span data-i18n="admin.properties.next">Next</span> <i class="fas fa-chevron-right"></i></button></div></div>
+          <p class="empty-state" id="postsEmpty" data-i18n="admin.blog.empty">No posts yet.</p>
         </div>
 
         <div id="viewTestimonials" class="view">
           <div class="view-header">
-            <h2>Testimonials</h2>
+            <h2 data-i18n="admin.testimonials.title">Testimonials</h2>
             <div class="view-actions">
-              <button class="btn-primary" onclick="openTestimonialForm()"><i class="fas fa-plus"></i> Add</button>
+              <button class="btn-primary" onclick="openTestimonialForm()"><i class="fas fa-plus"></i> <span data-i18n="admin.testimonials.add">Add</span></button>
             </div>
           </div>
-          <div class="table-wrap"><table id="testimonialsTable"><thead><tr><th>ID</th><th>Name</th><th>Rating</th><th>Published</th><th>Order</th><th>Actions</th></tr></thead><tbody id="testimonialsBody"></tbody></table></div>
-          <div class="pagination-bar" id="pagination_Testimonials" style="display:none;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px"><span id="pageInfo_Testimonials"></span><div><button class="btn-outline btn-sm" id="prevPage_Testimonials"><i class="fas fa-chevron-left"></i> Prev</button><button class="btn-outline btn-sm" id="nextPage_Testimonials" style="margin-left:8px">Next <i class="fas fa-chevron-right"></i></button></div></div>
-          <p class="empty-state" id="testimonialsEmpty">No testimonials yet.</p>
+          <div class="table-wrap"><table id="testimonialsTable"><thead><tr><th data-i18n="admin.testimonials.id">ID</th><th data-i18n="admin.testimonials.name">Name</th><th data-i18n="admin.testimonials.rating">Rating</th><th data-i18n="admin.testimonials.published">Published</th><th data-i18n="admin.testimonials.order">Order</th><th data-i18n="admin.testimonials.actions">Actions</th></tr></thead><tbody id="testimonialsBody"></tbody></table></div>
+          <div class="pagination-bar" id="pagination_Testimonials" style="display:none;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px"><span id="pageInfo_Testimonials"></span><div><button class="btn-outline btn-sm" id="prevPage_Testimonials"><i class="fas fa-chevron-left"></i> <span data-i18n="admin.properties.prev">Prev</span></button><button class="btn-outline btn-sm" id="nextPage_Testimonials" style="margin-left:8px"><span data-i18n="admin.properties.next">Next</span> <i class="fas fa-chevron-right"></i></button></div></div>
+          <p class="empty-state" id="testimonialsEmpty" data-i18n="admin.testimonials.empty">No testimonials yet.</p>
         </div>
 
         <div id="viewMessages" class="view">
-          <div class="view-header"><h2>Contact Messages</h2><div class="view-actions"><button class="btn-outline" onclick="exportCSV('messages')"><i class="fas fa-download"></i> CSV</button><button class="btn-danger" onclick="deleteAllMessages()"><i class="fas fa-trash"></i> Delete All</button></div></div>
+          <div class="view-header"><h2 data-i18n="admin.messages.title">Contact Messages</h2><div class="view-actions"><button class="btn-outline" onclick="exportCSV('messages')"><i class="fas fa-download"></i> <span data-i18n="admin.messages.csv">CSV</span></button><button class="btn-danger" onclick="deleteAllMessages()"><i class="fas fa-trash"></i> <span data-i18n="admin.messages.deleteAll">Delete All</span></button></div></div>
           <div id="messagesList"></div>
-          <p class="empty-state" id="messagesEmpty">No messages yet.</p>
+          <p class="empty-state" id="messagesEmpty" data-i18n="admin.messages.empty">No messages yet.</p>
         </div>
 
         <div id="viewPayments" class="view">
-          <div class="view-header"><h2>Payments</h2><div class="view-actions"><button class="btn-outline btn-sm" onclick="refundAllPayments()" title="Refund all completed payments in Stripe test mode"><i class="fas fa-undo"></i> Refund All</button><button class="btn-outline btn-sm" id="deleteSelectedBtn" onclick="deleteSelectedPayments()" style="display:none"><i class="fas fa-trash"></i> Delete Selected (<span id="selectedCount">0</span>)</button><button class="btn-danger" onclick="deleteAllPayments()"><i class="fas fa-trash"></i> Delete All</button></div></div>
-          <div class="table-wrap"><table id="paymentsTable"><thead><tr><th style="width:40px"><input type="checkbox" id="selectAllPayments" onchange="toggleSelectAllPayments()"></th><th>ID</th><th>Property</th><th>Email</th><th>Amount</th><th>Type</th><th>Duration</th><th>Status</th><th>Receipt</th><th>Date</th><th>Actions</th></tr></thead><tbody id="paymentsBody"></tbody></table></div>
-          <div class="pagination-bar" id="pagination_Payments" style="display:none;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px"><span id="pageInfo_Payments"></span><div><button class="btn-outline btn-sm" id="prevPage_Payments"><i class="fas fa-chevron-left"></i> Prev</button><button class="btn-outline btn-sm" id="nextPage_Payments" style="margin-left:8px">Next <i class="fas fa-chevron-right"></i></button></div></div>
-          <p class="empty-state" id="paymentsEmpty">No payments yet.</p>
+          <div class="view-header"><h2 data-i18n="admin.payments.title">Payments</h2><div class="view-actions"><button class="btn-outline btn-sm" onclick="refundAllPayments()" title="Refund all completed payments in Stripe test mode"><i class="fas fa-undo"></i> <span data-i18n="admin.payments.refundAll">Refund All</span></button><button class="btn-outline btn-sm" id="deleteSelectedBtn" onclick="deleteSelectedPayments()" style="display:none"><i class="fas fa-trash"></i> <span data-i18n="admin.payments.deleteSelected">Delete Selected</span> (<span id="selectedCount">0</span>)</button><button class="btn-danger" onclick="deleteAllPayments()"><i class="fas fa-trash"></i> <span data-i18n="admin.payments.deleteAll">Delete All</span></button></div></div>
+          <div class="table-wrap"><table id="paymentsTable"><thead><tr><th style="width:40px"><input type="checkbox" id="selectAllPayments" onchange="toggleSelectAllPayments()"></th><th data-i18n="admin.payments.id">ID</th><th data-i18n="admin.payments.property">Property</th><th data-i18n="admin.payments.email">Email</th><th data-i18n="admin.payments.amount">Amount</th><th data-i18n="admin.payments.type">Type</th><th data-i18n="admin.payments.duration">Duration</th><th data-i18n="admin.payments.status">Status</th><th data-i18n="admin.payments.receipt">Receipt</th><th data-i18n="admin.payments.date">Date</th><th data-i18n="admin.payments.actions">Actions</th></tr></thead><tbody id="paymentsBody"></tbody></table></div>
+          <div class="pagination-bar" id="pagination_Payments" style="display:none;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px"><span id="pageInfo_Payments"></span><div><button class="btn-outline btn-sm" id="prevPage_Payments"><i class="fas fa-chevron-left"></i> <span data-i18n="admin.properties.prev">Prev</span></button><button class="btn-outline btn-sm" id="nextPage_Payments" style="margin-left:8px"><span data-i18n="admin.properties.next">Next</span> <i class="fas fa-chevron-right"></i></button></div></div>
+          <p class="empty-state" id="paymentsEmpty" data-i18n="admin.payments.empty">No payments yet.</p>
         </div>
 
         <div id="viewBank" class="view">
-          <div class="view-header"><h2>Payment Settings</h2></div>
+          <div class="view-header"><h2 data-i18n="admin.bank.title">Payment Settings</h2></div>
 
-          <h3 style="margin-bottom:8px;color:var(--text)">Stripe Account</h3>
+          <h3 style="margin-bottom:8px;color:var(--text)" data-i18n="admin.bank.stripeAccount">Stripe Account</h3>
           <form id="stripeForm" class="modal-body" style="max-width:500px;padding:0;margin-bottom:24px">
-            <div class="field"><label>Publishable Key</label><input type="text" id="sfPubKey" placeholder="pk_live_..."></div>
-            <div class="field"><label>Secret Key</label><input type="password" id="sfSecKey" placeholder="sk_live_..."></div>
-            <div class="field"><label>Webhook Secret</label><input type="password" id="sfWhsec" placeholder="whsec_..."></div>
-            <div class="field"><label>Notification Email</label><input type="email" id="sfNotifEmail" placeholder="admin@example.com"><small style="color:var(--text-muted);display:block;margin-top:4px">Get notified when a payment is received</small></div>
-            <div class="field"><label>Gmail Email</label><input type="email" id="sfGmailEmail" placeholder="your.email@gmail.com"><small style="color:var(--text-muted);display:block;margin-top:4px">Used to send emails to you and customers.</small></div>
-            <div class="field"><label>Gmail Password</label><input type="password" id="sfGmailPass" placeholder="Leave blank to keep current"><small id="sfGmailPassStatus" style="color:var(--text-muted);display:none;margin-top:4px;font-weight:500"></small><small style="color:var(--text-muted);display:block;margin-top:4px">Use an <a href="https://myaccount.google.com/apppasswords" target="_blank">App Password</a> if 2FA is on, or your regular password.</small></div>
-            <div class="form-actions"><button type="submit" class="btn-primary" id="stripeSaveBtn">Save Stripe Keys</button></div>
+            <div class="field"><label data-i18n="admin.bank.publishableKey">Publishable Key</label><input type="text" id="sfPubKey" placeholder="pk_live_..."></div>
+            <div class="field"><label data-i18n="admin.bank.secretKey">Secret Key</label><input type="password" id="sfSecKey" placeholder="sk_live_..."></div>
+            <div class="field"><label data-i18n="admin.bank.webhookSecret">Webhook Secret</label><input type="password" id="sfWhsec" placeholder="whsec_..."></div>
+            <div class="field"><label data-i18n="admin.bank.notificationEmail">Notification Email</label><input type="email" id="sfNotifEmail" placeholder="admin@example.com"><small style="color:var(--text-muted);display:block;margin-top:4px" data-i18n="admin.bank.notifHelp">Get notified when a payment is received</small></div>
+            <div class="field"><label data-i18n="admin.bank.gmailEmail">Gmail Email</label><input type="email" id="sfGmailEmail" placeholder="your.email@gmail.com"><small style="color:var(--text-muted);display:block;margin-top:4px" data-i18n="admin.bank.gmailHelp">Used to send emails to you and customers.</small></div>
+            <div class="field"><label data-i18n="admin.bank.gmailPassword">Gmail Password</label><input type="password" id="sfGmailPass" placeholder="Leave blank to keep current"><small id="sfGmailPassStatus" style="color:var(--text-muted);display:none;margin-top:4px;font-weight:500"></small><small style="color:var(--text-muted);display:block;margin-top:4px" data-i18n="admin.bank.gmail2faHelp">Use an App Password if 2FA is on, or your regular password.</small></div>
+            <div class="form-actions"><button type="submit" class="btn-primary" id="stripeSaveBtn" data-i18n="admin.bank.saveStripeKeys">Save Stripe Keys</button></div>
           </form>
 
-          <h3 style="margin-bottom:8px;color:var(--text)">Auto-Translate</h3>
+          <h3 style="margin-bottom:8px;color:var(--text)" data-i18n="admin.bank.autoTranslate">Auto-Translate</h3>
           <form id="deeplForm" class="modal-body" style="max-width:500px;padding:0;margin-bottom:24px">
-            <div class="field"><label>DeepL API Key</label><input type="text" id="sfDeeplKey" placeholder="DeepL-Auth-Key ..."><small style="color:var(--text-muted);display:block;margin-top:4px">Free tier: 500k chars/mo. Get one at <a href="https://deepl.com/pro-api" target="_blank">deepl.com/pro-api</a></small></div>
-            <div class="form-actions"><button type="submit" class="btn-primary" id="deeplSaveBtn">Save DeepL Key</button></div>
+            <div class="field"><label data-i18n="admin.bank.deeplKey">DeepL API Key</label><input type="text" id="sfDeeplKey" placeholder="DeepL-Auth-Key ..."><small style="color:var(--text-muted);display:block;margin-top:4px" data-i18n="admin.bank.deeplHelp">Free tier: 500k chars/mo. Get one at deepl.com/pro-api</small></div>
+            <div class="form-actions"><button type="submit" class="btn-primary" id="deeplSaveBtn" data-i18n="admin.bank.saveDeepLKey">Save DeepL Key</button></div>
           </form>
 
-          <h3 style="margin-bottom:8px;color:var(--text)">Bank Transfer Info</h3>
+          <h3 style="margin-bottom:8px;color:var(--text)" data-i18n="admin.bank.bankTransferInfo">Bank Transfer Info</h3>
           <form id="bankForm" class="modal-body" style="max-width:500px;padding:0">
-            <div class="field"><label>Bank Name</label><input type="text" id="bfBankName"></div>
-            <div class="field"><label>Account Name</label><input type="text" id="bfAccountName"></div>
-            <div class="field"><label>Account Number</label><input type="text" id="bfAccountNumber"></div>
-            <div class="field"><label>Routing Number</label><input type="text" id="bfRouting"></div>
-            <div class="field"><label>IBAN</label><input type="text" id="bfIban"></div>
-            <div class="field"><label>SWIFT/BIC</label><input type="text" id="bfSwift"></div>
-            <div class="form-actions"><button type="submit" class="btn-primary" id="bankSaveBtn">Save Bank Info</button></div>
+            <div class="field"><label data-i18n="admin.bank.bankName">Bank Name</label><input type="text" id="bfBankName"></div>
+            <div class="field"><label data-i18n="admin.bank.accountName">Account Name</label><input type="text" id="bfAccountName"></div>
+            <div class="field"><label data-i18n="admin.bank.accountNumber">Account Number</label><input type="text" id="bfAccountNumber"></div>
+            <div class="field"><label data-i18n="admin.bank.routingNumber">Routing Number</label><input type="text" id="bfRouting"></div>
+            <div class="field"><label data-i18n="admin.bank.iban">IBAN</label><input type="text" id="bfIban"></div>
+            <div class="field"><label data-i18n="admin.bank.swiftBic">SWIFT/BIC</label><input type="text" id="bfSwift"></div>
+            <div class="form-actions"><button type="submit" class="btn-primary" id="bankSaveBtn" data-i18n="admin.bank.saveBankInfo">Save Bank Info</button></div>
           </form>
         </div>
 
         <div id="viewContactinfo" class="view">
-          <div class="view-header"><h2>Contact Information</h2><p style="color:var(--text-muted);margin-top:4px;font-size:14px">This info is shown on your public website. Update it here and it updates everywhere.</p></div>
+          <div class="view-header"><h2 data-i18n="admin.contactinfo.title">Contact Information</h2><p style="color:var(--text-muted);margin-top:4px;font-size:14px" data-i18n="admin.contactinfo.description">This info is shown on your public website. Update it here and it updates everywhere.</p></div>
 
           <form id="contactInfoForm" class="modal-body" style="max-width:600px;padding:0">
-            <h3 style="margin:16px 0 8px;color:var(--text)"><i class="fas fa-phone"></i> Phone & Email</h3>
-            <div class="field"><label>Phone Number</label><input type="tel" id="ciPhone" placeholder="+93 778 747 337"></div>
-            <div class="field"><label>Email Address</label><input type="email" id="ciEmail" placeholder="you@example.com"><small style="color:var(--text-muted);display:block;margin-top:4px">Used for display, contact form (FormSubmit.co), and inquiries</small></div>
-            <div class="field"><label>Office Address</label><input type="text" id="ciAddress" placeholder="Your office location"></div>
+            <h3 style="margin:16px 0 8px;color:var(--text)"><i class="fas fa-phone"></i> <span data-i18n="admin.contactinfo.phoneEmail">Phone & Email</span></h3>
+            <div class="field"><label data-i18n="admin.contactinfo.phoneNumber">Phone Number</label><input type="tel" id="ciPhone" placeholder="+93 778 747 337"></div>
+            <div class="field"><label data-i18n="admin.contactinfo.emailAddress">Email Address</label><input type="email" id="ciEmail" placeholder="you@example.com"><small style="color:var(--text-muted);display:block;margin-top:4px" data-i18n="admin.contactinfo.emailHelp">Used for display, contact form (FormSubmit.co), and inquiries</small></div>
+            <div class="field"><label data-i18n="admin.contactinfo.officeAddress">Office Address</label><input type="text" id="ciAddress" placeholder="Your office location"></div>
 
-            <h3 style="margin:20px 0 8px;color:var(--text)"><i class="fab fa-whatsapp"></i> WhatsApp</h3>
-            <div class="field"><label>WhatsApp Number</label><input type="tel" id="ciWhatsapp" placeholder="+93 778 747 337"><small style="color:var(--text-muted);display:block;margin-top:4px">Include country code. Leave blank to use phone number.</small></div>
-            <div class="field"><label>Pre-filled Message</label><input type="text" id="ciWhatsappMsg" placeholder="Hi, I'm interested in your properties"></div>
+            <h3 style="margin:20px 0 8px;color:var(--text)"><i class="fab fa-whatsapp"></i> <span data-i18n="admin.contactinfo.whatsapp">WhatsApp</span></h3>
+            <div class="field"><label data-i18n="admin.contactinfo.whatsappNumber">WhatsApp Number</label><input type="tel" id="ciWhatsapp" placeholder="+93 778 747 337"><small style="color:var(--text-muted);display:block;margin-top:4px" data-i18n="admin.contactinfo.whatsappHelp">Include country code. Leave blank to use phone number.</small></div>
+            <div class="field"><label data-i18n="admin.contactinfo.prefilledMessage">Pre-filled Message</label><input type="text" id="ciWhatsappMsg" placeholder="Hi, I'm interested in your properties"></div>
 
-            <h3 style="margin:20px 0 8px;color:var(--text)"><i class="fas fa-share-alt"></i> Social Media</h3>
-            <div class="field"><label>Facebook URL</label><input type="url" id="ciFacebook" placeholder="https://facebook.com/yourprofile"></div>
-            <div class="field"><label>Instagram URL</label><input type="url" id="ciInstagram" placeholder="https://instagram.com/yourprofile"></div>
-            <div class="field"><label>LinkedIn URL</label><input type="url" id="ciLinkedin" placeholder="https://linkedin.com/in/yourprofile"></div>
+            <h3 style="margin:20px 0 8px;color:var(--text)"><i class="fas fa-share-alt"></i> <span data-i18n="admin.contactinfo.socialMedia">Social Media</span></h3>
+            <div class="field"><label data-i18n="admin.contactinfo.facebookUrl">Facebook URL</label><input type="url" id="ciFacebook" placeholder="https://facebook.com/yourprofile"></div>
+            <div class="field"><label data-i18n="admin.contactinfo.instagramUrl">Instagram URL</label><input type="url" id="ciInstagram" placeholder="https://instagram.com/yourprofile"></div>
+            <div class="field"><label data-i18n="admin.contactinfo.linkedinUrl">LinkedIn URL</label><input type="url" id="ciLinkedin" placeholder="https://linkedin.com/in/yourprofile"></div>
 
-            <div class="form-actions"><button type="submit" class="btn-primary" id="ciSaveBtn">Save Contact Info</button></div>
+            <div class="form-actions"><button type="submit" class="btn-primary" id="ciSaveBtn" data-i18n="admin.contactinfo.saveContactInfo">Save Contact Info</button></div>
           </form>
         </div>
 
         <div id="viewSettings" class="view">
-          <div class="view-header"><h2>Account Settings</h2></div>
+          <div class="view-header"><h2 data-i18n="admin.settings.title">Account Settings</h2></div>
 
           <div style="max-width:500px">
-            <h3 style="margin-bottom:12px;color:var(--text)">Account Settings</h3>
+            <h3 style="margin-bottom:12px;color:var(--text)" data-i18n="admin.settings.title">Account Settings</h3>
             <form id="settingsForm" class="modal-body" style="padding:0;margin-bottom:32px">
-              <div class="field"><label>Current Password *</label><input type="password" id="settingsCurrentPw" required></div>
-              <div class="field"><label>New Username</label><input type="text" id="settingsNewUsername" placeholder="Leave blank to keep current"></div>
-              <div class="field"><label>New Password</label><input type="password" id="settingsNewPassword" placeholder="Leave blank to keep current"></div>
+              <div class="field"><label data-i18n="admin.settings.currentPassword">Current Password *</label><input type="password" id="settingsCurrentPw" required></div>
+              <div class="field"><label data-i18n="admin.settings.newUsername">New Username</label><input type="text" id="settingsNewUsername" data-i18n-placeholder="admin.settings.leaveBlank" placeholder="Leave blank to keep current"></div>
+              <div class="field"><label data-i18n="admin.settings.newPassword">New Password</label><input type="password" id="settingsNewPassword" data-i18n-placeholder="admin.settings.leaveBlank" placeholder="Leave blank to keep current"></div>
               <p class="form-error" id="settingsError"></p>
-              <div class="form-actions" style="justify-content:flex-start;padding:0"><button type="submit" class="btn-primary">Save Changes</button></div>
+              <div class="form-actions" style="justify-content:flex-start;padding:0"><button type="submit" class="btn-primary" data-i18n="admin.settings.saveChanges">Save Changes</button></div>
             </form>
 
-            <h3 style="margin-bottom:12px;color:var(--text)">Passkey (fingerprint / face)</h3>
-            <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px">Use your fingerprint, Face ID, or Windows Hello to sign in instead of a password.</p>
+            <h3 style="margin-bottom:12px;color:var(--text)" data-i18n="admin.settings.passkeyTitle">Passkey (fingerprint / face)</h3>
+            <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px" data-i18n="admin.settings.passkeyDesc">Use your fingerprint, Face ID, or Windows Hello to sign in instead of a password.</p>
             <div class="form-actions" style="justify-content:flex-start;margin-bottom:8px">
-              <button type="button" class="btn-primary" id="settingsSetupPasskeyBtn" onclick="setupPasskey()"><i class="fas fa-fingerprint"></i> Set up passkey</button>
-              <button type="button" class="btn-outline" id="settingsRemovePasskeyBtn" onclick="removePasskey()" style="display:none"><i class="fas fa-trash"></i> Remove passkey</button>
+              <button type="button" class="btn-primary" id="settingsSetupPasskeyBtn" onclick="setupPasskey()"><i class="fas fa-fingerprint"></i> <span data-i18n="admin.settings.setupPasskey">Set up passkey</span></button>
+              <button type="button" class="btn-outline" id="settingsRemovePasskeyBtn" onclick="removePasskey()" style="display:none"><i class="fas fa-trash"></i> <span data-i18n="admin.settings.removePasskey">Remove passkey</span></button>
             </div>
             <p id="settingsPasskeyStatus" style="font-size:13px;color:var(--text-muted)"></p>
 
-            <h3 style="margin-bottom:12px;color:var(--text);margin-top:32px">Face Login</h3>
-            <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px">Enroll your face for passwordless login. Provide 3-10 photos and the server will store your face embeddings.</p>
+            <h3 style="margin-bottom:12px;color:var(--text);margin-top:32px" data-i18n="admin.settings.faceTitle">Face Login</h3>
+            <p style="color:var(--text-muted);font-size:14px;margin-bottom:12px" data-i18n="admin.settings.faceDesc">Enroll your face for passwordless login. Provide 3-10 photos and the server will store your face embeddings.</p>
             <div class="form-actions" style="justify-content:flex-start;margin-bottom:8px">
               <input type="file" id="faceUploadInput" accept="image/*" multiple style="display:none" onchange="enrollFaceFromPhoto(this)">
-              <button type="button" class="btn-primary" id="settingsSetupFaceBtn" onclick="document.getElementById('faceUploadInput').click()"><i class="fas fa-upload"></i> Upload 3+ photos</button>
-              <button type="button" class="btn-outline" id="settingsWebcamFaceBtn" onclick="enrollFaceMulti()"><i class="fas fa-camera"></i> Enroll with webcam (5 photos)</button>
-              <button type="button" class="btn-outline" id="settingsRemoveFaceBtn" onclick="removeFace()" style="display:none"><i class="fas fa-trash"></i> Remove face</button>
+              <button type="button" class="btn-primary" id="settingsSetupFaceBtn" onclick="document.getElementById('faceUploadInput').click()"><i class="fas fa-upload"></i> <span data-i18n="admin.settings.uploadPhotos">Upload 3+ photos</span></button>
+              <button type="button" class="btn-outline" id="settingsWebcamFaceBtn" onclick="enrollFaceMulti()"><i class="fas fa-camera"></i> <span data-i18n="admin.settings.enrollWebcam">Enroll with webcam (5 photos)</span></button>
+              <button type="button" class="btn-outline" id="settingsRemoveFaceBtn" onclick="removeFace()" style="display:none"><i class="fas fa-trash"></i> <span data-i18n="admin.settings.removeFace">Remove face</span></button>
             </div>
             <p id="settingsFaceStatus" style="font-size:13px;color:var(--text-muted)"></p>
           </div>
@@ -245,29 +248,29 @@
     <!-- Property Form Modal -->
     <div class="modal-overlay" id="propertyModal" style="display:none">
       <div class="modal">
-        <div class="modal-header"><h3 id="propertyFormTitle">Add Property</h3><button class="modal-close" onclick="closePropertyForm()">&times;</button></div>
+        <div class="modal-header"><h3 id="propertyFormTitle" data-i18n="admin.forms.addProperty">Add Property</h3><button class="modal-close" onclick="closePropertyForm()">&times;</button></div>
         <form id="propertyForm" class="modal-body">
           <div class="form-grid">
-            <div class="field"><label>Title *</label><input type="text" id="pfTitle" required></div>
-            <div class="field"><label>Location *</label><input type="text" id="pfLocation" required></div>
-            <div class="field"><label>Price *</label><input type="number" id="pfPrice" required></div>
-            <div class="field"><label>Type *</label><select id="pfType"><option value="house">House</option><option value="apartment">Apartment</option><option value="condo">Condo</option><option value="villa">Villa</option></select></div>
-            <div class="field"><label>Beds</label><input type="number" id="pfBeds" value="0"></div>
-            <div class="field"><label>Baths</label><input type="number" id="pfBaths" value="0"></div>
-            <div class="field"><label>Sqft</label><input type="number" id="pfSqft" value="0"></div>
-            <div class="field"><label>Year</label><input type="number" id="pfYear"></div>
-            <div class="field"><label>Badge</label><select id="pfBadge"><option value="sale">For Sale</option><option value="rent">For Rent</option><option value="sold">Sold</option></select></div>
-            <div class="field"><label>Featured</label><select id="pfFeatured"><option value="0">No</option><option value="1">Yes</option></select></div>
-            <div class="field"><label>Coordinates</label><input type="text" id="pfCoords" placeholder="Paste DMS: 34°32'42.6&quot;N 69°08'55.6&quot;E"></div>
+            <div class="field"><label data-i18n="admin.forms.title">Title *</label><input type="text" id="pfTitle" required></div>
+            <div class="field"><label data-i18n="admin.forms.location">Location *</label><input type="text" id="pfLocation" required></div>
+            <div class="field"><label data-i18n="admin.forms.price">Price *</label><input type="number" id="pfPrice" required></div>
+            <div class="field"><label data-i18n="admin.forms.type">Type *</label><select id="pfType"><option value="house" data-i18n="search.house">House</option><option value="apartment" data-i18n="search.apartment">Apartment</option><option value="condo" data-i18n="search.condo">Condo</option><option value="villa" data-i18n="search.villa">Villa</option></select></div>
+            <div class="field"><label data-i18n="admin.forms.beds">Beds</label><input type="number" id="pfBeds" value="0"></div>
+            <div class="field"><label data-i18n="admin.forms.baths">Baths</label><input type="number" id="pfBaths" value="0"></div>
+            <div class="field"><label data-i18n="admin.forms.sqft">Sqft</label><input type="number" id="pfSqft" value="0"></div>
+            <div class="field"><label data-i18n="admin.forms.year">Year</label><input type="number" id="pfYear"></div>
+            <div class="field"><label data-i18n="admin.forms.badge">Badge</label><select id="pfBadge"><option value="sale" data-i18n="common.forSale">For Sale</option><option value="rent" data-i18n="common.forRent">For Rent</option><option value="sold" data-i18n="common.sold">Sold</option></select></div>
+            <div class="field"><label data-i18n="admin.forms.featured">Featured</label><select id="pfFeatured"><option value="0" data-i18n="admin.properties.no">No</option><option value="1" data-i18n="admin.properties.yes">Yes</option></select></div>
+            <div class="field"><label data-i18n="admin.forms.coordinates">Coordinates</label><input type="text" id="pfCoords" data-i18n-placeholder="admin.forms.coordsPlaceholder" placeholder="Paste DMS: 34°32'42.6&quot;N 69°08'55.6&quot;E"></div>
             <input type="hidden" id="pfLat"><input type="hidden" id="pfLng">
           </div>
 
-          <div class="field"><label>Main Image URL</label><input type="url" id="pfImage" placeholder="https://..."><input type="file" accept="image/*" onchange="uploadImage(this, 'pfImage')" style="margin-top:6px"></div>
-          <div class="field"><label>Gallery Images (one URL per line)</label><textarea id="pfGallery" rows="3" placeholder="https://...&#10;https://...&#10;https://..."></textarea><input type="file" accept="image/*" multiple onchange="uploadImage(this, 'pfGallery', true)" style="margin-top:6px"></div>
-          <div class="field"><label>Description</label><textarea id="pfDescription" rows="3"></textarea></div>
+          <div class="field"><label data-i18n="admin.forms.mainImage">Main Image URL</label><input type="url" id="pfImage" placeholder="https://..."><input type="file" accept="image/*" onchange="uploadImage(this, 'pfImage')" style="margin-top:6px"></div>
+          <div class="field"><label data-i18n="admin.forms.galleryImages">Gallery Images (one URL per line)</label><textarea id="pfGallery" rows="3" placeholder="https://...&#10;https://...&#10;https://..."></textarea><input type="file" accept="image/*" multiple onchange="uploadImage(this, 'pfGallery', true)" style="margin-top:6px"></div>
+          <div class="field"><label data-i18n="admin.forms.description">Description</label><textarea id="pfDescription" rows="3"></textarea></div>
           <div class="form-actions">
-            <button type="button" class="btn-outline" onclick="closePropertyForm()">Cancel</button>
-            <button type="submit" class="btn-primary" id="propertySubmit">Save Property</button>
+            <button type="button" class="btn-outline" onclick="closePropertyForm()" data-i18n="common.cancel">Cancel</button>
+            <button type="submit" class="btn-primary" id="propertySubmit" data-i18n="common.saveProperty">Save Property</button>
           </div>
         </form>
       </div>
@@ -276,21 +279,21 @@
     <!-- Post Form Modal -->
     <div class="modal-overlay" id="postModal" style="display:none">
       <div class="modal modal-lg">
-        <div class="modal-header"><h3 id="postFormTitle">New Post</h3><button class="modal-close" onclick="closePostForm()">&times;</button></div>
+        <div class="modal-header"><h3 id="postFormTitle" data-i18n="admin.forms.newPost">New Post</h3><button class="modal-close" onclick="closePostForm()">&times;</button></div>
         <form id="postForm" class="modal-body">
-          <div class="field"><label>Title *</label><input type="text" id="pfPostTitle" required></div>
-          <div class="field"><label>Slug * (URL-friendly, e.g. market-trends-2026)</label><input type="text" id="pfPostSlug" required></div>
-          <div class="field"><label>Excerpt (short summary)</label><textarea id="pfPostExcerpt" rows="2"></textarea></div>
-          <div class="field"><label>Content *</label><div id="pfPostEditor" style="min-height:300px;margin-bottom:48px"></div><textarea id="pfPostContent" style="display:none"></textarea></div>
+          <div class="field"><label data-i18n="admin.forms.postTitle">Title *</label><input type="text" id="pfPostTitle" required></div>
+          <div class="field"><label data-i18n="admin.forms.postSlug">Slug * (URL-friendly, e.g. market-trends-2026)</label><input type="text" id="pfPostSlug" required></div>
+          <div class="field"><label data-i18n="admin.forms.postExcerpt">Excerpt (short summary)</label><textarea id="pfPostExcerpt" rows="2"></textarea></div>
+          <div class="field"><label data-i18n="admin.forms.postContent">Content *</label><div id="pfPostEditor" style="min-height:300px;margin-bottom:48px"></div><textarea id="pfPostContent" style="display:none"></textarea></div>
 
           <div class="form-grid" style="grid-template-columns:1fr 1fr">
-            <div class="field"><label>Image URL</label><input type="url" id="pfPostImage"><input type="file" accept="image/*" onchange="uploadImage(this, 'pfPostImage')" style="margin-top:6px"></div>
-            <div class="field"><label>Author</label><input type="text" id="pfPostAuthor" value="Primenest Reality"></div>
+            <div class="field"><label data-i18n="admin.forms.postImage">Image URL</label><input type="url" id="pfPostImage"><input type="file" accept="image/*" onchange="uploadImage(this, 'pfPostImage')" style="margin-top:6px"></div>
+            <div class="field"><label data-i18n="admin.forms.postAuthor">Author</label><input type="text" id="pfPostAuthor" value="Primenest Reality"></div>
           </div>
-          <div class="field"><label>Published</label><select id="pfPostPublished"><option value="1">Yes</option><option value="0">No (Draft)</option></select></div>
+          <div class="field"><label data-i18n="admin.forms.postPublished">Published</label><select id="pfPostPublished"><option value="1" data-i18n="admin.forms.yes">Yes</option><option value="0" data-i18n="admin.forms.noDraft">No (Draft)</option></select></div>
           <div class="form-actions">
-            <button type="button" class="btn-outline" onclick="closePostForm()">Cancel</button>
-            <button type="submit" class="btn-primary" id="postSubmit">Save Post</button>
+            <button type="button" class="btn-outline" onclick="closePostForm()" data-i18n="common.cancel">Cancel</button>
+            <button type="submit" class="btn-primary" id="postSubmit" data-i18n="common.savePost">Save Post</button>
           </div>
         </form>
       </div>
@@ -299,20 +302,20 @@
     <!-- Testimonial Form Modal -->
     <div class="modal-overlay" id="testimonialModal" style="display:none">
       <div class="modal modal-sm">
-        <div class="modal-header"><h3 id="testimonialFormTitle">Add Testimonial</h3><button class="modal-close" onclick="closeTestimonialForm()">&times;</button></div>
+        <div class="modal-header"><h3 id="testimonialFormTitle" data-i18n="admin.forms.addTestimonial">Add Testimonial</h3><button class="modal-close" onclick="closeTestimonialForm()">&times;</button></div>
         <form id="testimonialForm" class="modal-body">
-          <div class="field"><label>Name *</label><input type="text" id="tfName" required></div>
-          <div class="field"><label>Role (e.g. Home Buyer, Seller)</label><input type="text" id="tfRole"></div>
-          <div class="field"><label>Content * (testimonial text)</label><textarea id="tfContent" rows="3" required></textarea></div>
+          <div class="field"><label data-i18n="admin.forms.testimonialName">Name *</label><input type="text" id="tfName" required></div>
+          <div class="field"><label data-i18n="admin.forms.testimonialRole">Role (e.g. Home Buyer, Seller)</label><input type="text" id="tfRole"></div>
+          <div class="field"><label data-i18n="admin.forms.testimonialContent">Content * (testimonial text)</label><textarea id="tfContent" rows="3" required></textarea></div>
           <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr">
-            <div class="field"><label>Rating (1-5)</label><input type="number" id="tfRating" min="1" max="5" value="5"></div>
-            <div class="field"><label>Display Order</label><input type="number" id="tfOrder" value="0"></div>
-            <div class="field"><label>Published</label><select id="tfPublished"><option value="1">Yes</option><option value="0">No</option></select></div>
+            <div class="field"><label data-i18n="admin.forms.testimonialRating">Rating (1-5)</label><input type="number" id="tfRating" min="1" max="5" value="5"></div>
+            <div class="field"><label data-i18n="admin.forms.testimonialOrder">Display Order</label><input type="number" id="tfOrder" value="0"></div>
+            <div class="field"><label data-i18n="admin.forms.testimonialPublished">Published</label><select id="tfPublished"><option value="1" data-i18n="admin.forms.yes">Yes</option><option value="0" data-i18n="admin.forms.no">No</option></select></div>
           </div>
-          <div class="field"><label>Avatar Image URL</label><input type="url" id="tfImage"><input type="file" accept="image/*" onchange="uploadImage(this, 'tfImage')" style="margin-top:6px"></div>
+          <div class="field"><label data-i18n="admin.forms.testimonialAvatar">Avatar Image URL</label><input type="url" id="tfImage"><input type="file" accept="image/*" onchange="uploadImage(this, 'tfImage')" style="margin-top:6px"></div>
           <div class="form-actions">
-            <button type="button" class="btn-outline" onclick="closeTestimonialForm()">Cancel</button>
-            <button type="submit" class="btn-primary" id="testimonialSubmit">Save Testimonial</button>
+            <button type="button" class="btn-outline" onclick="closeTestimonialForm()" data-i18n="common.cancel">Cancel</button>
+            <button type="submit" class="btn-primary" id="testimonialSubmit" data-i18n="common.saveTestimonial">Save Testimonial</button>
           </div>
         </form>
       </div>
@@ -321,14 +324,14 @@
     <!-- Change Password Modal -->
     <div class="modal-overlay" id="passwordModal" style="display:none">
       <div class="modal modal-sm">
-        <div class="modal-header"><h3>Change Password</h3><button class="modal-close" onclick="closePasswordModal()">&times;</button></div>
+        <div class="modal-header"><h3 data-i18n="admin.forms.changePassword">Change Password</h3><button class="modal-close" onclick="closePasswordModal()">&times;</button></div>
         <form id="passwordForm" class="modal-body">
-          <div class="field"><label>Current Password</label><input type="password" id="pwCurrent" required></div>
-          <div class="field"><label>New Password</label><input type="password" id="pwNew" required></div>
+          <div class="field"><label data-i18n="admin.forms.currentPassword">Current Password</label><input type="password" id="pwCurrent" required></div>
+          <div class="field"><label data-i18n="admin.forms.newPassword">New Password</label><input type="password" id="pwNew" required></div>
           <p class="form-error" id="passwordError"></p>
           <div class="form-actions">
-            <button type="button" class="btn-outline" onclick="closePasswordModal()">Cancel</button>
-            <button type="submit" class="btn-primary">Update</button>
+            <button type="button" class="btn-outline" onclick="closePasswordModal()" data-i18n="common.cancel">Cancel</button>
+            <button type="submit" class="btn-primary" data-i18n="common.update">Update</button>
           </div>
         </form>
       </div>
@@ -341,10 +344,11 @@
     <div style="text-align:center">
       <p id="faceHint" style="font-size:20px;font-weight:600;margin-bottom:8px"></p>
       <p id="faceCounter" style="font-size:48px;font-weight:800;margin:0;opacity:0.8"></p>
-      <p style="font-size:14px;margin-top:16px;opacity:0.6">Keep your face centered in the camera</p>
+      <p style="font-size:14px;margin-top:16px;opacity:0.6" data-i18n="admin.faceOverlay.keepCentered">Keep your face centered in the camera</p>
     </div>
   </div>
 
+  <script src="../i18n.js"></script>
   <script src="admin.js?v=3"></script>
 </body>
 </html>

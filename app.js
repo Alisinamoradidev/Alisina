@@ -37,16 +37,16 @@ function renderSoldProperties() {
     <div class="property-card" style="--i:${i}" data-id="${p.id}">
       <div class="property-image">
         <img src="${p.image}" alt="${sanitizeHTML(p.title)}" loading="lazy">
-        <span class="property-badge badge-sold">Sold</span>
+        <span class="property-badge badge-sold">${i18n.t('common.sold')}</span>
       </div>
       <div class="property-body">
         <div class="property-price" style="color:var(--text-muted);text-decoration:line-through">${formatPrice(p.price, 'sale')}</div>
         <div class="property-title">${sanitizeHTML(p.title)}</div>
         <div class="property-location">${IC['fas fa-map-marker-alt']} ${sanitizeHTML(p.location)}</div>
         <div class="property-details">
-          <span>${IC['fas fa-bed']} ${p.beds} Beds</span>
-          <span>${IC['fas fa-bath']} ${p.baths} Baths</span>
-          <span>${IC['fas fa-ruler-combined']} ${p.sqft.toLocaleString()} sqft</span>
+          <span>${IC['fas fa-bed']} ${p.beds} ${i18n.t('common.beds')}</span>
+          <span>${IC['fas fa-bath']} ${p.baths} ${i18n.t('common.baths')}</span>
+          <span>${IC['fas fa-ruler-combined']} ${p.sqft.toLocaleString()} ${i18n.t('common.sqft')}</span>
         </div>
       </div>
     </div>
@@ -126,12 +126,12 @@ function formatPrice(price, badge) {
 
 function getDescription(type) {
   const desc = {
-    house: "This stunning home features an open floor plan with abundant natural light, modern finishes throughout, and a spacious backyard perfect for entertaining.",
-    apartment: "This stylish apartment offers contemporary living in the heart of the city. Features include hardwood floors, in-unit laundry, and a private balcony with skyline views.",
-    condo: "This beautifully maintained condo offers resort-style living with top-of-the-line amenities. Enjoy the community pool, gym, and 24-hour concierge service.",
-    villa: "Experience luxury living in this exquisite villa featuring Mediterranean architecture, private pool, landscaped gardens, and premium finishes throughout."
+    house: i18n.t('descriptions.house'),
+    apartment: i18n.t('descriptions.apartment'),
+    condo: i18n.t('descriptions.condo'),
+    villa: i18n.t('descriptions.villa')
   };
-  return desc[type] || "This beautiful property offers modern finishes and an open floor plan.";
+  return desc[type] || i18n.t('descriptions.default');
 }
 
 function setFavIcon(btn, id) {
@@ -146,10 +146,12 @@ function createPropertyCard(p, idx = 0) {
   card.className = 'property-card';
   card.dataset.id = p.id;
   card.style.setProperty('--i', idx);
+  const badgeText = p.badge === 'sold' ? i18n.t('common.sold') : p.badge === 'sale' ? i18n.t('common.forSale') : i18n.t('common.forRent');
+  const badgeClass = p.badge === 'sold' ? 'badge-sold' : p.badge === 'sale' ? 'badge-sale' : 'badge-rent';
   card.innerHTML = `
     <div class="property-image">
       <img src="${p.image}" alt="${sanitizeHTML(p.title)}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22><rect fill=%22%23d1d5db%22 width=%22600%22 height=%22400%22/><text fill=%22%236b7280%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>No Image</text></svg>'">
-      <span class="property-badge ${p.badge === 'sold' ? 'badge-sold' : p.badge === 'sale' ? 'badge-sale' : 'badge-rent'}">${p.badge === 'sold' ? 'Sold' : p.badge === 'sale' ? 'For Sale' : 'For Rent'}</span>
+      <span class="property-badge ${badgeClass}">${badgeText}</span>
       <span class="photo-count">${IC['fas fa-camera']} ${p.gallery && p.gallery.length > 0 ? p.gallery.length + 1 : 1}</span>
       <button class="property-fav" data-id="${p.id}" aria-label="Save property">${IC['far fa-heart']}</button>
     </div>
@@ -158,9 +160,9 @@ function createPropertyCard(p, idx = 0) {
       <div class="property-title">${sanitizeHTML(p.title)}</div>
       <div class="property-location">${IC['fas fa-map-marker-alt']} ${sanitizeHTML(p.location)}</div>
       <div class="property-details">
-        <span>${IC['fas fa-bed']} ${p.beds} Beds</span>
-        <span>${IC['fas fa-bath']} ${p.baths} Baths</span>
-        <span>${IC['fas fa-ruler-combined']} ${p.sqft.toLocaleString()} sqft</span>
+        <span>${IC['fas fa-bed']} ${p.beds} ${i18n.t('common.beds')}</span>
+        <span>${IC['fas fa-bath']} ${p.baths} ${i18n.t('common.baths')}</span>
+        <span>${IC['fas fa-ruler-combined']} ${p.sqft.toLocaleString()} ${i18n.t('common.sqft')}</span>
       </div>
       <button class="btn-compare" data-id="${p.id}" onclick="toggleCompare(${p.id})" title="Compare">${I(compareItems.includes(p.id) ? 'fas fa-check-circle' : 'fas fa-plus-circle')}</button>
     </div>`;
@@ -170,7 +172,7 @@ function createPropertyCard(p, idx = 0) {
 
 function toggleCompare(id) {
   const idx = compareItems.indexOf(id);
-  if (idx > -1) { compareItems.splice(idx, 1); } else { if (compareItems.length >= 4) return alert('Compare up to 4 properties'); compareItems.push(id); }
+  if (idx > -1) { compareItems.splice(idx, 1); } else { if (compareItems.length >= 4) return alert(i18n.t('compare.maxAlert')); compareItems.push(id); }
   updateListings();
   renderCompareBar();
 }
@@ -191,8 +193,8 @@ function renderCompareBar() {
 function openCompare() {
   const items = compareItems.map(id => properties.find(p => p.id === id)).filter(Boolean);
   if (items.length < 2) return;
-  const labels = ['Price','Type','Beds','Baths','Sqft','Year Built','Location'];
-  const keys = [p => formatPrice(p.price, p.badge), p => sanitizeHTML(p.type), p => p.beds, p => p.baths, p => p.sqft.toLocaleString(), p => p.year || '—', p => sanitizeHTML(p.location)];
+  const labels = [i18n.t('compare.price'),i18n.t('compare.type'),i18n.t('compare.beds'),i18n.t('compare.baths'),i18n.t('compare.sqft'),i18n.t('compare.yearBuilt'),i18n.t('compare.location')];
+  const keys = [p => formatPrice(p.price, p.badge), p => sanitizeHTML(p.type), p => p.beds, p => p.baths, p => p.sqft.toLocaleString(), p => p.year || '\u2014', p => sanitizeHTML(p.location)];
   let html = '<table class="compare-table"><thead><tr><th></th>' + items.map(p => `<th><img src="${p.image}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px"><br>${sanitizeHTML(p.title)}</th>`).join('') + '</tr></thead><tbody>';
   labels.forEach((label, i) => {
     html += `<tr><td><strong>${label}</strong></td>` + items.map(p => `<td>${keys[i](p)}</td>`).join('') + '</tr>';
@@ -220,13 +222,13 @@ function sortProperties(list, sortBy) {
 
 function renderProperties(list) {
   listingsGrid.innerHTML = '';
-  if (list.length === 0) { noResults.classList.add('visible'); resultsCount.textContent = 'No properties found'; document.getElementById('pagination').style.display = 'none'; return; }
+  if (list.length === 0) { noResults.classList.add('visible'); resultsCount.textContent = i18n.t('listings.noResults'); document.getElementById('pagination').style.display = 'none'; return; }
   noResults.classList.remove('visible');
   const totalPages = Math.ceil(list.length / pageSize);
   if (currentPage > totalPages) currentPage = totalPages || 1;
   const start = (currentPage - 1) * pageSize;
   const pageItems = list.slice(start, start + pageSize);
-  resultsCount.textContent = `Showing ${start + 1}–${Math.min(start + pageSize, list.length)} of ${list.length} properties`;
+  resultsCount.textContent = i18n.t('listings.showing', { start: start + 1, end: Math.min(start + pageSize, list.length), total: list.length });
   const frag = document.createDocumentFragment();
   pageItems.forEach((p, i) => frag.appendChild(createPropertyCard(p, i)));
   listingsGrid.appendChild(frag);
@@ -299,7 +301,7 @@ listingsGrid.addEventListener('click', e => {
     wasFav ? favorites.delete(id) : favorites.add(id);
     localStorage.setItem('favs', JSON.stringify([...favorites]));
     setFavIcon(favBtn, id);
-    showToast(wasFav ? 'Removed from favorites' : 'Added to favorites');
+    showToast(wasFav ? i18n.t('toast.removedFromFavorites') : i18n.t('toast.addedToFavorites'));
     return;
   }
   const card = e.target.closest('.property-card');
@@ -314,7 +316,7 @@ function openModal(p) {
   const mapLink = $('modalMapLink');
   const modalMapEl = $('modalMap');
   if (p.lat && p.lng) { mapLink.href = `https://www.google.com/maps?q=${p.lat},${p.lng}`; mapLink.style.display = ''; modalMapEl.style.display = ''; loadLeafletScript().then(() => { setTimeout(() => { if (window._modalMap) { window._modalMap.remove(); } window._modalMap = L.map(modalMapEl, { zoomControl: false }).setView([p.lat, p.lng], 15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(window._modalMap); L.marker([p.lat, p.lng]).addTo(window._modalMap); setTimeout(() => window._modalMap.invalidateSize(), 100); }, 100); }).catch(() => {}); } else { mapLink.style.display = 'none'; modalMapEl.style.display = 'none'; }
-  $('modalDetails').innerHTML = `<span>${I('fas fa-bed')} ${p.beds} Beds</span><span>${I('fas fa-bath')} ${p.baths} Baths</span><span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} sqft</span><span>${I('fas fa-calendar')} Built ${p.year}</span>`;
+  $('modalDetails').innerHTML = `<span>${I('fas fa-bed')} ${p.beds} ${i18n.t('common.beds')}</span><span>${I('fas fa-bath')} ${p.baths} ${i18n.t('common.baths')}</span><span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} ${i18n.t('common.sqft')}</span><span>${I('fas fa-calendar')} ${i18n.t('modal.built', { year: p.year })}</span>`;
   $('modalDescription').textContent = getDescription(p.type);
   const mf = $('modalFav'), use = mf.querySelector('use');
   if (use) { use.setAttribute('href', favorites.has(p.id) ? '#heart-solid' : '#heart-outline'); } else { const icon = mf.querySelector('i'); if (icon) icon.className = favorites.has(p.id) ? 'fas fa-heart' : 'far fa-heart'; }
@@ -328,7 +330,7 @@ function openModal(p) {
     if (icu) { icu.setAttribute('href', favorites.has(p.id) ? '#heart-solid' : '#heart-outline'); } else { const ic = mf.querySelector('i'); if (ic) ic.className = favorites.has(p.id) ? 'fas fa-heart' : 'far fa-heart'; }
     const cf = document.querySelector(`.property-fav[data-id="${p.id}"]`);
     if (cf) setFavIcon(cf, p.id);
-    showToast(favorites.has(p.id) ? 'Added to favorites' : 'Removed from favorites');
+    showToast(favorites.has(p.id) ? i18n.t('toast.addedToFavorites') : i18n.t('toast.removedFromFavorites'));
   };
   /* Payment button */
   const payBtn = $('modalPay');
@@ -338,7 +340,7 @@ function openModal(p) {
   const durationOpts = $('durationOptions');
   rentalDiv.style.display = 'none';
   if (p.badge === 'sale') {
-    payBtn.innerHTML = `${I('fas fa-credit-card')} Pay $${DEPOSIT_AMOUNT.toLocaleString()} Deposit`;
+    payBtn.innerHTML = `${I('fas fa-credit-card')} ${i18n.t('modal.payDeposit', { amount: DEPOSIT_AMOUNT.toLocaleString() })}`;
     payBtn.style.display = '';
     payBtn._payType = 'deposit';
     payBtn._propId = p.id;
@@ -347,9 +349,9 @@ function openModal(p) {
     payBtn.style.display = 'none';
     rentalDiv.style.display = 'block';
     const durations = [
-      { key: '1month', label: '1 Month', months: 1 },
-      { key: '6months', label: '6 Months', months: 6 },
-      { key: '1year', label: '1 Year', months: 12 },
+      { key: '1month', label: i18n.t('modal.1month'), months: 1 },
+      { key: '6months', label: i18n.t('modal.6months'), months: 6 },
+      { key: '1year', label: i18n.t('modal.1year'), months: 12 },
     ];
     durationOpts.innerHTML = durations.map(d => {
       const total = p.price * d.months;
@@ -368,7 +370,8 @@ function openModal(p) {
         const dur = btn.dataset.duration;
         const months = parseInt(btn.dataset.months);
         const total = p.price * months;
-        payBtn.innerHTML = `${I('fas fa-credit-card')} Pay $${total.toLocaleString()} (${months > 1 ? months + ' months' : '1 month'})`;
+        const monthLabel = months > 1 ? months + ' months' : '1 month';
+        payBtn.innerHTML = `${I('fas fa-credit-card')} ${i18n.t('modal.payRent', { amount: total.toLocaleString(), months: monthLabel })}`;
         payBtn.style.display = '';
         payBtn._payType = 'rent';
         payBtn._propId = p.id;
@@ -382,12 +385,12 @@ function openModal(p) {
   fetch(`${API_URL}/api/payments/settings`).then(r => r.json()).then(d => {
     if (d && d.bank_name) {
       bankDetails.innerHTML = `
-        <div><strong>Bank:</strong> ${sanitizeHTML(d.bank_name) || ''}</div>
-        <div><strong>Account Name:</strong> ${sanitizeHTML(d.account_name) || ''}</div>
-        <div><strong>Account Number:</strong> ${sanitizeHTML(d.account_number) || ''}</div>
-        ${d.routing ? `<div><strong>Routing:</strong> ${sanitizeHTML(d.routing)}</div>` : ''}
-        ${d.iban ? `<div><strong>IBAN:</strong> ${sanitizeHTML(d.iban)}</div>` : ''}
-        ${d.swift ? `<div><strong>SWIFT:</strong> ${sanitizeHTML(d.swift)}</div>` : ''}`;
+        <div><strong>${i18n.t('modal.bank')}</strong> ${sanitizeHTML(d.bank_name) || ''}</div>
+        <div><strong>${i18n.t('modal.accountName')}</strong> ${sanitizeHTML(d.account_name) || ''}</div>
+        <div><strong>${i18n.t('modal.accountNumber')}</strong> ${sanitizeHTML(d.account_number) || ''}</div>
+        ${d.routing ? `<div><strong>${i18n.t('modal.routing')}</strong> ${sanitizeHTML(d.routing)}</div>` : ''}
+        ${d.iban ? `<div><strong>${i18n.t('modal.iban')}</strong> ${sanitizeHTML(d.iban)}</div>` : ''}
+        ${d.swift ? `<div><strong>${i18n.t('modal.swift')}</strong> ${sanitizeHTML(d.swift)}</div>` : ''}`;
       bankInfoDiv.style.display = '';
     } else {
       bankInfoDiv.style.display = 'none';
@@ -412,11 +415,11 @@ $('modalInquire').addEventListener('click', () => {
 $('modalPay').addEventListener('click', async () => {
   const btn = $('modalPay');
   if (!btn._propId || !btn._payType) return;
-  if (btn._payType === 'rent' && !btn._payDuration) { showToast('Please select a rental duration first'); return; }
+  if (btn._payType === 'rent' && !btn._payDuration) { showToast(i18n.t('toast.selectDurationFirst')); return; }
   const cfgRes = await fetch(`${API_URL}/api/stripe/config`);
   const cfg = await cfgRes.json();
-  if (!cfg.configured) { showToast('Payment not configured yet'); return; }
-  btn.disabled = true; btn.textContent = 'Redirecting...';
+  if (!cfg.configured) { showToast(i18n.t('toast.paymentNotConfigured')); return; }
+  btn.disabled = true; btn.textContent = i18n.t('toast.redirecting');
   try {
     const payload = { property_id: btn._propId, type: btn._payType };
     if (btn._payDuration) payload.duration = btn._payDuration;
@@ -427,7 +430,7 @@ $('modalPay').addEventListener('click', async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Payment failed');
     window.location.href = data.url;
-  } catch (err) { showToast(err.message); btn.disabled = false; btn.textContent = btn._payType === 'deposit' ? `Pay $${DEPOSIT_AMOUNT.toLocaleString()} Deposit` : 'Select Duration'; }
+  } catch (err) { showToast(err.message); btn.disabled = false; btn.textContent = btn._payType === 'deposit' ? i18n.t('modal.payDeposit', { amount: DEPOSIT_AMOUNT.toLocaleString() }) : i18n.t('modal.selectDuration'); }
 });
 
 $('mobileToggle').addEventListener('click', () => nav.classList.toggle('active'));
@@ -437,7 +440,7 @@ document.addEventListener('click', e => { if (!e.target.closest('.header-inner')
 contactForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = contactForm.querySelector('.btn-submit');
-  btn.textContent = 'Sending...';
+  btn.textContent = i18n.t('contact.sending');
   btn.disabled = true;
   const fd = new FormData(contactForm);
   const payload = { name: fd.get('name'), email: fd.get('email'), phone: fd.get('phone'), inquiry_type: fd.get('inquiry_type'), property: fd.get('property'), message: fd.get('message') };
@@ -446,17 +449,17 @@ contactForm.addEventListener('submit', async (e) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed');
     contactForm.reset();
-    btn.textContent = 'Send Message';
+    btn.textContent = i18n.t('contact.send');
     btn.disabled = false;
-    showToast('Message sent! I\'ll get back to you soon.');
+    showToast(i18n.t('toast.messageSent'));
   } catch (err) {
-    btn.textContent = 'Send Message';
+    btn.textContent = i18n.t('contact.send');
     btn.disabled = false;
-    showToast(err.message || 'Could not send. Try again.');
+    showToast(err.message || i18n.t('toast.messageFailed'));
   }
 });
-if (window.location.search.includes('payment=success')) { showToast('Payment successful! Thank you.'); window.history.replaceState({}, '', window.location.pathname); }
-if (window.location.search.includes('payment=canceled')) { showToast('Payment canceled.'); window.history.replaceState({}, '', window.location.pathname); }
+if (window.location.search.includes('payment=success')) { showToast(i18n.t('toast.paymentSuccess')); window.history.replaceState({}, '', window.location.pathname); }
+if (window.location.search.includes('payment=canceled')) { showToast(i18n.t('toast.paymentCanceled')); window.history.replaceState({}, '', window.location.pathname); }
 
 function showToast(msg) {
   let t = document.querySelector('.toast');
@@ -484,7 +487,7 @@ function renderTestimonials() {
   fetch('/api/testimonials').then(r => r.json()).then(testimonials => {
     const g = $('testimonialsGrid');
     if (!testimonials.length) {
-      g.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">No testimonials yet.</p>';
+      g.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">' + i18n.t('toast.noTestimonialsYet') + '</p>';
       return;
     }
     g.innerHTML = testimonials.map((t, i) => `
@@ -502,22 +505,22 @@ function renderTestimonials() {
 
 /* FAQ Chatbot */
 const faqData = [
-  { q: "How do I buy a property?", a: "First, get pre-approved for a mortgage. Then contact me to view properties that match your budget. I'll guide you through the entire process — from offer to closing." },
-  { q: "What documents do I need?", a: "You'll need a valid ID, proof of income (pay stubs, tax returns), bank statements, and a pre-approval letter from a lender." },
-  { q: "How much down payment is required?", a: "It varies: conventional loans typically require 5-20% down, FHA loans as low as 3.5%, and VA loans may require 0%." },
-  { q: "What are the closing costs?", a: "Closing costs are typically 2-5% of the purchase price and include appraisal, inspection, title insurance, and lender fees." },
-  { q: "How long does the buying process take?", a: "From offer to closing usually takes 30-45 days, depending on financing and inspections." },
-  { q: "Can I rent with bad credit?", a: "Yes, some landlords accept tenants with less-than-perfect credit, especially with a larger security deposit or co-signer." },
-  { q: "What properties are available?", a: "I have a wide range of properties — houses, apartments, condos, and villas. Use the search filters above to find exactly what you need!" },
-  { q: "Do you help with selling too?", a: "Absolutely! I provide market analysis, professional photography, listing management, and negotiation services to get you the best price." },
-  { q: "What areas do you serve?", a: "I cover all major areas. Check the listings to see available properties in your preferred location." }
+  { q: i18n.t('faq.buyingProcess.q'), a: i18n.t('faq.buyingProcess.a') },
+  { q: i18n.t('faq.documents.q'), a: i18n.t('faq.documents.a') },
+  { q: i18n.t('faq.downPayment.q'), a: i18n.t('faq.downPayment.a') },
+  { q: i18n.t('faq.closingCosts.q'), a: i18n.t('faq.closingCosts.a') },
+  { q: i18n.t('faq.timeline.q'), a: i18n.t('faq.timeline.a') },
+  { q: i18n.t('faq.badCredit.q'), a: i18n.t('faq.badCredit.a') },
+  { q: i18n.t('faq.available.q'), a: i18n.t('faq.available.a') },
+  { q: i18n.t('faq.selling.q'), a: i18n.t('faq.selling.a') },
+  { q: i18n.t('faq.areas.q'), a: i18n.t('faq.areas.a') }
 ];
 
 function toggleChat() {
   $('chatBody').classList.toggle('open');
   const msgs = $('chatMsgs');
   if ($('chatBody').classList.contains('open') && msgs.children.length <= 1) {
-    addBotMsg("Hi! I'm Primenest Reality's virtual assistant. Ask me anything about buying, renting, or selling properties!");
+    addBotMsg(i18n.t('chat.greeting'));
     showFaqOptions();
   }
 }
@@ -538,7 +541,7 @@ function showFaqOptions() {
   const c = document.createElement('div'); c.className = 'chat-options';
   faqData.forEach((item, i) => {
     const b = document.createElement('button'); b.className = 'chat-option'; b.textContent = item.q;
-    b.onclick = () => { addUserMsg(item.q); c.remove(); addBotMsg(item.a); showToast('FAQ answered'); setTimeout(showFaqOptions, 800); };
+    b.onclick = () => { addUserMsg(item.q); c.remove(); addBotMsg(item.a); showToast(i18n.t('chat.faqAnswered')); setTimeout(showFaqOptions, 800); };
     c.appendChild(b);
   });
   $('chatMsgs').appendChild(c);
@@ -557,10 +560,10 @@ function startQuiz() {
   showQuestion(0);
 }
 const quizQuestions = [
-  { q: "What type of property are you looking for?", options: ["House", "Apartment", "Condo", "Villa"] },
-  { q: "What's your budget range?", options: ["Under $200k", "$200k - $500k", "$500k - $1M", "$1M+"] },
-  { q: "How many bedrooms do you need?", options: ["1", "2", "3", "4+"] },
-  { q: "What's your preferred location?", options: ["City Center", "Suburban", "Beachfront", "Mountain/Quiet"] }
+  { q: i18n.t('quiz.q1'), options: [i18n.t('quiz.q1_house'), i18n.t('quiz.q1_apartment'), i18n.t('quiz.q1_condo'), i18n.t('quiz.q1_villa')] },
+  { q: i18n.t('quiz.q2'), options: [i18n.t('quiz.q2_under200k'), i18n.t('quiz.q2_200to500k'), i18n.t('quiz.q2_500kto1m'), i18n.t('quiz.q2_over1m')] },
+  { q: i18n.t('quiz.q3'), options: [i18n.t('quiz.q3_1'), i18n.t('quiz.q3_2'), i18n.t('quiz.q3_3'), i18n.t('quiz.q3_4')] },
+  { q: i18n.t('quiz.q4'), options: [i18n.t('quiz.q4_city'), i18n.t('quiz.q4_suburban'), i18n.t('quiz.q4_beach'), i18n.t('quiz.q4_mountain')] }
 ];
 let quizAnswers = [];
 let quizStep = 0;
@@ -592,22 +595,22 @@ function showQuizResult() {
   const price = priceMap[quizAnswers[1]?.answer] || '';
   const bedsNeeded = parseInt(quizAnswers[2]?.answer) || 0;
   const matched = properties.filter(p => (p.status !== 'deposited' && p.status !== 'rented') && (!type || p.type === type) && (!price || matchesPrice(p.price, price)) && p.beds >= bedsNeeded);
-  let html = '<p class="quiz-result-title">Based on your answers:</p>';
-  if (matched.length === 0) html += '<p class="quiz-result-text">No exact matches found. Let me help you find something close — contact me directly!</p>';
-  else html += `<p class="quiz-result-text">Found ${matched.length} matching propert${matched.length > 1 ? 'ies' : 'y'}!</p><div class="quiz-matches">`;
+  let html = '<p class="quiz-result-title">' + i18n.t('quiz.resultTitle') + '</p>';
+  if (matched.length === 0) html += '<p class="quiz-result-text">' + i18n.t('quiz.noMatches') + '</p>';
+  else html += `<p class="quiz-result-text">${i18n.t('quiz.foundMatches', { count: matched.length, plural: matched.length > 1 ? 'ies' : 'y' })}</p><div class="quiz-matches">`;
   matched.slice(0, 3).forEach(p => {
     html += `<div class="quiz-match" onclick="openModal(properties.find(x => x.id === ${p.id}))">
       <img src="${p.image}" alt="${sanitizeHTML(p.title)}"><div><strong>${sanitizeHTML(p.title)}</strong><br>${formatPrice(p.price, p.badge)} | ${p.beds} bed | ${sanitizeHTML(p.location)}</div>
     </div>`;
   });
-  html += '</div><button class="btn-search" onclick="resetQuiz()">Try Again</button>';
+  html += '</div><button class="btn-search" onclick="resetQuiz()">' + i18n.t('quiz.tryAgain') + '</button>';
   $('quizQuestions').innerHTML = html;
 }
 
 function resetQuiz() {
   quizAnswers = []; quizStep = 0;
   $('quizIntro').style.display = 'block';
-  $('quizIntro').innerHTML = `<h3>Find Your Perfect Property</h3><p>Answer 4 quick questions and I'll match you with the best properties.</p><button class="btn-search" onclick="startQuiz()">Start Quiz</button>`;
+  $('quizIntro').innerHTML = `<h3>${i18n.t('quiz.introTitle')}</h3><p>${i18n.t('quiz.introSubtitle')}</p><button class="btn-search" onclick="startQuiz()">${i18n.t('quiz.startQuiz')}</button>`;
   $('quizQuestions').style.display = 'none';
 }
 
@@ -637,7 +640,7 @@ function createPopupContent(p) {
         <span>${I('fas fa-bath')} ${p.baths}</span>
         <span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} sqft</span>
       </div>
-      <button class="map-popup-btn" data-id="${p.id}">View Details</button>
+      <button class="map-popup-btn" data-id="${p.id}">${i18n.t('map.viewDetails')}</button>
     </div>`;
   popup.querySelector('.map-popup-btn').addEventListener('click', () => openModal(p));
   return popup;
@@ -824,7 +827,7 @@ async function loadBlogPosts() {
     if (!res.ok) return hideBlogSkeletons();
     const posts = await res.json();
     const grid = document.getElementById('blogGrid');
-    if (!posts.length) { grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">No posts yet. Check back soon!</p>'; return; }
+    if (!posts.length) { grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">' + i18n.t('blog.noPosts') + '</p>'; return; }
     grid.innerHTML = posts.slice(0, 3).map(p => `
       <a href="/blog/${p.slug || p.id}" class="blog-card" style="text-decoration:none;color:inherit;display:block">
         ${p.image ? `<div class="blog-image"><img src="${p.image}" alt="${sanitizeHTML(p.title)}" loading="lazy"></div>` : ''}
@@ -832,7 +835,7 @@ async function loadBlogPosts() {
           <div class="blog-date">${sanitizeHTML(p.created_at?.split(' ')[0]) || ''}</div>
           <h3 class="blog-title">${sanitizeHTML(p.title)}</h3>
           <p class="blog-excerpt">${sanitizeHTML(p.excerpt) || ''}</p>
-          <span class="blog-read-more">Read More ${I('fas fa-arrow-right')}</span>
+          <span class="blog-read-more">${i18n.t('blog.readMore')} ${I('fas fa-arrow-right')}</span>
         </div>
       </a>
     `).join('');
@@ -871,10 +874,10 @@ if (window.__propertyId) {
     const p = properties.find(x => x.id === propId);
     if (p) {
       openModal(p);
-      showToast('Select a rental duration and complete payment to re-rent.');
+      showToast(i18n.t('toast.selectDurationPayment'));
     }
   } else if (renew === 'no') {
-    showToast('Thank you! This property will be available for rent after the current lease expires.');
+    showToast(i18n.t('toast.thankYouRenew'));
   }
 })();
 
@@ -926,4 +929,15 @@ if (typeof requestIdleCallback !== 'undefined') {
   requestIdleCallback(initAnimations);
 } else {
   setTimeout(initAnimations, 100);
+}
+
+/* ═══ i18n language change re-render ═══ */
+if (window.i18n) {
+  i18n.onLanguageChange(function () {
+    updateListings();
+    renderSoldProperties();
+    renderTestimonials();
+    resetQuiz();
+    loadBlogPosts();
+  });
 }

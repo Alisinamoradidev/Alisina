@@ -101,11 +101,11 @@ document.getElementById('loginForm').addEventListener('submit', e => {
   const password = document.getElementById('loginPass').value;
   const btn = document.getElementById('loginBtn');
   const err = document.getElementById('loginError');
-  btn.disabled = true; btn.textContent = 'Signing in...'; err.textContent = '';
+  btn.disabled = true; btn.textContent = i18n.t('admin.login.signingIn'); err.textContent = '';
   api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) })
     .then(data => { token = data.token; localStorage.setItem('admin_token', token); showAdmin(); })
     .catch(e => err.textContent = e.message)
-    .finally(() => { btn.disabled = false; btn.textContent = 'Sign In'; });
+    .finally(() => { btn.disabled = false; btn.textContent = i18n.t('admin.login.signIn'); });
 });
 
 function logout() { token = null; localStorage.removeItem('admin_token'); showLogin(); }
@@ -175,7 +175,7 @@ async function loadDashboard() {
     if (ctx1 && labels.length) {
       chartPaymentsInstance = new Chart(ctx1, {
         type: 'bar',
-        data: { labels, datasets: [{ label: 'Revenue ($)', data: amounts, backgroundColor: '#2563eb', borderRadius: 6 }] },
+        data: { labels, datasets: [{ label: i18n.t('admin.dashboard.revenue'), data: amounts, backgroundColor: '#2563eb', borderRadius: 6 }] },
         options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v.toLocaleString() } } } }
       });
     }
@@ -240,7 +240,7 @@ function renderProperties(props) {
       const payStr = s ? `<span style="color:var(--primary)">$${s.total_collected.toLocaleString()}</span> / <span style="color:${s.balance > 0 ? '#d97706' : '#059669'}">$${s.balance.toLocaleString()}</span>` : '—';
       const status = p.status || 'available';
       const statusColor = status === 'deposited' ? '#d97706' : status === 'rented' ? '#dc2626' : '#059669';
-      let statusLabel = status === 'available' ? 'Available' : status === 'deposited' ? 'Deposited' : 'Rented';
+      let statusLabel = status === 'available' ? i18n.t('admin.properties.available') : status === 'deposited' ? i18n.t('admin.properties.deposited') : i18n.t('admin.properties.rented');
       let countdownHtml = '';
       if (status === 'rented' && p.rented_at && p.rental_duration) {
         const months = durationMonths[p.rental_duration];
@@ -249,17 +249,17 @@ function renderProperties(props) {
         if (months) {
           const rentedAt = new Date(p.rented_at).getTime();
           const expiresAt = rentedAt + months * 30 * 24 * 60 * 60 * 1000;
-          countdownHtml = `<div class="countdown-timer" data-expires="${expiresAt}" data-id="${p.id}"><i class="fas fa-clock"></i> <span class="countdown-text">calculating...</span></div>`;
+          countdownHtml = `<div class="countdown-timer" data-expires="${expiresAt}" data-id="${p.id}"><i class="fas fa-clock"></i> <span class="countdown-text">${i18n.t('admin.properties.calculating')}</span></div>`;
         }
       } else if (status === 'rented') {
         const rd = rentDurations[p.id];
         if (rd) statusLabel = `Rented (${durationLabels[rd] || rd})`;
       }
       const cancelBtn = (status === 'deposited' || status === 'rented')
-        ? `<button class="btn-outline btn-sm" onclick="cancelPropertyStatus(${p.id})" title="Cancel ${statusLabel} — make available again"><i class="fas fa-undo"></i> Cancel</button>`
+        ? `<button class="btn-outline btn-sm" onclick="cancelPropertyStatus(${p.id})" title="Cancel ${statusLabel} — make available again"><i class="fas fa-undo"></i> ${i18n.t('admin.properties.cancel')}</button>`
         : '';
       const renewalBtn = status === 'rented' && p.renter_email
-        ? `<button class="btn-outline btn-sm" onclick="sendRenewalEmail(${p.id})" title="Send renewal email to ${escapeHtml(p.renter_email)}" ${p.renewal_email_sent ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-envelope"></i> ${p.renewal_email_sent ? 'Email Sent' : 'Send Renewal'}</button>`
+        ? `<button class="btn-outline btn-sm" onclick="sendRenewalEmail(${p.id})" title="Send renewal email to ${escapeHtml(p.renter_email)}" ${p.renewal_email_sent ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-envelope"></i> ${p.renewal_email_sent ? i18n.t('admin.properties.emailSent') : i18n.t('admin.properties.sendRenewal')}</button>`
         : '';
       const renterInfo = status === 'rented' && p.renter_email
         ? `<br><small style="color:var(--text-muted);font-size:11px">Renter: ${escapeHtml(p.renter_name || p.renter_email)}</small>`
@@ -286,12 +286,12 @@ function renderProperties(props) {
       const tr = document.createElement('tr');
       const status = p.status || 'available';
       const statusColor = status === 'deposited' ? '#d97706' : status === 'rented' ? '#dc2626' : '#059669';
-      const statusLabel = status === 'available' ? 'Available' : status === 'deposited' ? 'Deposited' : 'Rented';
+      const statusLabel = status === 'available' ? i18n.t('admin.properties.available') : status === 'deposited' ? i18n.t('admin.properties.deposited') : i18n.t('admin.properties.rented');
       const cancelBtn = (status === 'deposited' || status === 'rented')
-        ? `<button class="btn-outline btn-sm" onclick="cancelPropertyStatus(${p.id})" title="Cancel ${statusLabel} — make available again"><i class="fas fa-undo"></i> Cancelbutton>`
+        ? `<button class="btn-outline btn-sm" onclick="cancelPropertyStatus(${p.id})" title="Cancel ${statusLabel} — make available again"><i class="fas fa-undo"></i> ${i18n.t('admin.properties.cancel')}</button>`
         : '';
       const renewalBtn = status === 'rented' && p.renter_email
-        ? `<button class="btn-outline btn-sm" onclick="sendRenewalEmail(${p.id})" title="Send renewal email to ${escapeHtml(p.renter_email)}" ${p.renewal_email_sent ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-envelope"></i> ${p.renewal_email_sent ? 'Email Sent' : 'Send Renewal'}</button>`
+        ? `<button class="btn-outline btn-sm" onclick="sendRenewalEmail(${p.id})" title="Send renewal email to ${escapeHtml(p.renter_email)}" ${p.renewal_email_sent ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-envelope"></i> ${p.renewal_email_sent ? i18n.t('admin.properties.emailSent') : i18n.t('admin.properties.sendRenewal')}</button>`
         : '';
       const renterInfo = status === 'rented' && p.renter_email
         ? `<br><small style="color:var(--text-muted);font-size:11px">Renter: ${escapeHtml(p.renter_name || p.renter_email)}</small>`
@@ -451,13 +451,13 @@ async function editProperty(id) {
 }
 
 async function deleteProperty(id) {
-  if (!confirm('Delete this property?')) return;
+  if (!confirm(i18n.t('admin.properties.confirmDelete'))) return;
   try { await api(`/api/properties/${id}`, { method: 'DELETE' }); loadProperties(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
 
 async function cancelPropertyStatus(id) {
-  if (!confirm('Cancel the deposited/rented status? This will make the property visible on the website again.')) return;
+  if (!confirm(i18n.t('admin.properties.confirmCancelStatus'))) return;
   try {
     await api(`/api/properties/${id}/cancel-status`, { method: 'POST' });
     loadProperties();
@@ -465,7 +465,7 @@ async function cancelPropertyStatus(id) {
 }
 
 async function sendRenewalEmail(id) {
-  if (!confirm('Send a renewal email to the renter?')) return;
+  if (!confirm(i18n.t('admin.properties.confirmRenewal'))) return;
   try {
     const result = await api(`/api/properties/${id}/send-renewal`, { method: 'POST' });
     alert(result.message || 'Renewal email sent');
@@ -520,7 +520,7 @@ function startExpirationChecker() {
 }
 
 async function deleteAllProperties() {
-  if (!confirm('Delete ALL properties? This cannot be undone.')) return;
+  if (!confirm(i18n.t('admin.properties.confirmDeleteAll'))) return;
   try { await api('/api/properties', { method: 'DELETE' }); loadProperties(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
@@ -545,7 +545,7 @@ async function loadPosts() {
         <td>${p.id}</td>
         <td><strong>${escapeHtml(p.title)}</strong></td>
         <td><code>${escapeHtml(p.slug)}</code></td>
-        <td>${p.published ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '<span style="color:var(--text-muted)">Draft</span>'}</td>
+        <td>${p.published ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : `<span style="color:var(--text-muted)">${i18n.t('admin.properties.draft')}</span>`}</td>
         <td>${p.created_at?.split(' ')[0] || ''}</td>
         <td><div class="actions">
           <button class="btn-outline btn-sm" onclick="editPost(${p.id})"><i class="fas fa-edit"></i></button>
@@ -617,13 +617,13 @@ async function editPost(id) {
 }
 
 async function deletePost(id) {
-  if (!confirm('Delete this post?')) return;
+  if (!confirm(i18n.t('admin.blog.confirmDelete'))) return;
   try { await api(`/api/blog/${id}`, { method: 'DELETE' }); loadPosts(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
 
 async function deleteAllPosts() {
-  if (!confirm('Delete ALL blog posts? This cannot be undone.')) return;
+  if (!confirm(i18n.t('admin.blog.confirmDeleteAll'))) return;
   try { await api('/api/blog', { method: 'DELETE' }); loadPosts(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
@@ -648,7 +648,7 @@ async function loadTestimonials() {
         <td>${t.id}</td>
         <td><strong>${escapeHtml(t.name)}</strong>${t.role ? `<br><small style="color:var(--text-muted)">${escapeHtml(t.role)}</small>` : ''}</td>
         <td>${'<i class="fas fa-star" style="color:#f59e0b"></i>'.repeat(Math.min(5, Math.max(1, t.rating || 5)))}</td>
-        <td>${t.published !== false ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : '<span style="color:var(--text-muted)">No</span>'}</td>
+        <td>${t.published !== false ? '<i class="fas fa-check" style="color:var(--primary)"></i>' : `<span style="color:var(--text-muted)">${i18n.t('admin.properties.no')}</span>`}</td>
         <td>${t.display_order || 0}</td>
         <td><div class="actions">
           <button class="btn-outline btn-sm" onclick="editTestimonial(${t.id})"><i class="fas fa-edit"></i></button>
@@ -714,7 +714,7 @@ async function editTestimonial(id) {
 }
 
 async function deleteTestimonial(id) {
-  if (!confirm('Delete this testimonial?')) return;
+  if (!confirm(i18n.t('admin.testimonials.confirmDelete'))) return;
   try { await api(`/api/testimonials/${id}`, { method: 'DELETE' }); loadTestimonials(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
@@ -746,13 +746,13 @@ async function loadMessages() {
 }
 
 async function deleteMessage(id) {
-  if (!confirm('Delete this message?')) return;
+  if (!confirm(i18n.t('admin.messages.confirmDelete'))) return;
   try { await api(`/api/contact/messages/${id}`, { method: 'DELETE' }); loadMessages(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
 
 async function deleteAllMessages() {
-  if (!confirm('Delete ALL messages? This cannot be undone.')) return;
+  if (!confirm(i18n.t('admin.messages.confirmDeleteAll'))) return;
   try { await api('/api/contact/messages', { method: 'DELETE' }); loadMessages(); loadDashboard(); }
   catch (err) { alert(err.message); }
 }
@@ -838,7 +838,7 @@ async function loadPayments() {
 }
 
 async function refundPayment(id) {
-  if (!confirm('Refund this payment? This will issue a full refund through Stripe.')) return;
+  if (!confirm(i18n.t('admin.payments.confirmRefund'))) return;
   try {
     await api('/api/payments/refund', { method: 'POST', body: JSON.stringify({ payment_id: id }) });
     alert('Payment refunded');
@@ -854,7 +854,7 @@ async function notifyPayment(id) {
 }
 
 async function deletePayment(id) {
-  if (!confirm('Delete this payment record?')) return;
+  if (!confirm(i18n.t('admin.payments.confirmDelete'))) return;
   try { await api('/api/payments/delete', { method: 'POST', body: JSON.stringify({ id }) }); loadPayments(); }
   catch (err) { alert(err.message); }
 }
@@ -872,17 +872,17 @@ function updateSelectedCount() {
 async function deleteSelectedPayments() {
   const ids = [...document.querySelectorAll('.payment-checkbox:checked')].map(cb => parseInt(cb.dataset.id));
   if (!ids.length) return;
-  if (!confirm(`Delete ${ids.length} selected payment record(s)?`)) return;
+  if (!confirm(i18n.t('admin.payments.confirmDeleteSelected', {count: ids.length}))) return;
   try { await api('/api/payments/delete', { method: 'POST', body: JSON.stringify({ ids }) }); loadPayments(); updateSelectedCount(); }
   catch (err) { alert(err.message); }
 }
 async function refundAllPayments() {
-  if (!confirm('Refund ALL completed payments via Stripe? This will void them in test mode.')) return;
+  if (!confirm(i18n.t('admin.payments.confirmRefundAll'))) return;
   try { const r = await api('/api/payments/refund-all', { method: 'POST' }); alert(r.message); loadPayments(); }
   catch (err) { alert(err.message); }
 }
 async function deleteAllPayments() {
-  if (!confirm('Delete ALL payment records?')) return;
+  if (!confirm(i18n.t('admin.payments.confirmDeleteAll'))) return;
   try { await api('/api/payments', { method: 'DELETE' }); loadPayments(); }
   catch (err) { alert(err.message); }
 }
@@ -1047,7 +1047,7 @@ document.getElementById('passwordForm').addEventListener('submit', async e => {
   const err = document.getElementById('passwordError');
   try {
     await api('/api/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword: current, newPassword: newPw }) });
-    alert('Password updated');
+    alert(i18n.t('admin.settings.passwordUpdated'));
     closePasswordModal();
     document.getElementById('passwordForm').reset();
   } catch (e) { err.textContent = e.message; }
@@ -1206,7 +1206,7 @@ function webauthnSupport() {
 
 async function loginWithPasskey() {
   const err = document.getElementById('loginError');
-  if (!webauthnSupport()) { err.textContent = 'Passkey not supported on this browser'; return; }
+  if (!webauthnSupport()) { err.textContent = i18n.t('admin.settings.passkeyNotSupported'); return; }
 
   const username = document.getElementById('loginUser').value.trim();
 
@@ -1261,7 +1261,7 @@ async function loginWithPasskey() {
 }
 
 async function setupPasskey() {
-  if (!webauthnSupport()) { alert('Passkey not supported on this browser'); return; }
+  if (!webauthnSupport()) { alert(i18n.t('admin.settings.passkeyNotSupported')); return; }
 
   try {
     const beginRes = await fetch(`${API}/api/auth/webauthn/register/begin`, {
@@ -1303,7 +1303,7 @@ async function setupPasskey() {
     const completeData = await completeRes.json();
     if (!completeRes.ok) throw new Error(completeData.error);
 
-    document.getElementById('settingsPasskeyStatus').textContent = 'Passkey set up successfully!';
+    document.getElementById('settingsPasskeyStatus').textContent = i18n.t('admin.settings.passkeySetupSuccess');
     document.getElementById('settingsSetupPasskeyBtn').style.display = 'none';
     document.getElementById('settingsRemovePasskeyBtn').style.display = 'inline-flex';
   } catch (e) {
@@ -1313,13 +1313,13 @@ async function setupPasskey() {
 }
 
 async function removePasskey() {
-  if (!confirm('Remove your saved passkey?')) return;
+  if (!confirm(i18n.t('admin.settings.removePasskeyConfirm'))) return;
   alert('Delete the passkey from your device settings (browser password manager). The passkey record has been removed from the server.');
   try {
     await fetch(`${API}/api/auth/webauthn/passkeys`, {
       method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
     });
-    document.getElementById('settingsPasskeyStatus').textContent = 'Passkey removed.';
+    document.getElementById('settingsPasskeyStatus').textContent = i18n.t('admin.settings.passkeyRemoved');
     document.getElementById('settingsSetupPasskeyBtn').style.display = 'inline-flex';
     document.getElementById('settingsRemovePasskeyBtn').style.display = 'none';
   } catch (e) { console.error('Admin error:', e.message); }
@@ -1332,11 +1332,11 @@ async function checkPasskeyStatus() {
     });
     const data = await res.json();
     if (data.passkeys > 0) {
-      document.getElementById('settingsPasskeyStatus').textContent = `Passkey ready (${data.passkeys} registered)`;
+      document.getElementById('settingsPasskeyStatus').textContent = i18n.t('admin.settings.passkeyReady', {count: data.passkeys});
       document.getElementById('settingsSetupPasskeyBtn').style.display = 'none';
       document.getElementById('settingsRemovePasskeyBtn').style.display = 'inline-flex';
     } else {
-      document.getElementById('settingsPasskeyStatus').textContent = 'No passkey set up yet';
+      document.getElementById('settingsPasskeyStatus').textContent = i18n.t('admin.settings.noPasskey');
     }
   } catch (e) { console.error('Admin error:', e.message); }
 }
@@ -1438,7 +1438,7 @@ async function enrollFaceFromPhoto(input) {
     });
 
     if (res.success) {
-      status.textContent = `Face login set up with ${res.enrolled} photos!`;
+      status.textContent = i18n.t('admin.settings.faceSetupSuccess', {count: res.enrolled});
       document.getElementById('settingsSetupFaceBtn').style.display = 'none';
       document.getElementById('settingsWebcamFaceBtn').style.display = 'none';
       document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
@@ -1463,10 +1463,10 @@ async function enrollFaceMulti() {
   let stream;
   const images = [];
   const TOTAL_PHOTOS = 5;
-  const POSES = ['Look straight', 'Turn slightly left', 'Turn slightly right', 'Look slightly up', 'Look slightly down'];
+  const POSES = [i18n.t('admin.settings.lookStraight'), i18n.t('admin.settings.turnLeft'), i18n.t('admin.settings.turnRight'), i18n.t('admin.settings.lookUp'), i18n.t('admin.settings.lookDown')];
 
   try {
-    btn.textContent = 'Opening camera...';
+    btn.textContent = i18n.t('admin.settings.openingCamera');
     stream = await timeoutPromise(startFaceCamera(), 15000);
     await new Promise(r => setTimeout(r, 800));
 
@@ -1478,7 +1478,7 @@ async function enrollFaceMulti() {
       hint.textContent = POSES[i] || 'Hold still';
       await new Promise(r => setTimeout(r, 1200));
       images.push(captureFrameAsBase64(video));
-      hint.textContent = 'Captured!';
+      hint.textContent = i18n.t('admin.settings.captured');
       await new Promise(r => setTimeout(r, 400));
     }
 
@@ -1492,14 +1492,14 @@ async function enrollFaceMulti() {
     });
 
     if (res.success) {
-      status.textContent = `Face login set up with ${res.enrolled} photos!`;
+      status.textContent = i18n.t('admin.settings.faceSetupSuccess', {count: res.enrolled});
       document.getElementById('settingsSetupFaceBtn').style.display = 'none';
       document.getElementById('settingsWebcamFaceBtn').style.display = 'none';
       document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
     }
   } catch (e) {
     overlay.style.display = 'none';
-    alert(e.message === 'Timed out' ? 'Camera timed out. Make sure your face is visible.' : e.message);
+    alert(e.message === 'Timed out' ? i18n.t('admin.settings.cameraTimeout') : e.message);
   } finally {
     if (stream) stopFaceCamera(stream);
     overlay.style.display = 'none';
@@ -1508,10 +1508,10 @@ async function enrollFaceMulti() {
 }
 
 async function removeFace() {
-  if (!confirm('Remove your face login?')) return;
+  if (!confirm(i18n.t('admin.settings.removeFaceConfirm'))) return;
   try {
     await api('/api/auth/face/descriptor', { method: 'DELETE' });
-    document.getElementById('settingsFaceStatus').textContent = 'Face login removed.';
+    document.getElementById('settingsFaceStatus').textContent = i18n.t('admin.settings.faceRemoved');
     document.getElementById('settingsSetupFaceBtn').style.display = 'inline-flex';
     document.getElementById('settingsWebcamFaceBtn').style.display = 'inline-flex';
     document.getElementById('settingsRemoveFaceBtn').style.display = 'none';
@@ -1521,18 +1521,18 @@ async function removeFace() {
 async function loginWithFace() {
   const err = document.getElementById('loginError');
   const btn = document.getElementById('faceLoginBtn');
-  btn.disabled = true; btn.textContent = 'Opening camera...'; err.textContent = '';
+  btn.disabled = true; btn.textContent = i18n.t('admin.settings.openingCamera'); err.textContent = '';
 
   let stream;
   try {
     stream = await timeoutPromise(startFaceCamera(), 15000);
     await new Promise(r => setTimeout(r, 1000));
-    btn.textContent = 'Scanning...';
+    btn.textContent = i18n.t('admin.settings.scanning');
 
     const b64 = captureFrameAsBase64(document.getElementById('faceVideo'));
     stopFaceCamera(stream); stream = null;
 
-    btn.textContent = 'Verifying...';
+    btn.textContent = i18n.t('admin.settings.verifying');
     const res = await fetch(`${API}/api/auth/face/compare`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: b64 }),
@@ -1561,12 +1561,12 @@ async function checkFaceStatus() {
     });
     const data = await res.json();
     if (data.enrolled) {
-      document.getElementById('settingsFaceStatus').textContent = 'Face login ready';
+      document.getElementById('settingsFaceStatus').textContent = i18n.t('admin.settings.faceReady');
       document.getElementById('settingsSetupFaceBtn').style.display = 'none';
       document.getElementById('settingsWebcamFaceBtn').style.display = 'none';
       document.getElementById('settingsRemoveFaceBtn').style.display = 'inline-flex';
     } else {
-      document.getElementById('settingsFaceStatus').textContent = 'No face set up yet';
+      document.getElementById('settingsFaceStatus').textContent = i18n.t('admin.settings.noFace');
     }
   } catch (e) { console.error('Admin error:', e.message); }
 }
@@ -1579,7 +1579,7 @@ document.getElementById('settingsForm').addEventListener('submit', async functio
   const newPassword = document.getElementById('settingsNewPassword').value;
   const err = document.getElementById('settingsError');
   const btn = this.querySelector('button[type="submit"]');
-  if (!newUsername && !newPassword) { err.style.color = '#dc2626'; err.textContent = 'Enter a new username or password'; return; }
+  if (!newUsername && !newPassword) { err.style.color = '#dc2626'; err.textContent = i18n.t('admin.settings.enterNewCredentials'); return; }
   btn.disabled = true; btn.textContent = 'Saving...'; err.textContent = '';
   try {
     const body = { currentPassword: current };
@@ -1587,7 +1587,7 @@ document.getElementById('settingsForm').addEventListener('submit', async functio
     if (newPassword) body.newPassword = newPassword;
     const result = await api('/api/auth/password', { method: 'PUT', body: JSON.stringify(body) });
     if (result.token) { token = result.token; localStorage.setItem('admin_token', result.token); }
-    err.style.color = '#22c55e'; err.textContent = 'Updated successfully — please log in again with your new credentials';
+    err.style.color = '#22c55e'; err.textContent = i18n.t('admin.settings.credentialsUpdated');
     document.getElementById('settingsCurrentPw').value = '';
     document.getElementById('settingsNewUsername').value = '';
     document.getElementById('settingsNewPassword').value = '';
@@ -1598,3 +1598,12 @@ document.getElementById('settingsForm').addEventListener('submit', async functio
 });
 
 checkAuth();
+
+/* i18n language change re-render */
+if (window.i18n) {
+  i18n.onLanguageChange(function() {
+    if (document.getElementById('adminView').style.display !== 'none') {
+      loadDashboard();
+    }
+  });
+}
