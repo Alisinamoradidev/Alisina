@@ -145,10 +145,12 @@
 
   function updateLanguageSwitcher() {
     document.querySelectorAll('.lang-switcher').forEach(function (container) {
+      container.classList.remove('open');
       container.innerHTML = '';
       var currentInfo = LANGUAGES[currentLang] || LANGUAGES[DEFAULT_LANG];
 
       var btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'lang-btn';
       btn.innerHTML = '<span class="lang-icon">' + currentInfo.icon + '</span> ' + currentInfo.label;
       btn.setAttribute('aria-label', 'Change language');
@@ -160,13 +162,12 @@
       Object.keys(LANGUAGES).forEach(function (code) {
         var info = LANGUAGES[code];
         var option = document.createElement('button');
+        option.type = 'button';
         option.className = 'lang-option' + (code === currentLang ? ' active' : '');
         option.innerHTML = '<span>' + info.label + '</span><span class="lang-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></span>';
         option.setAttribute('aria-label', 'Switch to ' + info.label);
-        option.addEventListener('click', function (e) {
-          e.stopPropagation();
+        option.addEventListener('click', function () {
           setLanguage(code);
-          container.classList.remove('open');
         });
         dropdown.appendChild(option);
       });
@@ -174,17 +175,11 @@
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
         container.classList.toggle('open');
-        btn.setAttribute('aria-expanded', container.classList.contains('open'));
+        btn.setAttribute('aria-expanded', String(container.classList.contains('open')));
       });
 
       container.appendChild(btn);
       container.appendChild(dropdown);
-    });
-
-    document.addEventListener('click', function () {
-      document.querySelectorAll('.lang-switcher.open').forEach(function (el) {
-        el.classList.remove('open');
-      });
     });
   }
 
@@ -235,6 +230,12 @@
     if (currentLang !== DEFAULT_LANG) await loadTranslations(currentLang);
     applyTranslations();
     updateLanguageSwitcher();
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.lang-switcher')) return;
+      document.querySelectorAll('.lang-switcher.open').forEach(function (el) {
+        el.classList.remove('open');
+      });
+    });
     document.body.classList.add('i18n-ready');
   }
 
