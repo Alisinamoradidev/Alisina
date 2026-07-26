@@ -521,6 +521,12 @@ body {
   transform: scale(1.1);
 }
 
+.property-fav.saved {
+  background: rgba(239, 68, 68, 0.9);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fff;
+}
+
 .property-fav.saved svg,
 .property-fav:hover svg {
   transform: scale(1.15);
