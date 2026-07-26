@@ -22,18 +22,18 @@
   },
   "search": {
     "placeholder": "په ځاي، ډول یا کلیمي ته څېټئ...",
-    "anyPrice": "هر قیمت",
+    "anyPrice": "قیمت",
     "under200k": "له $200k کې ټیټ",
     "200to500k": "$200k - $500k",
     "500kto1m": "$500k - $1M",
     "over1m": "$1M+",
-    "allTypes": "ټولې ډولې",
+    "allTypes": "د ملکیت ډول",
     "house": "کور",
     "apartment": "اپارټمان",
     "condo": "کونډو",
     "villa": "ویلا",
-    "anyBeds": "هر ډول د خوب خونه",
-    "anyBaths": "هر ډول د حمام خونه",
+    "anyBeds": "د خوب شمېر",
+    "anyBaths": "د حمام شمېر",
     "search": "لټون"
   },
   "listings": {

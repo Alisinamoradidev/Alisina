@@ -22,18 +22,18 @@
   },
   "search": {
     "placeholder": "Search by location, type, or keyword...",
-    "anyPrice": "Any Price",
+    "anyPrice": "Price Range",
     "under200k": "Under $200k",
     "200to500k": "$200k - $500k",
     "500kto1m": "$500k - $1M",
     "over1m": "$1M+",
-    "allTypes": "All Types",
+    "allTypes": "Property Type",
     "house": "House",
     "apartment": "Apartment",
     "condo": "Condo",
     "villa": "Villa",
-    "anyBeds": "Any Beds",
-    "anyBaths": "Any Baths",
+    "anyBeds": "Number of Beds",
+    "anyBaths": "Number of Baths",
     "search": "Search"
   },
   "listings": {
