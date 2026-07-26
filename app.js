@@ -136,7 +136,7 @@ function getDescription(type) {
 
 function setFavIcon(btn, id) {
   const use = btn.querySelector('use');
-  if (use) { use.setAttribute('href', favorites.has(id) ? '#heart-solid' : '#heart-outline'); return; }
+  if (use) { use.setAttribute('href', favorites.has(id) ? 'icons.svg#heart-solid' : 'icons.svg#heart-outline'); return; }
   const icon = btn.querySelector('i');
   if (icon) icon.className = favorites.has(id) ? 'fas fa-heart' : 'far fa-heart';
 }
@@ -319,15 +319,15 @@ function openModal(p) {
   $('modalDetails').innerHTML = `<span>${I('fas fa-bed')} ${p.beds} ${i18n.t('common.beds')}</span><span>${I('fas fa-bath')} ${p.baths} ${i18n.t('common.baths')}</span><span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} ${i18n.t('common.sqft')}</span><span>${I('fas fa-calendar')} ${i18n.t('modal.built', { year: p.year })}</span>`;
   $('modalDescription').textContent = getDescription(p.type);
   const mf = $('modalFav'), use = mf.querySelector('use');
-  if (use) { use.setAttribute('href', favorites.has(p.id) ? '#heart-solid' : '#heart-outline'); } else { const icon = mf.querySelector('i'); if (icon) icon.className = favorites.has(p.id) ? 'fas fa-heart' : 'far fa-heart'; }
-  if (favorites.has(p.id)) mf.classList.add('saved'); else mf.classList.remove('saved');
+  if (use) { use.setAttribute('href', favorites.has(p.id) ? 'icons.svg#heart-solid' : 'icons.svg#heart-outline'); } else { const icon = mf.querySelector('i'); if (icon) icon.className = favorites.has(p.id) ? 'fas fa-heart' : 'far fa-heart'; }
+    if (favorites.has(p.id)) mf.classList.add('saved'); else mf.classList.remove('saved');
   modalOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
   mf.onclick = () => {
     favorites.has(p.id) ? favorites.delete(p.id) : favorites.add(p.id);
     localStorage.setItem('favs', JSON.stringify([...favorites]));
     const icu = mf.querySelector('use');
-    if (icu) { icu.setAttribute('href', favorites.has(p.id) ? '#heart-solid' : '#heart-outline'); } else { const ic = mf.querySelector('i'); if (ic) ic.className = favorites.has(p.id) ? 'fas fa-heart' : 'far fa-heart'; }
+    if (icu) { icu.setAttribute('href', favorites.has(p.id) ? 'icons.svg#heart-solid' : 'icons.svg#heart-outline'); } else { const ic = mf.querySelector('i'); if (ic) ic.className = favorites.has(p.id) ? 'fas fa-heart' : 'far fa-heart'; }
     const cf = document.querySelector(`.property-fav[data-id="${p.id}"]`);
     if (cf) setFavIcon(cf, p.id);
     showToast(favorites.has(p.id) ? i18n.t('toast.addedToFavorites') : i18n.t('toast.removedFromFavorites'));
