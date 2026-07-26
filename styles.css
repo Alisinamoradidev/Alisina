@@ -494,24 +494,48 @@ body {
   position: absolute;
   top: 12px;
   inset-inline-end: 12px;
-  width: 36px;
-  height: 36px;
-  background: var(--white);
-  border: none;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #ef4444;
+  color: #fff;
   font-size: 16px;
-  transition: var(--transition);
-  box-shadow: var(--shadow);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.property-fav svg {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), fill 0.2s ease;
 }
 
 .property-fav:hover {
-  background: #fee2e2;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   transform: scale(1.1);
+}
+
+.property-fav.saved svg,
+.property-fav:hover svg {
+  transform: scale(1.15);
+}
+
+@keyframes heartBounce {
+  0% { transform: scale(1); }
+  25% { transform: scale(0.8); }
+  50% { transform: scale(1.25); }
+  75% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.property-fav.bounce svg {
+  animation: heartBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .property-body {
@@ -1375,31 +1399,52 @@ body {
 }
 
 .btn-fav {
-  padding: 14px 24px;
-  background: var(--muted);
+  padding: 12px 22px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   align-items: center;
   gap: 8px;
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-fav svg {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), fill 0.2s ease;
 }
 
 .btn-fav:hover {
-  background: #fee2e2;
-  border-color: #fecaca;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
   color: #dc2626;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-fav:hover svg {
+  transform: scale(1.15);
 }
 
 .btn-fav.saved {
-  background: #fee2e2;
-  border-color: #fecaca;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
   color: #dc2626;
+}
+
+.btn-fav.saved svg {
+  transform: scale(1.1);
+}
+
+.btn-fav.bounce svg {
+  animation: heartBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Scroll to Top */

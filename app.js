@@ -136,9 +136,13 @@ function getDescription(type) {
 
 function setFavIcon(btn, id) {
   const use = btn.querySelector('use');
-  if (use) { use.setAttribute('href', favorites.has(id) ? 'icons.svg#heart-solid' : 'icons.svg#heart-outline'); return; }
+  if (use) { use.setAttribute('href', favorites.has(id) ? 'icons.svg#heart-solid' : 'icons.svg#heart-outline'); }
   const icon = btn.querySelector('i');
   if (icon) icon.className = favorites.has(id) ? 'fas fa-heart' : 'far fa-heart';
+  if (favorites.has(id)) btn.classList.add('saved'); else btn.classList.remove('saved');
+  btn.classList.remove('bounce');
+  void btn.offsetWidth;
+  btn.classList.add('bounce');
 }
 
 function createPropertyCard(p, idx = 0) {
