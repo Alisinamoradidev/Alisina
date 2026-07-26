@@ -7,8 +7,8 @@
 
   var LANGUAGES = {
     en: { label: 'English', icon: '🌐', dir: 'ltr', font: 'Inter' },
-    fa: { label: '\u0641\u0627\u0631\u0633\u06CC', icon: '\uD83C\uDDEE\uD83C\uDDF7', dir: 'rtl', font: 'Vazirmatn' },
-    ps: { label: '\u067E\u0634\u062A\u0648', icon: '\uD83C\uDDE6\uD83C\uDDEB', dir: 'rtl', font: 'Vazirmatn' }
+    fa: { label: '\u0641\u0627\u0631\u0633\u06CC', icon: '\uD83C\uDDEE\uD83C\uDDF7', dir: 'rtl', font: 'IRANSansX' },
+    ps: { label: '\u067E\u0634\u062A\u0648', icon: '\uD83C\uDDE6\uD83C\uDDEB', dir: 'rtl', font: 'Noto Nastaliq Urdu' }
   };
   var DEFAULT_LANG = 'en';
   var STORAGE_KEY = 'primenest_lang';
@@ -85,7 +85,9 @@
     var link = document.createElement('link');
     link.rel = 'stylesheet';
     link.dataset.i18nFont = lang;
-    link.href = 'https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap';
+    if (lang === 'ps') {
+      link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap';
+    }
     document.head.appendChild(link);
   }
 

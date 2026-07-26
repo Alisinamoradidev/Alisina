@@ -1,3 +1,32 @@
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('https://cdn.viraweb123.ir/api/v2/cdn/libs/IranSansX@Pro/Webfonts/fonts/woff2/IRANSansX-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('https://cdn.viraweb123.ir/api/v2/cdn/libs/IranSansX@Pro/Webfonts/fonts/woff2/IRANSansX-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('https://cdn.viraweb123.ir/api/v2/cdn/libs/IranSansX@Pro/Webfonts/fonts/woff2/IRANSansX-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('https://cdn.viraweb123.ir/api/v2/cdn/libs/IranSansX@Pro/Webfonts/fonts/woff2/IRANSansX-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 *,
 *::before,
 *::after {
