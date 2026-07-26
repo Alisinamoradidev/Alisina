@@ -2550,10 +2550,12 @@ select {
 
 .page-dots {
   padding: 0 4px;
-  color: var(--text-secondary);
-  font-size: 14px;
-  letter-spacing: 2px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 3px;
   user-select: none;
+  opacity: 0.7;
 }
 
 @media (max-width: 768px) {
