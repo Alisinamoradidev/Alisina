@@ -996,35 +996,39 @@ body {
   .nav {
     display: none;
     position: absolute;
-    top: calc(100% + 10px);
+    top: calc(100% + 12px);
     inset-inline-end: 0;
-    width: 220px;
-    background: linear-gradient(145deg, #fdf6ee, #fdf0e0);
-    border: 1px solid #e8d5bf;
-    border-radius: 16px;
+    width: 260px;
+    max-height: min(70vh, 480px);
+    overflow-y: auto;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--white) 94%, transparent), color-mix(in srgb, var(--card-bg) 88%, transparent));
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+    border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    border-radius: 18px;
     padding: 8px;
     gap: 2px;
-    box-shadow: 0 12px 40px rgba(180,130,80,0.2), 0 2px 8px rgba(180,130,80,0.1);
+    box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.08);
     z-index: 1001;
     flex-direction: column;
-    animation: menuSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: menuSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
   @keyframes menuSlideIn {
-    from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+    from { opacity: 0; transform: translateY(-10px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
   .nav a {
     padding: 12px 16px;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 15px;
     font-weight: 500;
-    color: #e2e8f0;
+    color: var(--text-secondary);
     white-space: nowrap;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
   }
   .nav a:hover {
-    background: rgba(180,130,80,0.12);
-    color: #f8fafc;
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    color: var(--primary);
     padding-inline-start: 20px;
   }
 
@@ -1035,13 +1039,19 @@ body {
     width: 42px;
     height: 42px;
     border-radius: 12px;
-    background: var(--primary);
-    color: #fff;
+    background: var(--muted);
+    color: var(--text);
+    border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
     font-size: 18px;
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+  .mobile-toggle:hover {
+    background: var(--primary);
+    color: var(--white);
   }
   .mobile-toggle:active {
-    background: #1557b0;
+    transform: scale(0.94);
+    background: var(--primary-dark);
   }
 
   .modal {
