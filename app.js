@@ -604,7 +604,7 @@ function showQuizResult() {
   else html += `<p class="quiz-result-text">${i18n.t('quiz.foundMatches', { count: matched.length, plural: matched.length > 1 ? 'ies' : 'y' })}</p><div class="quiz-matches">`;
   matched.slice(0, 3).forEach(p => {
     html += `<div class="quiz-match" onclick="openModal(properties.find(x => x.id === ${p.id}))">
-      <img src="${p.image}" alt="${sanitizeHTML(p.title)}"><div><strong>${sanitizeHTML(p.title)}</strong><br>${formatPrice(p.price, p.badge)} | ${p.beds} bed | ${sanitizeHTML(p.location)}</div>
+      <img src="${p.image}" alt="${sanitizeHTML(p.title)}"><div><strong>${sanitizeHTML(p.title)}</strong><br>${formatPrice(p.price, p.badge)} | ${p.beds} ${i18n.t('common.beds')} | ${sanitizeHTML(p.location)}</div>
     </div>`;
   });
   html += '</div><button class="btn-search" onclick="resetQuiz()">' + i18n.t('quiz.tryAgain') + '</button>';
@@ -640,9 +640,9 @@ function createPopupContent(p) {
       <div class="map-popup-title">${sanitizeHTML(p.title)}</div>
           <div class="map-popup-location">${I('fas fa-map-marker-alt')} ${sanitizeHTML(p.location)}</div>
       <div class="map-popup-features">
-        <span>${I('fas fa-bed')} ${p.beds}</span>
-        <span>${I('fas fa-bath')} ${p.baths}</span>
-        <span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} sqft</span>
+        <span>${I('fas fa-bed')} ${p.beds} ${i18n.t('common.beds')}</span>
+        <span>${I('fas fa-bath')} ${p.baths} ${i18n.t('common.baths')}</span>
+        <span>${I('fas fa-ruler-combined')} ${p.sqft.toLocaleString()} ${i18n.t('common.sqft')}</span>
       </div>
       <button class="map-popup-btn" data-id="${p.id}">${i18n.t('map.viewDetails')}</button>
     </div>`;
