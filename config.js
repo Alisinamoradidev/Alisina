@@ -10,7 +10,7 @@ const SITE_CONFIG = {
   analyticsId: '', // Google Analytics ID (G-XXXXXXXXXX)
   depositAmount: 1000, // Deposit amount in USD
   facebook_url: 'https://www.facebook.com/share/1BcvM1R8fr/',
-  instagram_url: '', // Add your Instagram profile URL
+  instagram_url: 'https://www.instagram.com/alisina3178?igsh=aG9tY29zaXRsZWdu',
   linkedin_url: 'https://www.linkedin.com/in/alisina-moradi-439b183b5',
 };
 
