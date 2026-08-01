@@ -9,6 +9,9 @@ const SITE_CONFIG = {
   address: '123 Main St, New York, NY 10001',
   analyticsId: '', // Google Analytics ID (G-XXXXXXXXXX)
   depositAmount: 1000, // Deposit amount in USD
+  facebook_url: 'https://www.facebook.com/share/1BcvM1R8fr/',
+  instagram_url: '', // Add your Instagram profile URL
+  linkedin_url: 'https://www.linkedin.com/in/alisina-moradi-439b183b5',
 };
 
 const SUPABASE_URL = '';
