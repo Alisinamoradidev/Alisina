@@ -10,7 +10,7 @@ function sanitizeHTML(str) {
 
 function imgSrc(src, w, q) {
   if (!src) return src;
-  w = w || 400; q = q || 80;
+  w = w || 800; q = q || 85;
   const m = /^(https:\/\/[a-z0-9]+\.supabase\.co)\/storage\/v1\/object\/public\/([^?#]+)(?:[?#].*)?$/i.exec(src);
   if (m) {
     return `${m[1]}/storage/v1/render/image/public/${m[2]}?width=${w}&quality=${q}&format=webp`;
@@ -52,7 +52,7 @@ function renderSoldProperties() {
   grid.innerHTML = sold.map((p, i) => `
     <div class="property-card" style="--i:${i}" data-id="${p.id}">
       <div class="property-image">
-        <img src="${imgSrc(p.image, 400, 80)}" alt="${sanitizeHTML(p.title)}" width="400" height="260" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${p.image.replace(/'/g, "\\'")}'">
+        <img src="${imgSrc(p.image, 800, 85)}" alt="${sanitizeHTML(p.title)}" width="800" height="520" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${p.image.replace(/'/g, "\\'")}'">
         <span class="property-badge badge-sold">${i18n.t('common.sold')}</span>
       </div>
       <div class="property-body">
@@ -173,7 +173,7 @@ function createPropertyCard(p, idx = 0) {
   const badgeClass = p.badge === 'sold' ? 'badge-sold' : p.badge === 'sale' ? 'badge-sale' : 'badge-rent';
   card.innerHTML = `
     <div class="property-image">
-      <img src="${imgSrc(p.image, 400, 80)}" alt="${sanitizeHTML(p.title)}" width="400" height="260" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${p.image.replace(/'/g, "\\'")}'">
+      <img src="${imgSrc(p.image, 800, 85)}" alt="${sanitizeHTML(p.title)}" width="800" height="520" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${p.image.replace(/'/g, "\\'")}'">
       <span class="property-badge ${badgeClass}">${badgeText}</span>
       <span class="photo-count">${IC['fas fa-camera']} ${p.gallery && p.gallery.length > 0 ? p.gallery.length + 1 : 1}</span>
       <button class="property-fav" data-id="${p.id}" aria-label="Save property">${IC['far fa-heart']}</button>
@@ -218,7 +218,7 @@ function openCompare() {
   if (items.length < 2) return;
   const labels = [i18n.t('compare.price'),i18n.t('compare.type'),i18n.t('compare.beds'),i18n.t('compare.baths'),i18n.t('compare.sqft'),i18n.t('compare.yearBuilt'),i18n.t('compare.location')];
   const keys = [p => formatPrice(p.price, p.badge), p => sanitizeHTML(p.type), p => p.beds, p => p.baths, p => p.sqft.toLocaleString(), p => p.year || '\u2014', p => sanitizeHTML(p.location)];
-  let html = '<table class="compare-table"><thead><tr><th></th>' + items.map(p => `<th><img src="${imgSrc(p.image, 300, 80)}" alt="${sanitizeHTML(p.title)}" width="300" height="180" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px"><br>${sanitizeHTML(p.title)}</th>`).join('') + '</tr></thead><tbody>';
+  let html = '<table class="compare-table"><thead><tr><th></th>' + items.map(p => `<th><img src="${imgSrc(p.image, 400, 85)}" alt="${sanitizeHTML(p.title)}" width="400" height="240" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px"><br>${sanitizeHTML(p.title)}</th>`).join('') + '</tr></thead><tbody>';
   labels.forEach((label, i) => {
     html += `<tr><td><strong>${label}</strong></td>` + items.map(p => `<td>${keys[i](p)}</td>`).join('') + '</tr>';
   });
@@ -332,7 +332,7 @@ listingsGrid.addEventListener('click', e => {
 });
 
 function openModal(p) {
-  $('modalImage').innerHTML = `<img src="${imgSrc(p.image, 1000, 85)}" alt="${sanitizeHTML(p.title)}">`;
+  $('modalImage').innerHTML = `<img src="${imgSrc(p.image, 1200, 90)}" alt="${sanitizeHTML(p.title)}">`;
   $('modalTitle').textContent = p.title;
   $('modalPrice').textContent = formatPrice(p.price, p.badge);
   $('modalLocation').querySelector('span').textContent = p.location;
@@ -518,7 +518,7 @@ function renderTestimonials() {
         <div class="testimonial-stars">${I('fas fa-star').repeat(Math.min(5, Math.max(1, t.rating || 5)))}</div>
         <p class="testimonial-text">"${sanitizeHTML(t.content)}"</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar">${t.image ? `<img src="${imgSrc(t.image, 100, 85)}" alt="${sanitizeHTML(t.name)}" width="100" height="100" style="width:48px;height:48px;border-radius:50%;object-fit:cover">` : (t.name ? t.name.charAt(0).toUpperCase() : '?')}</div>
+          <div class="testimonial-avatar">${t.image ? `<img src="${imgSrc(t.image, 160, 90)}" alt="${sanitizeHTML(t.name)}" width="160" height="160" style="width:48px;height:48px;border-radius:50%;object-fit:cover">` : (t.name ? t.name.charAt(0).toUpperCase() : '?')}</div>
           <div><div class="testimonial-name">${sanitizeHTML(t.name)}</div><div class="testimonial-role">${sanitizeHTML(t.role) || ''}</div></div>
         </div>
       </div>
@@ -623,7 +623,7 @@ function showQuizResult() {
   else html += `<p class="quiz-result-text">${i18n.t('quiz.foundMatches', { count: matched.length, plural: matched.length > 1 ? 'ies' : 'y' })}</p><div class="quiz-matches">`;
   matched.slice(0, 3).forEach(p => {
     html += `<div class="quiz-match" onclick="openModal(properties.find(x => x.id === ${p.id}))">
-      <img src="${imgSrc(p.image, 400, 80)}" alt="${sanitizeHTML(p.title)}" width="400" height="260" loading="lazy" decoding="async"><div><strong>${sanitizeHTML(p.title)}</strong><br>${formatPrice(p.price, p.badge)} | ${p.beds} ${i18n.t('common.beds')} | ${sanitizeHTML(p.location)}</div>
+      <img src="${imgSrc(p.image, 800, 85)}" alt="${sanitizeHTML(p.title)}" width="800" height="520" loading="lazy" decoding="async"><div><strong>${sanitizeHTML(p.title)}</strong><br>${formatPrice(p.price, p.badge)} | ${p.beds} ${i18n.t('common.beds')} | ${sanitizeHTML(p.location)}</div>
     </div>`;
   });
   html += '</div><button class="btn-search" onclick="resetQuiz()">' + i18n.t('quiz.tryAgain') + '</button>';
@@ -653,7 +653,7 @@ function createPopupContent(p) {
   const popup = document.createElement('div');
   popup.className = 'map-popup';
   popup.innerHTML = `
-    <div class="map-popup-img"><img src="${imgSrc(p.image, 300, 80)}" alt="${sanitizeHTML(p.title)}" width="300" height="200" loading="lazy" decoding="async"></div>
+    <div class="map-popup-img"><img src="${imgSrc(p.image, 400, 85)}" alt="${sanitizeHTML(p.title)}" width="400" height="267" loading="lazy" decoding="async"></div>
     <div class="map-popup-body">
       <div class="map-popup-price">${formatPrice(p.price, p.badge)}</div>
       <div class="map-popup-title">${sanitizeHTML(p.title)}</div>
@@ -845,7 +845,7 @@ openModal = function(p) {
   let gallery = p.gallery || [];
   if (typeof gallery === 'string') { try { gallery = JSON.parse(gallery); } catch(e) { gallery = []; } }
   if (!Array.isArray(gallery)) gallery = [];
-  const images = [imgSrc(p.image, 1000, 85), ...gallery.map(g => imgSrc(g, 1000, 85))].filter(Boolean);
+  const images = [imgSrc(p.image, 1200, 90), ...gallery.map(g => imgSrc(g, 1200, 90))].filter(Boolean);
   initCarousel($('modalImage'), images);
 };
 
@@ -859,7 +859,7 @@ async function loadBlogPosts() {
     if (!posts.length) { grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px">' + i18n.t('blog.noPosts') + '</p>'; return; }
     grid.innerHTML = posts.slice(0, 3).map(p => `
       <a href="/blog/${p.slug || p.id}" class="blog-card" style="text-decoration:none;color:inherit;display:block">
-        ${p.image ? `<div class="blog-image"><img src="${imgSrc(p.image, 800, 80)}" alt="${sanitizeHTML(p.title)}" width="800" height="450" loading="lazy" decoding="async"></div>` : ''}
+        ${p.image ? `<div class="blog-image"><img src="${imgSrc(p.image, 900, 85)}" alt="${sanitizeHTML(p.title)}" width="900" height="506" loading="lazy" decoding="async"></div>` : ''}
         <div class="blog-body">
           <div class="blog-date">${sanitizeHTML(p.created_at?.split(' ')[0]) || ''}</div>
           <h3 class="blog-title">${sanitizeHTML(p.title)}</h3>
