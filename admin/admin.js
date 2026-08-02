@@ -60,31 +60,61 @@ function api(path, options = {}) {
   });
 }
 
+let pendingUploads = Promise.resolve();
+
 async function uploadImage(input, targetId, append) {
   const files = input.files;
   if (!files || files.length === 0) return;
   input.disabled = true;
+  const btn = document.getElementById('propertySubmit');
+  if (btn) btn.disabled = true;
   const el = document.getElementById(targetId);
+  const status = ensureUploadStatus();
+  status.style.display = 'block';
   for (const file of files) {
-    try {
-      let data = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const img = await loadImage(data);
-      if (img && (img.naturalWidth > 1920 || img.naturalHeight > 1920)) {
-        data = captureFrameAsBase64(img, 1920);
+    pendingUploads = pendingUploads.then(async () => {
+      status.textContent = `Uploading ${file.name}...`;
+      try {
+        let data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const img = await loadImage(data);
+        if (img && (img.naturalWidth > 1920 || img.naturalHeight > 1920)) {
+          data = captureFrameAsBase64(img, 1920);
+        }
+        const b64 = data.split(',')[1] || '';
+        const bytes = Math.floor(b64.length * 3 / 4);
+        if (bytes > 3 * 1024 * 1024) throw new Error('image too large (max 3MB)');
+        const result = await api('/api/upload', { method: 'POST', body: JSON.stringify({ file: data, name: file.name }) });
+        if (append) el.value += (el.value ? '\n' : '') + result.url;
+        else el.value = result.url;
+        status.textContent = 'Uploaded. You can now save.';
+      } catch (err) {
+        status.textContent = '';
+        alert(`Failed to upload "${file.name}": ${err.message}`);
       }
-      if (data.length > 3 * 1024 * 1024) { alert(`"${file.name}" too large (max 3MB), skipped`); continue; }
-      const result = await api('/api/upload', { method: 'POST', body: JSON.stringify({ file: data, name: file.name }) });
-      if (append) el.value += (el.value ? '\n' : '') + result.url;
-      else el.value = result.url;
-    } catch (err) { alert(`Failed to upload "${file.name}": ${err.message}`); }
+    });
   }
+  await pendingUploads;
+  status.style.display = 'none';
   input.value = '';
   input.disabled = false;
+  if (btn) btn.disabled = false;
+}
+
+function ensureUploadStatus() {
+  let el = document.getElementById('uploadStatus');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'uploadStatus';
+    el.style.cssText = 'margin-top:6px;font-size:13px;color:var(--text-muted)';
+    const fileInput = document.querySelector('#propertyForm input[type=file]');
+    if (fileInput && fileInput.parentNode) fileInput.parentNode.appendChild(el);
+  }
+  return el;
 }
 
 function loadImage(src) {
@@ -427,6 +457,7 @@ function closePropertyForm() { document.getElementById('propertyModal').style.di
 
 document.getElementById('propertyForm').addEventListener('submit', async e => {
   e.preventDefault();
+  await pendingUploads;
   const data = {
     title: document.getElementById('pfTitle').value,
     location: document.getElementById('pfLocation').value,
@@ -1362,7 +1393,7 @@ async function startFaceCamera() {
   const video = getFaceVideo();
   video.style.display = 'block';
   video.style.position = 'fixed';
-  video.style.bottom = '20px';
+  video.style.top = '20px';
   video.style.right = '20px';
   video.style.width = '240px';
   video.style.height = '180px';
