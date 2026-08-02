@@ -394,6 +394,7 @@ ${post.image ? `<img src="${escapeHtml(post.image)}" alt="${escapeHtml(post.titl
       const user = await getAuthUser(auth);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const allowedFields = ['title','location','price','type','beds','baths','sqft','year','badge','featured','lat','lng','image','gallery','description','status','rented_at','rental_duration','renter_email','renter_name','renewal_email_sent','title_l10n','location_l10n','description_l10n'];
+      console.log('PUT property', propMatch[1], 'image=', JSON.stringify(body.image), 'gallery=', JSON.stringify(body.gallery));
       const upd = { updated_at: new Date().toISOString() };
       for (const f of allowedFields) {
         if (body[f] !== undefined) upd[f] = body[f];
@@ -1103,6 +1104,7 @@ ${post.image ? `<img src="${escapeHtml(post.image)}" alt="${escapeHtml(post.titl
       const { error: ue } = await supabase.storage.from('property-images').upload(filename, Buffer.from(base64Data, 'base64'), { contentType: file.split(';')[0].split(':')[1] || 'image/jpeg', upsert: false });
       if (ue) throw ue;
       const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(filename);
+      console.log('UPLOAD OK', filename, 'bytes=', size, 'url=', publicUrl);
       return res.status(200).json({ url: publicUrl });
     }
 
