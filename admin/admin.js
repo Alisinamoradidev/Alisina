@@ -66,14 +66,18 @@ async function uploadImage(input, targetId, append) {
   input.disabled = true;
   const el = document.getElementById(targetId);
   for (const file of files) {
-    if (file.size > 3 * 1024 * 1024) { alert(`"${file.name}" too large (max 3MB), skipped`); continue; }
     try {
-      const data = await new Promise((resolve, reject) => {
+      let data = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+      const img = await loadImage(data);
+      if (img && (img.naturalWidth > 1920 || img.naturalHeight > 1920)) {
+        data = captureFrameAsBase64(img, 1920);
+      }
+      if (data.length > 3 * 1024 * 1024) { alert(`"${file.name}" too large (max 3MB), skipped`); continue; }
       const result = await api('/api/upload', { method: 'POST', body: JSON.stringify({ file: data, name: file.name }) });
       if (append) el.value += (el.value ? '\n' : '') + result.url;
       else el.value = result.url;
@@ -81,6 +85,15 @@ async function uploadImage(input, targetId, append) {
   }
   input.value = '';
   input.disabled = false;
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const el = new Image();
+    el.onload = () => resolve(el);
+    el.onerror = () => reject(new Error('Failed to load image'));
+    el.src = src;
+  });
 }
 
 /* Auth */
